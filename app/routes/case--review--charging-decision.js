@@ -1,15 +1,16 @@
 const _ = require('lodash')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
-const { getEligibleCharges, findOrCreateReview, hydrateSeededReviewSession } = require('../helpers/caseReview')
+const { getEligibleCharges, findOrCreateReview, findOrCreateReviewWithAnswers, buildDecisionsMap } = require('../helpers/caseReview')
 
 module.exports = (router) => {
   // Entry point — send the reviewer to the first charge that still needs a decision
   router.get('/cases/:caseId/review/charging-decision', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
+    const userId = req.session.data.user.id
 
     if (req.query.referrer) {
-      req.session.data.chargingDecision = { ...req.session.data.chargingDecision, referrer: req.query.referrer }
+      req.session.data.caseReviewReferrer = req.query.referrer
     }
 
     const { charges } = await getEligibleCharges(prisma, caseId)
@@ -17,7 +18,8 @@ module.exports = (router) => {
       return res.redirect(`/cases/${caseId}/review`)
     }
 
-    const decisions = req.session.data.chargingDecision?.decisions || {}
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, userId)
+    const decisions = buildDecisionsMap(review)
     const nextCharge = charges.find(charge => !decisions[charge.id]) || charges[0]
     res.redirect(`/cases/${caseId}/review/charging-decision/${nextCharge.id}`)
   })
@@ -28,10 +30,9 @@ module.exports = (router) => {
     const caseId = parseInt(req.params.caseId)
     const userId = req.session.data.user.id
     const { _case, eligibleDefendants, charges } = await getEligibleCharges(prisma, caseId)
-    const review = await findOrCreateReview(prisma, caseId, userId)
-    hydrateSeededReviewSession(req, res, review, charges)
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, userId)
 
-    const decisions = req.session.data.chargingDecision?.decisions || {}
+    const decisions = buildDecisionsMap(review)
     const chargeRows = charges.map(charge => ({
       ...charge,
       decision: decisions[charge.id],
@@ -62,6 +63,7 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/charging-decision/:chargeId', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const chargeId = parseInt(req.params.chargeId)
+    const userId = req.session.data.user.id
     const { _case, eligibleDefendants, charges } = await getEligibleCharges(prisma, caseId)
 
     const chargeIndex = charges.findIndex(charge => charge.id === chargeId)
@@ -80,6 +82,8 @@ module.exports = (router) => {
       }
     }))
 
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, userId)
+
     res.render('cases/review/charging-decision/index', {
       _case,
       charge,
@@ -87,7 +91,7 @@ module.exports = (router) => {
       chargeNumber: chargeIndex + 1,
       totalCharges: charges.length,
       showDefendantName: eligibleDefendants.length > 1,
-      selectedDecision: req.session.data.chargingDecision?.decisions?.[chargeId],
+      selectedDecision: buildDecisionsMap(review)[chargeId],
       isFirstCharge: chargeIndex === 0,
       from: req.query.from,
     })
@@ -96,14 +100,14 @@ module.exports = (router) => {
   router.post('/cases/:caseId/review/charging-decision/:chargeId', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const chargeId = parseInt(req.params.chargeId)
+    const userId = req.session.data.user.id
 
-    req.session.data.chargingDecision = {
-      ...req.session.data.chargingDecision,
-      decisions: {
-        ...req.session.data.chargingDecision?.decisions,
-        [chargeId]: req.body.decision,
-      },
-    }
+    const review = await findOrCreateReview(prisma, caseId, userId)
+    await prisma.caseReviewChargeDecision.upsert({
+      where: { caseReviewId_chargeId: { caseReviewId: review.id, chargeId } },
+      update: { decision: req.body.decision },
+      create: { caseReviewId: review.id, chargeId, decision: req.body.decision },
+    })
 
     if (req.body.from === 'check') {
       return res.redirect(`/cases/${caseId}/review/charging-decision/check`)

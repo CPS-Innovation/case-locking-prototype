@@ -59,22 +59,22 @@
                 {
                   key: { text: "Category" },
                   value: { text: item.category },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "category for item " + loop.index }] }
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "category for item " + loop.index }] }
                 },
                 {
                   key: { text: "Description" },
                   value: { text: item.description },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "description for item " + loop.index }] }
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "description for item " + loop.index }] }
                 },
                 {
                   key: { text: "Due date" },
-                  value: { text: item.formattedDueDate },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "due date for item " + loop.index }] }
+                  value: { text: item.dueDate | isoDateFromDateInput | govukDate },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "due date for item " + loop.index }] }
                 },
                 {
                   key: { text: "Defendants" },
                   value: { text: item.defendantNames or "—" },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "defendants for item " + loop.index }] }
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "defendants for item " + loop.index }] }
                 } if _case.defendants.length > 1
               ]
             })

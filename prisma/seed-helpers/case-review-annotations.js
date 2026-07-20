@@ -107,7 +107,7 @@ async function seedCaseReviewAnnotations(prisma, { users }) {
     const elements = _case.defendants.flatMap(d => d.charges.flatMap(c => c.elements))
 
     const review = await prisma.caseReview.create({
-      data: { caseId: _case.id, userId }
+      data: { caseId: _case.id, userId, status: 'submitted' }
     })
     reviewCount++
 

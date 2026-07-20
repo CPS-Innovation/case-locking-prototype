@@ -1,9 +1,14 @@
 const statuses = require('../data/case-statuses')
+const { formatDefendantNames } = require('./informationRequest')
 
 // A case's review is shared - whoever opens it continues the same review
 // rather than getting their own private copy, so document status and
 // annotations are visible regardless of who is signed in.
-async function findOrCreateReview(prisma, caseId, userId) {
+//
+// Falls back to the most recent review of any status when there's no
+// in-progress one, so a submitted review's document annotations stay
+// visible after the review that made them has been submitted.
+async function getReview(prisma, caseId) {
   let review = await prisma.caseReview.findFirst({
     where: { caseId, status: 'in_progress' }
   })
@@ -13,12 +18,66 @@ async function findOrCreateReview(prisma, caseId, userId) {
       orderBy: { updatedAt: 'desc' }
     })
   }
-  if (!review) {
-    review = await prisma.caseReview.create({
-      data: { caseId, userId }
-    })
-  }
   return review
+}
+
+async function createReview(prisma, caseId, userId) {
+  return prisma.caseReview.create({
+    data: { caseId, userId }
+  })
+}
+
+async function findOrCreateReview(prisma, caseId, userId) {
+  return (await getReview(prisma, caseId)) ?? (await createReview(prisma, caseId, userId))
+}
+
+async function findOrCreateReviewWithAnswers(prisma, caseId, userId) {
+  const review = await findOrCreateReview(prisma, caseId, userId)
+  return prisma.caseReview.findUnique({
+    where: { id: review.id },
+    include: {
+      chargeDecisions: true,
+      informationRequestItems: { include: { defendants: true }, orderBy: { createdAt: 'asc' } },
+    },
+  })
+}
+
+function buildDecisionsMap(review) {
+  return Object.fromEntries(review.chargeDecisions.map(d => [d.chargeId, d.decision]))
+}
+
+// null is load-bearing: templates use "informationRequest present" to mean
+// "task started" (In progress) vs absent (Not started).
+function shapeInformationRequest(review, caseDefendants) {
+  if (review.wantsInformationRequest == null) return null
+  return {
+    wantsInformationRequest: review.wantsInformationRequest,
+    description: review.informationRequestDescription,
+    sentDate: review.informationRequestSentDate,
+    complete: review.informationRequestComplete,
+    items: review.informationRequestItems.map(item => {
+      const dueDate = { day: item.dueDay || '', month: item.dueMonth || '', year: item.dueYear || '' }
+      const defendantIds = item.defendants.map(d => String(d.id))
+      return {
+        id: item.id,
+        category: item.category,
+        description: item.description,
+        dueDate,
+        defendants: defendantIds,
+        defendantNames: formatDefendantNames(defendantIds, caseDefendants),
+      }
+    }),
+  }
+}
+
+function shapeFirstHearing(review) {
+  if (!review.firstHearingDay && !review.firstHearingTime && !review.firstHearingVenue) return null
+  return {
+    hearingDate: { day: review.firstHearingDay || '', month: review.firstHearingMonth || '', year: review.firstHearingYear || '' },
+    time: review.firstHearingTime || '',
+    venue: review.firstHearingVenue || '',
+    confirmed: review.firstHearingConfirmed,
+  }
 }
 
 async function findOrCreateDocumentReview(prisma, caseReviewId, documentId) {
@@ -70,53 +129,16 @@ async function getElementAnnotations(prisma, elementId) {
   return annotationLinks.map(link => link.annotation)
 }
 
-// A live review keeps the per-charge charging decisions and the information
-// request answer in the session, but seeded in-progress reviews arrive with
-// both already made, stored on the review row (decision). Copy them into the
-// session the first time the review is opened so the task list and check
-// pages reflect the seeded state. The kit copies session data into
-// res.locals.data before the route runs, so mirror the hydrated keys there
-// too or the first render won't see them.
-function hydrateSeededReviewSession(req, res, review, charges) {
-  if (review.status !== 'in_progress' || !review.decision) return
-
-  const decisions = req.session.data.chargingDecision?.decisions || {}
-  if (charges.length && !charges.some(charge => decisions[charge.id])) {
-    req.session.data.chargingDecision = {
-      ...req.session.data.chargingDecision,
-      decisions: {
-        ...decisions,
-        ...Object.fromEntries(charges.map(charge => [charge.id, review.decision]))
-      }
-    }
-    res.locals.data.chargingDecision = req.session.data.chargingDecision
-  }
-
-  if (!req.session.data.reviewInformationRequest) {
-    req.session.data.reviewInformationRequest = { wantsInformationRequest: 'no', complete: true, items: [] }
-    res.locals.data.reviewInformationRequest = req.session.data.reviewInformationRequest
-  }
-}
-
 // Offences (charges) can be added, changed or removed after the Charging
 // decision or Strength assessment tasks have already been marked complete.
 // When that happens, the recorded per-charge decisions and element strengths
-// no longer reliably reflect the current charges, so drop decisions for
-// charges that no longer exist and reset completeness — the task list will
-// then show "In progress" or "Not started" based on what's left, rather
-// than staying "Completed".
-async function syncChargingDecisionAfterOffenceChange(prisma, req, caseId, defendantId) {
-  const userId = req.session.data.user.id
+// no longer reliably reflect the current charges, so reset completeness —
+// the task list will then show "In progress" or "Not started" based on
+// what's left, rather than staying "Completed". Decisions for charges that
+// no longer exist are pruned automatically via the DB cascade on
+// CaseReviewChargeDecision.chargeId.
+async function resetReviewCompletionAfterOffenceChange(prisma, caseId, userId) {
   const review = await findOrCreateReview(prisma, caseId, userId)
-
-  const currentCharges = await prisma.charge.findMany({ where: { defendantId }, select: { id: true } })
-  const currentChargeIds = currentCharges.map(c => c.id)
-
-  const decisions = req.session.data.chargingDecision?.decisions || {}
-  const prunedDecisions = Object.fromEntries(
-    Object.entries(decisions).filter(([chargeId]) => currentChargeIds.includes(Number(chargeId)))
-  )
-  req.session.data.chargingDecision = { ...req.session.data.chargingDecision, decisions: prunedDecisions }
 
   const resets = {}
   if (review.chargingDecisionComplete) resets.chargingDecisionComplete = false
@@ -130,10 +152,15 @@ async function syncChargingDecisionAfterOffenceChange(prisma, req, caseId, defen
 }
 
 module.exports = {
+  getReview,
+  createReview,
   findOrCreateReview,
+  findOrCreateReviewWithAnswers,
+  buildDecisionsMap,
+  shapeInformationRequest,
+  shapeFirstHearing,
   findOrCreateDocumentReview,
   getEligibleCharges,
   getElementAnnotations,
-  hydrateSeededReviewSession,
-  syncChargingDecisionAfterOffenceChange,
+  resetReviewCompletionAfterOffenceChange,
 }

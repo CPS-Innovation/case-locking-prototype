@@ -280,6 +280,7 @@ model Defendant {
   directions         Direction[]
   hearings           Hearing[]            @relation("HearingDefendants")
   informationRequestItems InformationRequestItem[]
+  caseReviewInformationRequestItems CaseReviewInformationRequestItem[]
 }
 
 model DefenceLawyer {
@@ -303,6 +304,7 @@ model Charge {
   defendantId         Int
   defendant           Defendant @relation(fields: [defendantId], references: [id])
   elements            Element[]
+  caseReviewDecisions CaseReviewChargeDecision[]
 }
 
 model Element {
@@ -432,12 +434,23 @@ model CaseReview {
   summaryComplete Boolean?
   chargingDecisionComplete Boolean?
   strengthAssessmentComplete Boolean?
-  decision  String?
+  wantsInformationRequest        String?
+  informationRequestDescription  String?
+  informationRequestSentDate     DateTime?
+  informationRequestComplete     Boolean?
+  firstHearingDay       String?
+  firstHearingMonth     String?
+  firstHearingYear      String?
+  firstHearingTime      String?
+  firstHearingVenue     String?
+  firstHearingConfirmed Boolean?
   createdAt DateTime             @default(now())
   updatedAt DateTime             @updatedAt
   case      Case                 @relation(fields: [caseId], references: [id])
   user      User                 @relation(fields: [userId], references: [id])
   documents CaseReviewDocument[]
+  chargeDecisions          CaseReviewChargeDecision[]
+  informationRequestItems  CaseReviewInformationRequestItem[]
 }
 
 model CaseReviewDocument {
@@ -495,6 +508,33 @@ model CaseReviewInadmissible {
   occurrenceIndex      Int                @default(0)
   createdAt            DateTime           @default(now())
   caseReviewDocument   CaseReviewDocument @relation(fields: [caseReviewDocumentId], references: [id])
+}
+
+model CaseReviewChargeDecision {
+  id           Int        @id @default(autoincrement())
+  caseReviewId Int
+  caseReview   CaseReview @relation(fields: [caseReviewId], references: [id], onDelete: Cascade)
+  chargeId     Int
+  charge       Charge     @relation(fields: [chargeId], references: [id], onDelete: Cascade)
+  decision     String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@unique([caseReviewId, chargeId])
+}
+
+model CaseReviewInformationRequestItem {
+  id           Int        @id @default(autoincrement())
+  caseReviewId Int
+  caseReview   CaseReview @relation(fields: [caseReviewId], references: [id], onDelete: Cascade)
+  category     String?
+  description  String     @default("")
+  dueDay       String?
+  dueMonth     String?
+  dueYear      String?
+  defendants   Defendant[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Note {

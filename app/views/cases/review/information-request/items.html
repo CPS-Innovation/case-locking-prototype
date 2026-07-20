@@ -22,7 +22,7 @@
           },
           items: [{
             text: 'Delete item',
-            href: '/cases/' + _case.id + '/review/information-request/items/' + loop.index0 + '/delete'
+            href: '/cases/' + _case.id + '/review/information-request/items/' + item.id + '/delete'
           }]
         }) }}
 
@@ -32,22 +32,22 @@
               {
                 key: { text: "Category" },
                 value: { text: item.category },
-                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "category" }] }
+                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + item.id + '/edit', text: "Change", visuallyHiddenText: "category" }] }
               },
               {
                 key: { text: "Description" },
                 value: { text: item.description },
-                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "description" }] }
+                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + item.id + '/edit', text: "Change", visuallyHiddenText: "description" }] }
               },
               {
                 key: { text: "Due date" },
-                value: { text: item.formattedDueDate },
-                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "due date" }] }
+                value: { text: item.dueDate | isoDateFromDateInput | govukDate },
+                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + item.id + '/edit', text: "Change", visuallyHiddenText: "due date" }] }
               },
               {
                 key: { text: "Defendants" },
                 value: { text: item.defendantNames or "—" },
-                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "defendants" }] }
+                actions: { items: [{ href: '/cases/' + _case.id + '/review/information-request/items/' + item.id + '/edit', text: "Change", visuallyHiddenText: "defendants" }] }
               } if _case.defendants.length > 1
             ]
           })

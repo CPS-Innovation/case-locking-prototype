@@ -52,13 +52,19 @@ module.exports = router => {
     })
     const elementIdsWithEvidence = new Set(evidenceLinks.map(link => link.elementId))
 
+    const submittedReview = await prisma.caseReview.findFirst({
+      where: { caseId: _case.id, status: 'submitted' }
+    })
+
     const charges = _case.defendants.flatMap(defendant =>
       defendant.charges.map(charge => ({
         ...charge,
         defendant,
         elements: charge.elements.map(element => ({
           ...element,
-          hasEvidence: elementIdsWithEvidence.has(element.id)
+          strength: submittedReview ? element.strength : null,
+          strengthReasoning: submittedReview ? element.strengthReasoning : null,
+          hasEvidence: submittedReview ? elementIdsWithEvidence.has(element.id) : false
         }))
       }))
     )

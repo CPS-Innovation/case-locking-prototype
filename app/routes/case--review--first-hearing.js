@@ -1,14 +1,6 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
-
-// First hearing details — start empty, CPS has to find out and enter the real details
-function buildEmptyFirstHearing() {
-  return {
-    hearingDate: { day: '', month: '', year: '' },
-    time: '',
-    venue: '',
-  }
-}
+const { findOrCreateReview, shapeFirstHearing } = require('../helpers/caseReview')
 
 function buildDateHintExample() {
   const exampleDate = new Date()
@@ -16,25 +8,33 @@ function buildDateHintExample() {
   return `${exampleDate.getDate()} ${exampleDate.getMonth() + 1} ${exampleDate.getFullYear()}`
 }
 
+const EMPTY_FIRST_HEARING = { hearingDate: { day: '', month: '', year: '' }, time: '', venue: '' }
+
 module.exports = (router) => {
   router.get('/cases/:caseId/review/first-hearing', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await prisma.case.findUnique({ where: { id: caseId } })
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
 
-    if (!req.session.data.reviewFirstHearing) {
-      req.session.data.reviewFirstHearing = buildEmptyFirstHearing()
-    }
-    res.locals.data.reviewFirstHearing = req.session.data.reviewFirstHearing
-
-    res.render('cases/review/first-hearing/index', { _case, dateHintExample: buildDateHintExample() })
+    res.render('cases/review/first-hearing/index', {
+      _case,
+      reviewFirstHearing: shapeFirstHearing(review) || EMPTY_FIRST_HEARING,
+      dateHintExample: buildDateHintExample(),
+    })
   })
 
-  router.post('/cases/:caseId/review/first-hearing', (req, res) => {
+  router.post('/cases/:caseId/review/first-hearing', async (req, res) => {
     const caseId = req.params.caseId
-    req.session.data.reviewFirstHearing = {
-      ...req.session.data.reviewFirstHearing,
-      hearingDate: req.body.reviewFirstHearing?.hearingDate,
-    }
+    const review = await findOrCreateReview(prisma, parseInt(caseId), req.session.data.user.id)
+    const hearingDate = req.body.reviewFirstHearing?.hearingDate || {}
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: {
+        firstHearingDay: hearingDate.day || null,
+        firstHearingMonth: hearingDate.month || null,
+        firstHearingYear: hearingDate.year || null,
+      },
+    })
     res.redirect(`/cases/${caseId}/review/first-hearing/time`)
   })
 
@@ -42,15 +42,20 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/first-hearing/time', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await prisma.case.findUnique({ where: { id: caseId } })
-    res.render('cases/review/first-hearing/time', { _case })
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    res.render('cases/review/first-hearing/time', {
+      _case,
+      reviewFirstHearing: shapeFirstHearing(review) || EMPTY_FIRST_HEARING,
+    })
   })
 
-  router.post('/cases/:caseId/review/first-hearing/time', (req, res) => {
+  router.post('/cases/:caseId/review/first-hearing/time', async (req, res) => {
     const caseId = req.params.caseId
-    req.session.data.reviewFirstHearing = {
-      ...req.session.data.reviewFirstHearing,
-      time: req.body.reviewFirstHearing?.time,
-    }
+    const review = await findOrCreateReview(prisma, parseInt(caseId), req.session.data.user.id)
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: { firstHearingTime: req.body.reviewFirstHearing?.time || null },
+    })
     res.redirect(`/cases/${caseId}/review/first-hearing/venue`)
   })
 
@@ -58,15 +63,20 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/first-hearing/venue', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await prisma.case.findUnique({ where: { id: caseId } })
-    res.render('cases/review/first-hearing/venue', { _case })
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    res.render('cases/review/first-hearing/venue', {
+      _case,
+      reviewFirstHearing: shapeFirstHearing(review) || EMPTY_FIRST_HEARING,
+    })
   })
 
-  router.post('/cases/:caseId/review/first-hearing/venue', (req, res) => {
+  router.post('/cases/:caseId/review/first-hearing/venue', async (req, res) => {
     const caseId = req.params.caseId
-    req.session.data.reviewFirstHearing = {
-      ...req.session.data.reviewFirstHearing,
-      venue: req.body.reviewFirstHearing?.venue,
-    }
+    const review = await findOrCreateReview(prisma, parseInt(caseId), req.session.data.user.id)
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: { firstHearingVenue: req.body.reviewFirstHearing?.venue || null },
+    })
     res.redirect(`/cases/${caseId}/review/first-hearing/check`)
   })
 
@@ -74,12 +84,20 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/first-hearing/check', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await prisma.case.findUnique({ where: { id: caseId } })
-    res.render('cases/review/first-hearing/check', { _case })
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    res.render('cases/review/first-hearing/check', {
+      _case,
+      reviewFirstHearing: shapeFirstHearing(review) || EMPTY_FIRST_HEARING,
+    })
   })
 
-  router.post('/cases/:caseId/review/first-hearing/check', (req, res) => {
+  router.post('/cases/:caseId/review/first-hearing/check', async (req, res) => {
     const caseId = req.params.caseId
-    req.session.data.reviewFirstHearing.confirmed = req.body.complete === 'yes'
+    const review = await findOrCreateReview(prisma, parseInt(caseId), req.session.data.user.id)
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: { firstHearingConfirmed: req.body.complete === 'yes' },
+    })
     res.redirect(`/cases/${caseId}/review`)
   })
 }

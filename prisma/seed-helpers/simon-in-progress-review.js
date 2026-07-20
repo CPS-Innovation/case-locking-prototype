@@ -21,9 +21,8 @@ const CASE_REFERENCE = '52SW200001';
 // submit: every document reviewed, the key material annotated with text from
 // the real documents, summary written, all elements assessed as strong and a
 // decision to charge. The charging decision and information request answer
-// live in the session during a live review, so they are stored on the review
-// row and hydrated into the session when the review is opened (see
-// hydrateSeededReviewSession in app/helpers/caseReview.js). Runs after
+// are draft state stored directly on the review row, so no session hydration
+// is needed to make the task list and check pages reflect them. Runs after
 // seedElements, so it creates its own (all strong) elements.
 async function seedSimonInProgressReview(prisma, dependencies, config) {
   const { types, complexities } = config;
@@ -106,7 +105,11 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
       summaryComplete: true,
       chargingDecisionComplete: true,
       strengthAssessmentComplete: true,
-      decision: 'Charge'
+      wantsInformationRequest: 'no',
+      informationRequestComplete: true,
+      chargeDecisions: {
+        create: { chargeId: defendant.charges[0].id, decision: 'Charge' }
+      }
     }
   });
 

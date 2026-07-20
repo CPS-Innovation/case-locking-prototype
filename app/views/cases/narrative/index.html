@@ -21,7 +21,7 @@
 
           {% set elementRows = [] %}
           {% for element in charge.elements %}
-            {% set elementRows = (elementRows.push({ key: { text: element.description }, value: { text: element.strength or 'Not assessed' } }), elementRows) %}
+            {% set elementRows = (elementRows.push({ key: { text: element.description }, value: { text: (element.strength if submittedReview else null) or 'Not assessed' } }), elementRows) %}
           {% endfor %}
 
           {% if elementRows.length %}

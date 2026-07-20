@@ -2,8 +2,14 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const statuses = require('../data/case-statuses')
 const hearingStatuses = require('../data/hearing-statuses')
-const { findOrCreateReview, getEligibleCharges, hydrateSeededReviewSession } = require('../helpers/caseReview')
-const { createInformationRequestFromSession, formatSessionDate, formatDefendantNames } = require('../helpers/informationRequest')
+const {
+  findOrCreateReviewWithAnswers,
+  getEligibleCharges,
+  buildDecisionsMap,
+  shapeInformationRequest,
+  shapeFirstHearing,
+} = require('../helpers/caseReview')
+const { createInformationRequestFromSession } = require('../helpers/informationRequest')
 
 // Material with categories (mirroring the folder structure of the source
 // material) is grouped under category headings, in the order a prosecutor
@@ -46,8 +52,7 @@ module.exports = (router) => {
 
     const { _case, eligibleDefendants, charges } = await getEligibleCharges(prisma, caseId)
 
-    const review = await findOrCreateReview(prisma, caseId, userId)
-    hydrateSeededReviewSession(req, res, review, charges)
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, userId)
 
     const documents = await prisma.document.findMany({
       where: { caseId },
@@ -64,7 +69,7 @@ module.exports = (router) => {
     const docReviewMap = {}
     documentReviews.forEach(dr => { docReviewMap[dr.documentId] = dr })
 
-    const decisions = req.session.data.chargingDecision?.decisions || {}
+    const decisions = buildDecisionsMap(review)
     const needsChargingDecision = eligibleDefendants.length > 0
     const chargingDecisionStarted = Object.keys(decisions).length > 0
     const chargingDecisionAllAnswered = needsChargingDecision && charges.every(charge => decisions[charge.id])
@@ -74,7 +79,10 @@ module.exports = (router) => {
     const strengthAssessmentStarted = allElements.some(elementAssessed)
     const strengthAssessmentAllAssessed = needsChargingDecision && allElements.length > 0 && allElements.every(elementAssessed)
 
-    res.render('cases/review/index', { _case, documentGroups, review, docReviewMap, needsChargingDecision, chargingDecisionStarted, chargingDecisionAllAnswered, strengthAssessmentStarted, strengthAssessmentAllAssessed })
+    const informationRequest = shapeInformationRequest(review, _case.defendants)
+    const reviewFirstHearing = shapeFirstHearing(review)
+
+    res.render('cases/review/index', { _case, documentGroups, review, docReviewMap, needsChargingDecision, chargingDecisionStarted, chargingDecisionAllAnswered, strengthAssessmentStarted, strengthAssessmentAllAssessed, informationRequest, reviewFirstHearing })
   })
 
   // Check page
@@ -84,8 +92,7 @@ module.exports = (router) => {
 
     const { _case, eligibleDefendants, charges } = await getEligibleCharges(prisma, caseId)
 
-    const review = await findOrCreateReview(prisma, caseId, userId)
-    hydrateSeededReviewSession(req, res, review, charges)
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, userId)
 
     const documents = await prisma.document.findMany({
       where: { caseId },
@@ -127,20 +134,13 @@ module.exports = (router) => {
       }
     })
 
-    const decisions = req.session.data.chargingDecision?.decisions || {}
+    const decisions = buildDecisionsMap(review)
     const needsChargingDecision = eligibleDefendants.length > 0
     const chargeRows = charges.map(charge => ({ ...charge, decision: decisions[charge.id] }))
     const allChargesNoFurtherAction = needsChargingDecision && charges.every(charge => decisions[charge.id] === 'Do not charge')
 
-    const reviewInformationRequest = req.session.data.reviewInformationRequest
-    const informationRequest = reviewInformationRequest && {
-      ...reviewInformationRequest,
-      items: reviewInformationRequest.items.map(item => ({
-        ...item,
-        formattedDueDate: formatSessionDate(item.dueDate),
-        defendantNames: formatDefendantNames(item.defendants, _case.defendants),
-      }))
-    }
+    const informationRequest = shapeInformationRequest(review, _case.defendants)
+    const reviewFirstHearing = shapeFirstHearing(review)
 
     res.render('cases/review/check', {
       _case,
@@ -152,6 +152,7 @@ module.exports = (router) => {
       showDefendantName: eligibleDefendants.length > 1,
       allChargesNoFurtherAction,
       informationRequest,
+      reviewFirstHearing,
     })
   })
 
@@ -159,10 +160,12 @@ module.exports = (router) => {
   router.post('/cases/:caseId/review/submit', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const userId = req.session.data.user.id
-    const decisions = req.session.data.chargingDecision?.decisions || {}
 
     const { _case, eligibleDefendants, charges } = await getEligibleCharges(prisma, caseId)
     const reviewedDefendantIds = _case.defendants.map(d => d.id)
+
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, userId)
+    const decisions = buildDecisionsMap(review)
 
     for (const charge of charges) {
       if (decisions[charge.id]) {
@@ -194,7 +197,7 @@ module.exports = (router) => {
       })
     }
 
-    const reviewFirstHearing = req.session.data.reviewFirstHearing
+    const reviewFirstHearing = shapeFirstHearing(review)
     const hasFirstHearing = (await prisma.hearing.count({
       where: { caseId, type: 'First hearing' },
     })) > 0
@@ -240,21 +243,29 @@ module.exports = (router) => {
       })
     }
 
-    const reviewInformationRequest = req.session.data.reviewInformationRequest
-    if (reviewInformationRequest?.complete && reviewInformationRequest?.wantsInformationRequest === 'yes') {
-      await createInformationRequestFromSession(prisma, caseId, reviewInformationRequest, userId)
+    const informationRequest = shapeInformationRequest(review, _case.defendants)
+    if (informationRequest?.complete && informationRequest?.wantsInformationRequest === 'yes') {
+      await createInformationRequestFromSession(prisma, caseId, informationRequest, userId)
     }
 
-    const review = await prisma.caseReview.findFirst({
-      where: { caseId, status: 'in_progress' }
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: {
+        status: 'submitted',
+        wantsInformationRequest: null,
+        informationRequestDescription: null,
+        informationRequestSentDate: null,
+        informationRequestComplete: null,
+        firstHearingDay: null,
+        firstHearingMonth: null,
+        firstHearingYear: null,
+        firstHearingTime: null,
+        firstHearingVenue: null,
+        firstHearingConfirmed: null,
+        chargeDecisions: { deleteMany: {} },
+        informationRequestItems: { deleteMany: {} },
+      },
     })
-
-    if (review) {
-      await prisma.caseReview.update({
-        where: { id: review.id },
-        data: { status: 'submitted' }
-      })
-    }
 
     await prisma.activityLog.create({
       data: {
@@ -264,17 +275,15 @@ module.exports = (router) => {
         action: 'UPDATE',
         title: 'Charging decision made',
         meta: {
-          ...req.session.data.chargingDecision,
-          caseReviewId: review?.id
+          decisions,
+          caseReviewId: review.id,
         },
         caseId,
       },
     })
 
-    const referrer = req.session.data.chargingDecision?.referrer
-    delete req.session.data.chargingDecision
-    delete req.session.data.reviewFirstHearing
-    delete req.session.data.reviewInformationRequest
+    const referrer = req.session.data.caseReviewReferrer
+    delete req.session.data.caseReviewReferrer
 
     req.flash('success', 'Review submitted')
     res.redirect(referrer || `/cases/${caseId}`)

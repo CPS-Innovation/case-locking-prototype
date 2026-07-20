@@ -246,13 +246,13 @@ async function findWalkerPoliceUnit(prisma) {
   return prisma.policeUnit.findUnique({ where: { name: 'Merseyside Police' } })
 }
 
-async function createWalkerDefendant(prisma, { hasCharge = true } = {}) {
+async function createWalkerDefendant(prisma, { hasCharge = true, firstName = 'Daniel', lastName = 'Palmer' } = {}) {
   const defenceLawyer = await findOrCreateWalkerDefenceLawyer(prisma)
 
   return prisma.defendant.create({
     data: {
-      firstName: 'Daniel',
-      lastName: 'Palmer',
+      firstName,
+      lastName,
       gender: 'Male',
       dateOfBirth: new Date('1988-03-14'),
       occupation: 'Mechanic',

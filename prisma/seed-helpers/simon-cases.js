@@ -710,12 +710,12 @@ async function createColleagueCase(prisma, prosecutor, paralegalOfficer, config)
   return _case;
 }
 
-async function createReviewCase(prisma, user, taskName, config, hasCharge = true) {
+async function createReviewCase(prisma, user, taskName, config, { hasCharge = true, firstName, lastName } = {}) {
   const { types, complexities } = config;
 
   const unitId = faker.helpers.arrayElement(SIMON_UNITS_ARRAY);
 
-  const defendant = await createWalkerDefendant(prisma, { hasCharge });
+  const defendant = await createWalkerDefendant(prisma, { hasCharge, firstName, lastName });
   const victim = await findOrCreateWalkerVictim(prisma);
   const policeUnit = await findWalkerPoliceUnit(prisma);
 
@@ -817,11 +817,13 @@ async function seedSimonCases(prisma, dependencies, config) {
   const divergedCase2 = await createDivergedCase(prisma, simonWhatley, faker.helpers.arrayElement(SIMON_UNITS_ARRAY), [statuses.NOT_CHARGED, statuses.CHARGES_PENDING, statuses.CHARGED], { ...fullConfig, charges: [SIMON_CHARGE] });
   await createVictimWitness(prisma, divergedCase2.id, fullConfig);
 
-  // Cases awaiting a charging decision (not charged, needs review)
-  await createReviewCase(prisma, simonWhatley, 'Make charging decision', fullConfig);
-  await createReviewCase(prisma, simonWhatley, 'Make charging decision', fullConfig, false);
+  // Case awaiting a charging decision (not charged, needs review) - same
+  // supporting cast as the Walker/Palmer material (victim, police witnesses,
+  // documents) but a different defendant, so it doesn't read as a duplicate
+  // of the in-progress Palmer review seeded by seedSimonInProgressReview.
+  await createReviewCase(prisma, simonWhatley, 'Make charging decision', fullConfig, { firstName: 'Marcus', lastName: 'Webb' });
 
-  return SIMON_STL_TASKS.length + SIMON_CTL_TASKS.length + 1 + 20 + 1 + 1 + 2;
+  return SIMON_STL_TASKS.length + SIMON_CTL_TASKS.length + 1 + 20 + 1 + 1 + 1;
 }
 
 module.exports = {

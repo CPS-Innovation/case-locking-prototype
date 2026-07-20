@@ -23,7 +23,7 @@
           rows: [
             {
               key: { text: "Date" },
-              value: { text: data.reviewFirstHearing.hearingDate | isoDateFromDateInput | govukDate },
+              value: { text: reviewFirstHearing.hearingDate | isoDateFromDateInput | govukDate },
               actions: {
                 items: [{
                   href: '/cases/' + _case.id + '/review/first-hearing',
@@ -34,7 +34,7 @@
             },
             {
               key: { text: "Time" },
-              value: { text: data.reviewFirstHearing.time },
+              value: { text: reviewFirstHearing.time },
               actions: {
                 items: [{
                   href: '/cases/' + _case.id + '/review/first-hearing/time',
@@ -45,7 +45,7 @@
             },
             {
               key: { text: "Venue" },
-              value: { text: data.reviewFirstHearing.venue },
+              value: { text: reviewFirstHearing.venue },
               actions: {
                 items: [{
                   href: '/cases/' + _case.id + '/review/first-hearing/venue',
@@ -68,7 +68,7 @@
                 classes: "govuk-fieldset__legend--m"
               }
             },
-            value: "yes" if data.reviewFirstHearing.confirmed == true else ("no" if data.reviewFirstHearing.confirmed == false else ""),
+            value: "yes" if reviewFirstHearing.confirmed == true else ("no" if reviewFirstHearing.confirmed == false else ""),
             items: [
               {
                 value: "yes",

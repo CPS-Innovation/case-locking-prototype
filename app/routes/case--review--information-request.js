@@ -4,11 +4,9 @@ const {
   ITEM_CATEGORIES,
   ordinal,
   buildDefendantItems,
-  formatSessionDate,
   cleanDefendantIds,
-  formatDefendantNames,
 } = require('../helpers/informationRequest')
-const { findOrCreateReview } = require('../helpers/caseReview')
+const { findOrCreateReview, findOrCreateReviewWithAnswers, shapeInformationRequest } = require('../helpers/caseReview')
 
 const ITEM_CATEGORY_RADIO_ITEMS = ITEM_CATEGORIES.map((c) => ({ value: c, text: c }))
 
@@ -32,22 +30,26 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/information-request', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await fetchCase(caseId)
-    res.render('cases/review/information-request/index', { _case })
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    res.render('cases/review/information-request/index', {
+      _case,
+      informationRequest: { wantsInformationRequest: review.wantsInformationRequest },
+    })
   })
 
   router.post('/cases/:caseId/review/information-request', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const wantsInformationRequest = req.body.wantsInformationRequest
-    req.session.data.reviewInformationRequest = {
-      ...req.session.data.reviewInformationRequest,
-      wantsInformationRequest,
-      items: req.session.data.reviewInformationRequest?.items || [],
-    }
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: { wantsInformationRequest },
+    })
+
     if (wantsInformationRequest === 'yes') {
       return res.redirect(`/cases/${caseId}/review/information-request/description`)
     }
 
-    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
     const notes = await getInformationRequestNotes(review.id)
     if (notes.length) {
       res.redirect(`/cases/${caseId}/review/information-request/notes`)
@@ -73,13 +75,16 @@ module.exports = (router) => {
 
   router.post('/cases/:caseId/review/information-request/notes', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
 
     if (req.body.notesDecision === 'add') {
-      req.session.data.reviewInformationRequest.wantsInformationRequest = 'yes'
+      await prisma.caseReview.update({
+        where: { id: review.id },
+        data: { wantsInformationRequest: 'yes' },
+      })
       return res.redirect(`/cases/${caseId}/review/information-request/description`)
     }
 
-    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
     await prisma.caseReviewAnnotation.deleteMany({
       where: { type: 'information-request', caseReviewDocument: { caseReviewId: review.id } },
     })
@@ -91,17 +96,23 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/information-request/description', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await fetchCase(caseId)
-    res.render('cases/review/information-request/description', { _case })
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    res.render('cases/review/information-request/description', {
+      _case,
+      informationRequest: { description: review.informationRequestDescription },
+    })
   })
 
-  router.post('/cases/:caseId/review/information-request/description', (req, res) => {
+  router.post('/cases/:caseId/review/information-request/description', async (req, res) => {
     const caseId = req.params.caseId
-    req.session.data.reviewInformationRequest = {
-      ...req.session.data.reviewInformationRequest,
-      description: req.body.reviewInformationRequest?.description || '',
-      sentDate: new Date().toISOString(),
-      items: req.session.data.reviewInformationRequest?.items || [],
-    }
+    const review = await findOrCreateReview(prisma, parseInt(caseId), req.session.data.user.id)
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: {
+        informationRequestDescription: req.body.reviewInformationRequest?.description || '',
+        informationRequestSentDate: new Date(),
+      },
+    })
     res.redirect(`/cases/${caseId}/review/information-request/item`)
   })
 
@@ -110,19 +121,33 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/information-request/item', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await fetchCase(caseId)
-    const items = req.session.data.reviewInformationRequest?.items || []
+    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    const itemCount = await prisma.caseReviewInformationRequestItem.count({
+      where: { caseReviewId: review.id },
+    })
     res.render('cases/review/information-request/item', {
       _case,
-      itemNumber: ordinal(items.length + 1),
+      itemNumber: ordinal(itemCount + 1),
       itemCategoryItems: ITEM_CATEGORY_RADIO_ITEMS,
       defendantItems: buildDefendantItems(_case.defendants),
     })
   })
 
-  router.post('/cases/:caseId/review/information-request/item', (req, res) => {
+  router.post('/cases/:caseId/review/information-request/item', async (req, res) => {
     const caseId = req.params.caseId
-    if (!req.session.data.reviewInformationRequest) req.session.data.reviewInformationRequest = { items: [] }
-    req.session.data.reviewInformationRequest.items.push(req.body.reviewInformationRequestItem)
+    const review = await findOrCreateReview(prisma, parseInt(caseId), req.session.data.user.id)
+    const { category, description, dueDate, defendants } = req.body.reviewInformationRequestItem
+    await prisma.caseReviewInformationRequestItem.create({
+      data: {
+        caseReviewId: review.id,
+        category: category || null,
+        description: description || '',
+        dueDay: dueDate?.day || null,
+        dueMonth: dueDate?.month || null,
+        dueYear: dueDate?.year || null,
+        defendants: { connect: cleanDefendantIds(defendants).map(id => ({ id: parseInt(id) })) },
+      },
+    })
     res.redirect(`/cases/${caseId}/review/information-request/items`)
   })
 
@@ -131,19 +156,14 @@ module.exports = (router) => {
   router.get('/cases/:caseId/review/information-request/items', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await fetchCase(caseId)
-    const items = req.session.data.reviewInformationRequest?.items || []
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, req.session.data.user.id)
+    const draft = shapeInformationRequest(review, _case.defendants)
 
-    if (items.length === 0) {
+    if (!draft || draft.items.length === 0) {
       return res.redirect(`/cases/${caseId}/review/information-request/item`)
     }
 
-    const formattedItems = items.map((item) => ({
-      ...item,
-      formattedDueDate: formatSessionDate(item.dueDate),
-      defendantNames: formatDefendantNames(item.defendants, _case.defendants),
-    }))
-
-    res.render('cases/review/information-request/items', { _case, items: formattedItems })
+    res.render('cases/review/information-request/items', { _case, items: draft.items })
   })
 
   router.post('/cases/:caseId/review/information-request/items', (req, res) => {
@@ -157,35 +177,50 @@ module.exports = (router) => {
 
   // ─── Edit item ──────────────────────────────────────────────────────────────
 
-  router.get('/cases/:caseId/review/information-request/items/:index/edit', async (req, res) => {
+  router.get('/cases/:caseId/review/information-request/items/:itemId/edit', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
-    const index = parseInt(req.params.index)
+    const itemId = parseInt(req.params.itemId)
     const _case = await fetchCase(caseId)
-    const item = req.session.data.reviewInformationRequest.items[index]
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, req.session.data.user.id)
+    const draft = shapeInformationRequest(review, _case.defendants)
+    const itemIndex = draft.items.findIndex(item => item.id === itemId)
+    const item = draft.items[itemIndex]
+
     res.render('cases/review/information-request/item-edit', {
       _case,
       item,
-      index,
-      itemNumber: ordinal(index + 1),
+      itemId,
+      itemNumber: ordinal(itemIndex + 1),
       itemCategoryItems: ITEM_CATEGORY_RADIO_ITEMS,
       defendantItems: buildDefendantItems(_case.defendants),
-      selectedDefendantIds: cleanDefendantIds(item.defendants),
+      selectedDefendantIds: item.defendants,
     })
   })
 
-  router.post('/cases/:caseId/review/information-request/items/:index/edit', (req, res) => {
+  router.post('/cases/:caseId/review/information-request/items/:itemId/edit', async (req, res) => {
     const caseId = req.params.caseId
-    const index = parseInt(req.params.index)
-    req.session.data.reviewInformationRequest.items[index] = req.body.reviewInformationRequestItem
+    const itemId = parseInt(req.params.itemId)
+    const { category, description, dueDate, defendants } = req.body.reviewInformationRequestItem
+    await prisma.caseReviewInformationRequestItem.update({
+      where: { id: itemId },
+      data: {
+        category: category || null,
+        description: description || '',
+        dueDay: dueDate?.day || null,
+        dueMonth: dueDate?.month || null,
+        dueYear: dueDate?.year || null,
+        defendants: { set: cleanDefendantIds(defendants).map(id => ({ id: parseInt(id) })) },
+      },
+    })
     res.redirect(`/cases/${caseId}/review/information-request/items`)
   })
 
   // ─── Delete item ────────────────────────────────────────────────────────────
 
-  router.get('/cases/:caseId/review/information-request/items/:index/delete', (req, res) => {
+  router.get('/cases/:caseId/review/information-request/items/:itemId/delete', async (req, res) => {
     const caseId = req.params.caseId
-    const index = parseInt(req.params.index)
-    req.session.data.reviewInformationRequest.items.splice(index, 1)
+    const itemId = parseInt(req.params.itemId)
+    await prisma.caseReviewInformationRequestItem.delete({ where: { id: itemId } })
     res.redirect(`/cases/${caseId}/review/information-request/items`)
   })
 
@@ -195,32 +230,31 @@ module.exports = (router) => {
 
   router.get('/cases/:caseId/review/information-request/check', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
-    const sessionData = req.session.data.reviewInformationRequest
+    const _case = await fetchCase(caseId)
+    const review = await findOrCreateReviewWithAnswers(prisma, caseId, req.session.data.user.id)
+    const draft = shapeInformationRequest(review, _case.defendants)
 
-    if (!sessionData) {
+    if (!draft) {
       return res.redirect(`/cases/${caseId}/review/information-request`)
     }
 
-    const _case = await fetchCase(caseId)
-
-    const formattedSentDate = new Date(sessionData.sentDate)
-      .toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-
-    const formattedItems = sessionData.items.map((item) => ({
-      ...item,
-      formattedDueDate: formatSessionDate(item.dueDate),
-      defendantNames: formatDefendantNames(item.defendants, _case.defendants),
-    }))
+    const formattedSentDate = draft.sentDate
+      ? new Date(draft.sentDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+      : ''
 
     res.render('cases/review/information-request/check', {
       _case,
-      informationRequest: { ...sessionData, formattedSentDate, items: formattedItems },
+      informationRequest: { ...draft, formattedSentDate },
     })
   })
 
-  router.post('/cases/:caseId/review/information-request/check', (req, res) => {
+  router.post('/cases/:caseId/review/information-request/check', async (req, res) => {
     const caseId = req.params.caseId
-    req.session.data.reviewInformationRequest.complete = req.body.complete === 'yes'
+    const review = await findOrCreateReview(prisma, parseInt(caseId), req.session.data.user.id)
+    await prisma.caseReview.update({
+      where: { id: review.id },
+      data: { informationRequestComplete: req.body.complete === 'yes' },
+    })
     res.redirect(`/cases/${caseId}/review`)
   })
 }

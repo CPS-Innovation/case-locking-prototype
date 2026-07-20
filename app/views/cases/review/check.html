@@ -192,7 +192,7 @@
             {
               key: { text: "Do you want to request information?" },
               value: {
-                text: "Yes" if (data.reviewInformationRequest and data.reviewInformationRequest.wantsInformationRequest == "yes") else "No"
+                text: "Yes" if (informationRequest and informationRequest.wantsInformationRequest == "yes") else "No"
               },
               actions: {
                 items: [{
@@ -206,7 +206,7 @@
         })
       }}
 
-      {% if data.reviewInformationRequest and data.reviewInformationRequest.wantsInformationRequest == "yes" %}
+      {% if informationRequest and informationRequest.wantsInformationRequest == "yes" %}
         {{
           govukSummaryList({
             classes: "govuk-!-margin-bottom-4",
@@ -214,7 +214,7 @@
               {
                 key: { text: "Title" },
                 value: {
-                  text: data.reviewInformationRequest.description or "Not provided"
+                  text: informationRequest.description or "Not provided"
                 },
                 actions: {
                   items: [{
@@ -237,22 +237,22 @@
                 {
                   key: { text: "Category" },
                   value: { text: item.category },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "category for item " + loop.index }] }
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "category for item " + loop.index }] }
                 },
                 {
                   key: { text: "Description" },
                   value: { text: item.description },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "description for item " + loop.index }] }
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "description for item " + loop.index }] }
                 },
                 {
                   key: { text: "Due date" },
-                  value: { text: item.formattedDueDate },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "due date for item " + loop.index }] }
+                  value: { text: item.dueDate | isoDateFromDateInput | govukDate },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "due date for item " + loop.index }] }
                 },
                 {
                   key: { text: "Defendants" },
                   value: { text: item.defendantNames or "—" },
-                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "defendants for item " + loop.index }] }
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "defendants for item " + loop.index }] }
                 } if _case.defendants.length > 1
               ]
             })
@@ -323,7 +323,7 @@
               {
                 key: { text: "First hearing" },
                 value: {
-                  text: (data.reviewFirstHearing.hearingDate | isoDateFromDateInput | govukDate) + ", " + data.reviewFirstHearing.time + ", " + data.reviewFirstHearing.venue if (data.reviewFirstHearing and data.reviewFirstHearing.confirmed) else "Not provided"
+                  text: (reviewFirstHearing.hearingDate | isoDateFromDateInput | govukDate) + ", " + reviewFirstHearing.time + ", " + reviewFirstHearing.venue if (reviewFirstHearing and reviewFirstHearing.confirmed) else "Not provided"
                 },
                 actions: {
                   items: [{
@@ -350,7 +350,7 @@
 
           <p>We’ll send your charging decision to the police.</p>
 
-          {% if data.reviewInformationRequest and data.reviewInformationRequest.wantsInformationRequest == "yes" %}
+          {% if informationRequest and informationRequest.wantsInformationRequest == "yes" %}
             <p>We’ll also send your requests for more information.</p>
           {% endif %}
 

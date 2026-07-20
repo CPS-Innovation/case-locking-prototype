@@ -2,7 +2,7 @@ const _ = require('lodash')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
-const { findOrCreateReview, findOrCreateDocumentReview, getElementAnnotations, syncChargingDecisionAfterOffenceChange } = require('../helpers/caseReview')
+const { findOrCreateReview, findOrCreateDocumentReview, getElementAnnotations, resetReviewCompletionAfterOffenceChange } = require('../helpers/caseReview')
 const charges = require('../data/charges')
 const elementsByChargeCode = require('../data/elements')
 
@@ -356,7 +356,7 @@ module.exports = (router) => {
       })
     }
 
-    await syncChargingDecisionAfterOffenceChange(prisma, req, caseId, defendant.id)
+    await resetReviewCompletionAfterOffenceChange(prisma, caseId, userId)
 
     delete req.session.data.addOffence
 
@@ -467,7 +467,7 @@ module.exports = (router) => {
       })
     }
 
-    await syncChargingDecisionAfterOffenceChange(prisma, req, caseId, defendant.id)
+    await resetReviewCompletionAfterOffenceChange(prisma, caseId, userId)
 
     delete req.session.data.changeOffence
 
@@ -533,7 +533,7 @@ module.exports = (router) => {
       }
     })
 
-    await syncChargingDecisionAfterOffenceChange(prisma, req, caseId, charge.defendantId)
+    await resetReviewCompletionAfterOffenceChange(prisma, caseId, userId)
 
     res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
   })
