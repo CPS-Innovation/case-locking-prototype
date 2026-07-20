@@ -417,6 +417,7 @@ model Document {
   description     String?
   type            String
   size            Int
+  category        String?
   case            Case                 @relation(fields: [caseId], references: [id])
   caseId          Int
   reviewDocuments CaseReviewDocument[]

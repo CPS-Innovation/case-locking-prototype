@@ -1,36 +1,32 @@
 const { faker } = require('@faker-js/faker');
-const statuses = require('../../app/data/case-statuses');
 const elementsByChargeCode = require('../../app/data/elements');
-const { generateDocumentsData } = require('./documents');
 const { createDirectionsForCase } = require('./directions');
-const { createVictimWitness, SIMON_UNITS } = require('./simon-cases');
-const { buildCandidates, findParagraphOccurrence } = require('./case-review-annotations');
+const { SIMON_UNITS } = require('./simon-cases');
+const { findParagraphOccurrence } = require('./case-review-annotations');
+const {
+  WALKER_LOCATION,
+  WALKER_ELEMENT_REASONINGS,
+  WALKER_REVIEW_SUMMARY,
+  WALKER_ANNOTATIONS,
+  findOrCreateWalkerVictim,
+  findWalkerPoliceUnit,
+  createWalkerDefendant,
+  createWalkerWitnesses,
+  createWalkerDocuments
+} = require('./walker-case');
 
-// A single ABH charge so the elements, annotations and document content
-// (the push against the shop window and the resulting injuries) all tell
-// the same story.
-const CHARGE_CODE = 'A02';
 const CASE_REFERENCE = '52SW200001';
 
-const REVIEW_SUMMARY = 'Reviewed all material on the case file. The witness accounts are consistent and corroborated by CCTV footage, forensic findings and the medical report. Each element of the offence is made out and there is a realistic prospect of conviction. Prosecution is required in the public interest given the seriousness of the offence and its impact on the victim.';
-
-// One reasoning per A02 element, in element order.
-const ELEMENT_REASONINGS = [
-  'The witness account and CCTV footage both show the defendant pushing the victim against the shop window.',
-  'The medical report records injuries consistent with the victim falling against the shop window.',
-  'The CCTV footage shows a deliberate push, and injury was a foreseeable result of the force used.'
-];
-
-// Simon has a review that is all but ready to submit: every document
-// reviewed (all but one annotated), summary written, all elements assessed
-// as strong and a decision to charge. The charging decision and information request
-// answer live in the session during a live review, so they are stored on the
-// review row and hydrated into the session when the review is opened (see
+// Simon has a review of the R v Joseph Walker case that is all but ready to
+// submit: every document reviewed, the key material annotated with text from
+// the real documents, summary written, all elements assessed as strong and a
+// decision to charge. The charging decision and information request answer
+// live in the session during a live review, so they are stored on the review
+// row and hydrated into the session when the review is opened (see
 // hydrateSeededReviewSession in app/helpers/caseReview.js). Runs after
 // seedElements, so it creates its own (all strong) elements.
 async function seedSimonInProgressReview(prisma, dependencies, config) {
-  const { defenceLawyers, victims, policeUnits } = dependencies;
-  const { charges, firstNames, lastNames, types, complexities, ukCities, documentNames, documentTypes } = config;
+  const { types, complexities } = config;
 
   const simonWhatley = await prisma.user.findFirst({
     where: { firstName: 'Simon', lastName: 'Whatley' }
@@ -41,34 +37,9 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
     return 0;
   }
 
-  const abhCharge = charges.find(charge => charge.code === CHARGE_CODE);
-
-  const defendant = await prisma.defendant.create({
-    data: {
-      firstName: faker.helpers.arrayElement(firstNames),
-      lastName: faker.helpers.arrayElement(lastNames),
-      gender: faker.helpers.arrayElement(['Male', 'Female', 'Unknown']),
-      dateOfBirth: faker.date.birthdate({ min: 18, max: 75, mode: 'age' }),
-      remandStatus: null,
-      status: statuses.NOT_CHARGED,
-      needsReview: true,
-      defenceLawyer: { connect: { id: faker.helpers.arrayElement(defenceLawyers).id } },
-      charges: {
-        create: {
-          chargeCode: abhCharge.code,
-          description: abhCharge.description,
-          status: 'Pre-charge',
-          offenceDate: faker.date.past(),
-          plea: null,
-          isCount: false
-        }
-      }
-    },
-    include: { charges: true }
-  });
-
-  const victimIds = faker.helpers.arrayElements(victims, faker.number.int({ min: 1, max: 2 })).map(v => ({ id: v.id }));
-  const documentsData = generateDocumentsData(documentNames, documentTypes, 5);
+  const defendant = await createWalkerDefendant(prisma);
+  const victim = await findOrCreateWalkerVictim(prisma);
+  const policeUnit = await findWalkerPoliceUnit(prisma);
 
   const _case = await prisma.case.create({
     data: {
@@ -76,25 +47,14 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
       type: faker.helpers.arrayElement(types),
       complexity: faker.helpers.arrayElement(complexities),
       unit: { connect: { id: SIMON_UNITS.NORTH_YORKSHIRE_MAGISTRATES_COURT } },
-      policeUnit: { connect: { id: faker.helpers.arrayElement(policeUnits).id } },
+      policeUnit: { connect: { id: policeUnit.id } },
       defendants: { connect: { id: defendant.id } },
-      victims: { connect: victimIds },
-      location: {
-        create: {
-          name: faker.company.name(),
-          line1: faker.location.streetAddress(),
-          line2: faker.location.secondaryAddress(),
-          town: faker.helpers.arrayElement(ukCities),
-          postcode: faker.location.zipCode('WD# #SF'),
-        },
-      },
-      documents: {
-        createMany: {
-          data: documentsData,
-        },
-      },
+      victims: { connect: { id: victim.id } },
+      location: { create: WALKER_LOCATION }
     }
   });
+
+  await createWalkerDocuments(prisma, _case.id);
 
   await prisma.caseProsecutor.create({
     data: {
@@ -120,10 +80,10 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
   });
 
   await createDirectionsForCase(prisma, _case.id, defendant.id, faker.number.int({ min: 1, max: 3 }));
-  await createVictimWitness(prisma, _case.id, config);
+  await createWalkerWitnesses(prisma, _case.id);
 
   const elements = [];
-  const elementDescriptions = elementsByChargeCode[abhCharge.code];
+  const elementDescriptions = elementsByChargeCode[defendant.charges[0].chargeCode];
   for (const [index, description] of elementDescriptions.entries()) {
     const element = await prisma.element.create({
       data: {
@@ -131,7 +91,7 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
         description,
         order: index,
         strength: 'Strong',
-        strengthReasoning: ELEMENT_REASONINGS[index]
+        strengthReasoning: WALKER_ELEMENT_REASONINGS[index]
       }
     });
     elements.push(element);
@@ -142,7 +102,7 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
       caseId: _case.id,
       userId: simonWhatley.id,
       status: 'in_progress',
-      summary: REVIEW_SUMMARY,
+      summary: WALKER_REVIEW_SUMMARY,
       summaryComplete: true,
       chargingDecisionComplete: true,
       strengthAssessmentComplete: true,
@@ -152,20 +112,17 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
 
   const documents = await prisma.document.findMany({ where: { caseId: _case.id } });
 
-  for (const [index, document] of documents.entries()) {
+  for (const document of documents) {
     const docReview = await prisma.caseReviewDocument.create({
       data: { caseReviewId: review.id, documentId: document.id, status: 'reviewed' }
     });
 
-    // Leave one document reviewed but unannotated
-    if (index === documents.length - 1) continue;
-
     // No information-request annotations - the review answers no to the
     // information request question.
-    const candidates = buildCandidates(document).filter(snippet => snippet.type !== 'information-request');
+    const annotations = WALKER_ANNOTATIONS.filter(annotation => annotation.documentName === document.name);
 
-    for (const snippet of candidates) {
-      const element = snippet.type === 'evidence' ? faker.helpers.arrayElement(elements) : null;
+    for (const snippet of annotations) {
+      const element = snippet.elementIndex != null ? elements[snippet.elementIndex] : null;
       const { paragraphIndex, occurrenceIndex } = findParagraphOccurrence(document, snippet.selectedText);
 
       const annotation = await prisma.caseReviewAnnotation.create({

@@ -4,7 +4,7 @@ const prisma = new PrismaClient()
 const documentTypes = require('../data/document-types')
 const { addTimeLimitDates } = require('../helpers/timeLimit')
 const { addCaseStatus } = require('../helpers/caseStatus')
-const { generateDocumentContent } = require('../helpers/documentContent')
+const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
 
 function deriveDocumentType(filename) {
   return (filename || '').split('.').pop().toUpperCase()
@@ -250,7 +250,7 @@ module.exports = router => {
       isPhoto,
       videoUrl: isVideo ? '/public/videos/cctv-placeholder.mp4' : null,
       audioUrl: isAudio ? '/public/audio/999-call-placeholder.mp3' : null,
-      photoUrl: isPhoto ? '/public/images/evidence-photo-placeholder.jpg' : null,
+      photoUrls: isPhoto ? getDocumentPhotoUrls(document) : null,
       user: req.session.data.user
     })
   })

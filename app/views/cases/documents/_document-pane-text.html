@@ -7,7 +7,9 @@
       data-document-id="{{ documentId }}"
     >
       {% for section in sections %}
-        <h2 class="app-document__section-heading">{{ section.heading }}</h2>
+        {% if section.heading %}
+          <h2 class="app-document__section-heading">{{ section.heading }}</h2>
+        {% endif %}
         {% for paragraph in section.paragraphs %}
           <p class="app-document__paragraph">{{ paragraph | safe }}</p>
         {% endfor %}

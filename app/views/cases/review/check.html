@@ -13,128 +13,154 @@
       <span class="govuk-caption-l">{{ _case.reference }}</span>
       <h1 class="govuk-heading-l">{{ pageName }}</h1>
 
-      <h2 class="govuk-heading-m">Material</h2>
+      {% for group in documentGroups %}
+        {% if group.heading %}
+          <h2 class="govuk-heading-m {% if not loop.first %}govuk-!-margin-top-6{% endif %}">
+            {{ group.heading }}
+          </h2>
+        {% endif %}
 
-      {% for document in documents %}
-        {% set docReview = docReviewMap[document.id] %}
-        {% set items = docReview.items if docReview else [] %}
+        {% for document in group.documents %}
+          {% set docReview = docReviewMap[document.id] %}
+          {% set items = docReview.items if docReview else [] %}
 
-        <h3 class="govuk-heading-s govuk-!-margin-bottom-2">{{ document.name }}</h3>
+          <h3 class="govuk-heading-s govuk-!-margin-bottom-2">
+            {{ document.name }}
+            {% if docReview.hasEvidence %}
+              {{
+                govukTag({
+                  text: "Will be shared",
+                  classes: 'govuk-!-margin-top-1'
+                })
+              }}
+            {% else %}
+              {{
+                govukTag({
+                  text: "Will not be shared",
+                  classes: 'govuk-tag--grey govuk-!-margin-top-1'
+                })
+              }}
+            {% endif %}
+          </h3>
 
-        {% if items.length %}
-          <div class="govuk-!-margin-bottom-6">
-            {% for item in items %}
-              {% if item.kind == 'redaction' %}
-                {% set typeLabel = 'Redaction' %}
-                {% set typeColour = 'red' %}
-              {% elif item.kind == 'inadmissible' %}
-                {% set typeLabel = 'Inadmissible' %}
-                {% set typeColour = 'grey' %}
-              {% elif item.type == 'evidence' %}
-                {% set typeLabel = 'Evidence' %}
-                {% set typeColour = 'blue' %}
-              {% elif item.type == 'disclosure' %}
-                {% set typeLabel = 'Disclosure' %}
-                {% set typeColour = 'purple' %}
-              {% elif item.type == 'note' %}
-                {% set typeLabel = 'Note' %}
-                {% set typeColour = 'yellow' %}
-              {% else %}
-                {% set typeLabel = 'Information request note' %}
-                {% set typeColour = 'orange' %}
-              {% endif %}
-              <div class="app-review-annotation-card app-review-annotation-card--{{ typeColour }}">
+          {% if items.length %}
+            <div class="govuk-!-margin-bottom-6">
+              {% for item in items %}
+                {% if item.kind == 'redaction' %}
+                  {% set typeLabel = 'Redaction' %}
+                  {% set typeColour = 'red' %}
+                {% elif item.kind == 'inadmissible' %}
+                  {% set typeLabel = 'Inadmissible' %}
+                  {% set typeColour = 'grey' %}
+                {% elif item.type == 'evidence' %}
+                  {% set typeLabel = 'Evidence' %}
+                  {% set typeColour = 'blue' %}
+                {% elif item.type == 'disclosure' %}
+                  {% set typeLabel = 'Disclosure' %}
+                  {% set typeColour = 'purple' %}
+                {% elif item.type == 'note' %}
+                  {% set typeLabel = 'Note' %}
+                  {% set typeColour = 'yellow' %}
+                {% else %}
+                  {% set typeLabel = 'Information request note' %}
+                  {% set typeColour = 'orange' %}
+                {% endif %}
                 <div
-                  class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
+                  class="app-review-annotation-card app-review-annotation-card--{{ typeColour }}"
                 >
-                  <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
-                  <p class="govuk-!-margin-bottom-0">
-                    <a
-                      href="/cases/{{ _case.id }}/review/documents/{{ document.id }}{{ '#annotation-' + item.id if item.kind == 'annotation' }}"
-                      class="govuk-link govuk-link--no-visited-state"
-                    >
-                      Change
-                      <span class="govuk-visually-hidden">
-                        {{ typeLabel | lower }}{{ ' annotation' if item.kind == 'annotation' }}
-                      </span>
-                    </a>
-                    {% if item.kind == 'annotation' %}
+                  <div
+                    class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
+                  >
+                    <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
+                    <p class="govuk-!-margin-bottom-0">
                       <a
-                        href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/annotations/{{ item.id }}/delete?from=check"
-                        class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
+                        href="/cases/{{ _case.id }}/review/documents/{{ document.id }}{{ '#annotation-' + item.id if item.kind == 'annotation' }}"
+                        class="govuk-link govuk-link--no-visited-state"
                       >
-                        Delete
+                        Change
                         <span class="govuk-visually-hidden">
-                          {{ typeLabel | lower }} annotation
+                          {{ typeLabel | lower }}{{ ' annotation' if item.kind == 'annotation' }}
                         </span>
                       </a>
-                    {% endif %}
-                  </p>
-                </div>
-                <div class="app-review-annotation-card__body">
-                  {% if item.kind != 'annotation' %}
-                    <p class="govuk-!-margin-bottom-0">‘{{ item.selectedText | truncate(80) }}’</p>
-                  {% else %}
-                    {% if item.selectedText == 'Whole photo' %}
-                      <img
-                        src="/public/images/evidence-photo-placeholder.jpg"
-                        alt="{{ document.name }}"
-                        class="app-review-annotation-card__photo"
-                      />
+                      {% if item.kind == 'annotation' %}
+                        <a
+                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/annotations/{{ item.id }}/delete?from=check"
+                          class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
+                        >
+                          Delete
+                          <span class="govuk-visually-hidden">
+                            {{ typeLabel | lower }} annotation
+                          </span>
+                        </a>
+                      {% endif %}
+                    </p>
+                  </div>
+                  <div class="app-review-annotation-card__body">
+                    {% if item.kind != 'annotation' %}
+                      <p class="govuk-!-margin-bottom-0">
+                        ‘{{ item.selectedText | truncate(80) }}’
+                      </p>
                     {% else %}
-                      {% if item.timestampSeconds != null %}
-                        {% if document.type == 'MP3' %}
-                          <audio
-                            src="/public/audio/999-call-placeholder.mp3#t={{ item.timestampSeconds }}"
-                            class="app-review-annotation-card__audio"
-                            controls
-                          ></audio>
-                        {% else %}
-                          <video
-                            src="/public/videos/cctv-placeholder.mp4#t={{ item.timestampSeconds }}"
-                            class="app-review-annotation-card__video"
-                            controls
-                          ></video>
-                        {% endif %}
-                        <p class="app-review-annotation-card__label">Timestamp</p>
-                        <p>{{ item.selectedText }}</p>
+                      {% if item.selectedText == 'Whole photo' %}
+                        <img
+                          src="{{ document.name | documentPhotoUrl }}"
+                          alt="{{ document.name }}"
+                          class="app-review-annotation-card__photo"
+                        />
                       {% else %}
-                        <p>‘{{ item.selectedText | truncate(80) }}’</p>
+                        {% if item.timestampSeconds != null %}
+                          {% if document.type == 'MP3' %}
+                            <audio
+                              src="/public/audio/999-call-placeholder.mp3#t={{ item.timestampSeconds }}"
+                              class="app-review-annotation-card__audio"
+                              controls
+                            ></audio>
+                          {% else %}
+                            <video
+                              src="/public/videos/cctv-placeholder.mp4#t={{ item.timestampSeconds }}"
+                              class="app-review-annotation-card__video"
+                              controls
+                            ></video>
+                          {% endif %}
+                          <p class="app-review-annotation-card__label">Timestamp</p>
+                          <p>{{ item.selectedText }}</p>
+                        {% else %}
+                          <p>‘{{ item.selectedText | truncate(80) }}’</p>
+                        {% endif %}
+                      {% endif %}
+
+                      {% if item.elements.length %}
+                        {% for link in item.elements %}
+                          <p class="app-review-annotation-card__label">
+                            {{ link.element.description }}
+                          </p>
+                          <p class="govuk-!-margin-bottom-0">{{ link.reasoning }}</p>
+                          <p
+                            class="govuk-!-font-size-16 govuk-!-margin-top-3 govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}"
+                          >
+                            {{ link.element.charge.description }}
+                          </p>
+                        {% endfor %}
+                      {% else %}
+                        <p class="app-review-annotation-card__label">Note</p>
+                        <p class="govuk-!-margin-bottom-0">{{ item.note }}</p>
                       {% endif %}
                     {% endif %}
-
-                    {% if item.elements.length %}
-                      {% for link in item.elements %}
-                        <p class="app-review-annotation-card__label">
-                          {{ link.element.description }}
-                        </p>
-                        <p class="govuk-!-margin-bottom-0">{{ link.reasoning }}</p>
-                        <p
-                          class="govuk-!-font-size-16 govuk-!-margin-top-3 govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}"
-                        >
-                          {{ link.element.charge.description }}
-                        </p>
-                      {% endfor %}
-                    {% else %}
-                      <p class="app-review-annotation-card__label">Note</p>
-                      <p class="govuk-!-margin-bottom-0">{{ item.note }}</p>
-                    {% endif %}
-                  {% endif %}
+                  </div>
                 </div>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          <p class="govuk-!-margin-bottom-1">No annotations - will not be shared.</p>
-          <p class="govuk-!-margin-bottom-7">
-            <a
-              href="/cases/{{ _case.id }}/review/documents/{{ document.id }}"
-              class="govuk-link govuk-link--no-visited-state"
-            >
-              Add annotation
-            </a>
-          </p>
-        {% endif %}
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="govuk-!-margin-bottom-7">
+              <a
+                href="/cases/{{ _case.id }}/review/documents/{{ document.id }}"
+                class="govuk-link govuk-link--no-visited-state"
+              >
+                Add annotation
+              </a>
+            </p>
+          {% endif %}
+        {% endfor %}
       {% endfor %}
 
       <h2 class="govuk-heading-m govuk-!-margin-top-6">Summary of review</h2>
@@ -322,16 +348,18 @@
         {% else %}
           <h2 class="govuk-heading-m govuk-!-margin-top-5">When you submit this review</h2>
 
-          <p>We’ll send the suggested charges to the police.</p>
+          <p>We’ll send your charging decision to the police.</p>
 
           {% if data.reviewInformationRequest and data.reviewInformationRequest.wantsInformationRequest == "yes" %}
             <p>We’ll also send your requests for more information.</p>
           {% endif %}
 
           <p>
-            If the police charge the defendant with your suggested charges, we’ll share all material
-            which has evidence connected to the charges or is required for disclosure.
+            If the police charges match your charging decision, we’ll share all material which has
+            evidence connected to the charges.
           </p>
+
+          <p>We’ll always share the police report and previous convictions.</p>
 
           <p>We’ll share the material with:</p>
 

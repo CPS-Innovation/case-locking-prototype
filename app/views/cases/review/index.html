@@ -14,36 +14,40 @@
       <span class="govuk-caption-l">{{ _case.reference }}</span>
       <h1 class="govuk-heading-l">{{ pageName }}</h1>
 
-      <h2 class="govuk-heading-m">Material</h2>
-
-      {% set documentItems = [] %}
-      {% for document in documents %}
-        {% set docReview = docReviewMap[document.id] %}
-        {% set annotations = docReview.annotations if docReview else [] %}
-
-        {% if docReview and docReview.status == 'reviewed' %}
-          {% set docStatus = { text: "Completed" } %}
-        {% elif (docReview and docReview.status == 'in_progress') or annotations.length %}
-          {% set docStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
-        {% else %}
-          {% set docStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+      {% for group in documentGroups %}
+        {% if group.heading %}
+          <h2 class="govuk-heading-m{% if not loop.first %} govuk-!-margin-top-6{% endif %}">{{ group.heading }}</h2>
         {% endif %}
 
-        {%
-          set documentItems = documentItems.concat([{
-            title: { text: document.name },
-            href: "/cases/" + _case.id + "/review/documents/" + document.id,
-            status: docStatus
-          }])
-        %}
-      {% endfor %}
+        {% set documentItems = [] %}
+        {% for document in group.documents %}
+          {% set docReview = docReviewMap[document.id] %}
+          {% set annotations = docReview.annotations if docReview else [] %}
 
-      {{
-        govukTaskList({
-          idPrefix: "review-documents",
-          items: documentItems
-        })
-      }}
+          {% if docReview and docReview.status == 'reviewed' %}
+            {% set docStatus = { text: "Completed" } %}
+          {% elif (docReview and docReview.status == 'in_progress') or annotations.length %}
+            {% set docStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
+          {% else %}
+            {% set docStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+          {% endif %}
+
+          {%
+            set documentItems = documentItems.concat([{
+              title: { text: document.name },
+              href: "/cases/" + _case.id + "/review/documents/" + document.id,
+              status: docStatus
+            }])
+          %}
+        {% endfor %}
+
+        {{
+          govukTaskList({
+            idPrefix: "review-documents-" + loop.index,
+            items: documentItems
+          })
+        }}
+      {% endfor %}
 
       <h2 class="govuk-heading-m govuk-!-margin-top-4">Additional information</h2>
 

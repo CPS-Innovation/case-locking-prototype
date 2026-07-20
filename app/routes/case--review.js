@@ -5,6 +5,25 @@ const hearingStatuses = require('../data/hearing-statuses')
 const { findOrCreateReview, getEligibleCharges, hydrateSeededReviewSession } = require('../helpers/caseReview')
 const { createInformationRequestFromSession, formatSessionDate, formatDefendantNames } = require('../helpers/informationRequest')
 
+// Material with categories (mirroring the folder structure of the source
+// material) is grouped under category headings, in the order a prosecutor
+// would work through it. Uncategorised material renders as a single flat list.
+function groupDocumentsByCategory(documents) {
+  const categoryOrder = ['Police report', 'Witness statements', 'Exhibits', 'Previous convictions', 'Other material']
+  const categorised = documents.filter(document => document.category)
+  const uncategorised = documents.filter(document => !document.category)
+
+  const groups = categoryOrder
+    .map(category => ({ heading: category, documents: categorised.filter(document => document.category === category) }))
+    .filter(group => group.documents.length)
+
+  if (uncategorised.length) {
+    groups.push({ heading: groups.length ? 'Other material' : 'Material', documents: uncategorised })
+  }
+
+  return groups
+}
+
 function parseHearingTime(time) {
   const match = String(time || '').trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i)
   if (!match) return { hour: 10, minute: 0 }
@@ -35,6 +54,8 @@ module.exports = (router) => {
       orderBy: { id: 'asc' }
     })
 
+    const documentGroups = groupDocumentsByCategory(documents)
+
     const documentReviews = await prisma.caseReviewDocument.findMany({
       where: { caseReviewId: review.id },
       include: { annotations: { orderBy: { createdAt: 'asc' } } }
@@ -53,7 +74,7 @@ module.exports = (router) => {
     const strengthAssessmentStarted = allElements.some(elementAssessed)
     const strengthAssessmentAllAssessed = needsChargingDecision && allElements.length > 0 && allElements.every(elementAssessed)
 
-    res.render('cases/review/index', { _case, documents, review, docReviewMap, needsChargingDecision, chargingDecisionStarted, chargingDecisionAllAnswered, strengthAssessmentStarted, strengthAssessmentAllAssessed })
+    res.render('cases/review/index', { _case, documentGroups, review, docReviewMap, needsChargingDecision, chargingDecisionStarted, chargingDecisionAllAnswered, strengthAssessmentStarted, strengthAssessmentAllAssessed })
   })
 
   // Check page
@@ -70,6 +91,8 @@ module.exports = (router) => {
       where: { caseId },
       orderBy: { id: 'asc' }
     })
+
+    const documentGroups = groupDocumentsByCategory(documents)
 
     const documentReviews = await prisma.caseReviewDocument.findMany({
       where: { caseReviewId: review.id },
@@ -97,7 +120,11 @@ module.exports = (router) => {
         ...dr.redactions.map(redaction => ({ ...redaction, kind: 'redaction' })),
         ...dr.inadmissibles.map(inadmissible => ({ ...inadmissible, kind: 'inadmissible' }))
       ].sort(byDocumentPosition)
-      docReviewMap[dr.documentId] = { ...dr, items }
+      docReviewMap[dr.documentId] = {
+        ...dr,
+        items,
+        hasEvidence: dr.annotations.some(annotation => annotation.type === 'evidence')
+      }
     })
 
     const decisions = req.session.data.chargingDecision?.decisions || {}
@@ -117,7 +144,7 @@ module.exports = (router) => {
 
     res.render('cases/review/check', {
       _case,
-      documents,
+      documentGroups,
       review,
       docReviewMap,
       needsChargingDecision,

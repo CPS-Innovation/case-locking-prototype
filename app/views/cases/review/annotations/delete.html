@@ -34,7 +34,7 @@
         <div class="app-review-annotation-card__body">
           {% if annotation.selectedText == 'Whole photo' %}
             <img
-              src="/public/images/evidence-photo-placeholder.jpg"
+              src="{{ document.name | documentPhotoUrl }}"
               alt="{{ document.name }}"
               class="app-review-annotation-card__photo"
             />

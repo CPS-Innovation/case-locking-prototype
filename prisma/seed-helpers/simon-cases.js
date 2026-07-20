@@ -12,6 +12,14 @@ const {
 } = require('./stl-generators');
 const { createDirectionsForCase } = require('./directions');
 const { createCtlLogEntries } = require('./ctl-log-entries');
+const {
+  WALKER_LOCATION,
+  findOrCreateWalkerVictim,
+  findWalkerPoliceUnit,
+  createWalkerDefendant,
+  createWalkerWitnesses,
+  createWalkerDocuments
+} = require('./walker-case');
 
 const SIMON_UNITS = {
   NORTH_YORKSHIRE_MAGISTRATES_COURT: 9,
@@ -24,7 +32,7 @@ const SIMON_UNITS_ARRAY = Object.values(SIMON_UNITS);
 
 const statuses = require('../../app/data/case-statuses');
 
-// All of Simon's own cases use the same offence: ABH (A02)
+// All cases seeded here (Simon's and his colleagues') use the same offence: ABH (A02)
 const SIMON_CHARGE = require('../../app/data/charges').find(charge => charge.code === 'A02');
 
 const SIMON_STATUSES = [
@@ -614,8 +622,8 @@ async function createColleagueCase(prisma, prosecutor, paralegalOfficer, config)
       defenceLawyer: { connect: { id: faker.helpers.arrayElement(defenceLawyers).id } },
       charges: {
         create: {
-          chargeCode: faker.helpers.arrayElement(charges).code,
-          description: faker.helpers.arrayElement(charges).description,
+          chargeCode: SIMON_CHARGE.code,
+          description: SIMON_CHARGE.description,
           status: 'Charged',
           offenceDate: faker.date.past(),
           plea: faker.helpers.arrayElement(pleas),
@@ -703,70 +711,28 @@ async function createColleagueCase(prisma, prosecutor, paralegalOfficer, config)
 }
 
 async function createReviewCase(prisma, user, taskName, config, hasCharge = true) {
-  const { defenceLawyers, charges, firstNames, lastNames, victims, types, complexities, policeUnits, ukCities, availableOperationNames, documentNames, documentTypes } = config;
+  const { types, complexities } = config;
 
   const unitId = faker.helpers.arrayElement(SIMON_UNITS_ARRAY);
 
-  const defendant = await prisma.defendant.create({
-    data: {
-      firstName: faker.helpers.arrayElement(firstNames),
-      lastName: faker.helpers.arrayElement(lastNames),
-      gender: faker.helpers.arrayElement(['Male', 'Female', 'Unknown']),
-      dateOfBirth: faker.date.birthdate({ min: 18, max: 75, mode: 'age' }),
-      remandStatus: null,
-      status: statuses.NOT_CHARGED,
-      needsReview: true,
-      defenceLawyer: { connect: { id: faker.helpers.arrayElement(defenceLawyers).id } },
-      ...(hasCharge ? {
-        charges: {
-          create: {
-            chargeCode: SIMON_CHARGE.code,
-            description: SIMON_CHARGE.description,
-            status: 'Pre-charge',
-            offenceDate: faker.date.past(),
-            plea: null,
-            isCount: false
-          }
-        }
-      } : {})
-    }
-  });
-
-  const victimIds = faker.helpers.arrayElements(victims, faker.number.int({ min: 1, max: 2 })).map(v => ({ id: v.id }));
-
-  const operationName = (faker.datatype.boolean({ probability: 0.3 }) && availableOperationNames.length > 0)
-    ? availableOperationNames.pop()
-    : null;
-
-  const numDocuments = faker.number.int({ min: 5, max: 15 });
-  const documentsData = generateDocumentsData(documentNames, documentTypes, numDocuments);
+  const defendant = await createWalkerDefendant(prisma, { hasCharge });
+  const victim = await findOrCreateWalkerVictim(prisma);
+  const policeUnit = await findWalkerPoliceUnit(prisma);
 
   const _case = await prisma.case.create({
     data: {
       reference: generateCaseReference(),
-      operationName,
       type: faker.helpers.arrayElement(types),
       complexity: faker.helpers.arrayElement(complexities),
       unit: { connect: { id: unitId } },
-      policeUnit: { connect: { id: faker.helpers.arrayElement(policeUnits).id } },
+      policeUnit: { connect: { id: policeUnit.id } },
       defendants: { connect: { id: defendant.id } },
-      victims: { connect: victimIds },
-      location: {
-        create: {
-          name: faker.company.name(),
-          line1: faker.location.streetAddress(),
-          line2: faker.location.secondaryAddress(),
-          town: faker.helpers.arrayElement(ukCities),
-          postcode: faker.location.zipCode("WD# #SF"),
-        },
-      },
-      documents: {
-        createMany: {
-          data: documentsData,
-        },
-      },
+      victims: { connect: { id: victim.id } },
+      location: { create: WALKER_LOCATION }
     }
   });
+
+  await createWalkerDocuments(prisma, _case.id);
 
   await prisma.caseProsecutor.create({
     data: {
@@ -793,7 +759,7 @@ async function createReviewCase(prisma, user, taskName, config, hasCharge = true
 
   await createDirectionsForCase(prisma, _case.id, defendant.id, faker.number.int({ min: 1, max: 3 }));
 
-  await createVictimWitness(prisma, _case.id, config);
+  await createWalkerWitnesses(prisma, _case.id);
 
   return _case;
 }
