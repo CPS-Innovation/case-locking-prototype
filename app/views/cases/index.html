@@ -43,7 +43,7 @@
 
   <h1 class="govuk-heading-l">{{ pageName }}</h1>
 
-  <div class="govuk-button-group">
+  <div class="govuk-button-group" style="display: none;">
     {{
       govukButton({
         text: "Create case"
@@ -81,7 +81,10 @@
 
       {% if cases.length %}
         <form method="post" action="/cases?page={{ pagination.pageNumber }}">
-          <div class="govuk-button-group app-list-actions govuk-!-margin-top-4">
+          <div
+            class="govuk-button-group app-list-actions govuk-!-margin-top-4"
+            style="display: none;"
+          >
             {% if data.applyAction.cases and data.applyAction.cases.length == totalCases %}
               {{
                 govukButton({
@@ -164,7 +167,7 @@
                           html: labelHtml
                         }],
                         values: data.applyAction.cases
-                      })
+                      }) if false
                     }}
 
                     <div class="app-list__content">

@@ -12,19 +12,19 @@
         <span class="app-overview-card__status">{{ chargesPendingCaseCount | pluralize("case has", "cases have") }} charges pending authorisation</span>
       </a>
     {% endif %}
-    {% if firstHearingNeededCount > 0 %}
+    {% if firstHearingNeededCount > 0 and false %}
       <a href="/cases/shortcut/first-hearing-needed" class="app-overview-card app-overview-card--green">
         <span class="app-overview-card__count">{{ firstHearingNeededCount }}</span>
         <span class="app-overview-card__status">{{ firstHearingNeededCount | pluralize("case needs", "cases need") }} a first hearing</span>
       </a>
     {% endif %}
-    {% if needsProsecutorCount > 0 %}
+    {% if needsProsecutorCount > 0 and false %}
       <a href="/cases/shortcut/needs-prosecutor" class="app-overview-card app-overview-card--turquoise">
         <span class="app-overview-card__count">{{ needsProsecutorCount }}</span>
         <span class="app-overview-card__status">{{ needsProsecutorCount | pluralize("case needs", "cases need") }} a prosecutor</span>
       </a>
     {% endif %}
-    {% if needsParalegalOfficerCount > 0 %}
+    {% if needsParalegalOfficerCount > 0 and false %}
       <a href="/cases/shortcut/needs-paralegal-officer" class="app-overview-card app-overview-card--orange">
         <span class="app-overview-card__count">{{ needsParalegalOfficerCount }}</span>
         <span class="app-overview-card__status">{{ needsParalegalOfficerCount | pluralize("case needs", "cases need") }} a paralegal officer</span>

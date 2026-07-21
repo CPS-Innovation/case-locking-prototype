@@ -154,57 +154,59 @@
         </div>
       {% endif %}
 
-      <h2 class="govuk-heading-m govuk-!-margin-top-7">Prosecutor</h2>
+      {% if false %}
+        <h2 class="govuk-heading-m govuk-!-margin-top-7">Prosecutor</h2>
 
-      <p><a href="/cases/{{ _case.id }}/add-prosecutor">Add prosecutor</a></p>
+        <p><a href="/cases/{{ _case.id }}/add-prosecutor">Add prosecutor</a></p>
 
-      {% if _case.prosecutors.length %}
-        <div class="app-list">
-          {% for cp in _case.prosecutors %}
-            <div class="app-list__item">
-              <p class="govuk-body govuk-!-margin-bottom-0">
-                {{ cp.user.firstName }}
-                {{ cp.user.lastName }}{% if _case.prosecutors.length > 1 and cp.isLead %}(lead){% endif %}
-              </p>
-              <div class="app-list__actions">
-                <a
-                  href="/cases/{{ _case.id }}/prosecutors/{{ cp.id }}/remove"
-                  class="govuk-link govuk-link--no-visited-state"
-                >
-                  Remove
-                </a>
+        {% if _case.prosecutors.length %}
+          <div class="app-list">
+            {% for cp in _case.prosecutors %}
+              <div class="app-list__item">
+                <p class="govuk-body govuk-!-margin-bottom-0">
+                  {{ cp.user.firstName }}
+                  {{ cp.user.lastName }}{% if _case.prosecutors.length > 1 and cp.isLead %}(lead){% endif %}
+                </p>
+                <div class="app-list__actions">
+                  <a
+                    href="/cases/{{ _case.id }}/prosecutors/{{ cp.id }}/remove"
+                    class="govuk-link govuk-link--no-visited-state"
+                  >
+                    Remove
+                  </a>
+                </div>
               </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        {# <p>There is no assigned prosecutor.</p> #}
-      {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          {# <p>There is no assigned prosecutor.</p> #}
+        {% endif %}
 
-      <h2 class="govuk-heading-m govuk-!-margin-top-7">Paralegal officer</h2>
+        <h2 class="govuk-heading-m govuk-!-margin-top-7">Paralegal officer</h2>
 
-      <p><a href="/cases/{{ _case.id }}/add-paralegal-officer">Add paralegal officer</a></p>
+        <p><a href="/cases/{{ _case.id }}/add-paralegal-officer">Add paralegal officer</a></p>
 
-      {% if _case.paralegalOfficers.length %}
-        <div class="app-list">
-          {% for cpo in _case.paralegalOfficers %}
-            <div class="app-list__item">
-              <p class="govuk-body govuk-!-margin-bottom-0">
-                {{ cpo.user.firstName }} {{ cpo.user.lastName }}
-              </p>
-              <div class="app-list__actions">
-                <a
-                  href="/cases/{{ _case.id }}/paralegal-officers/{{ cpo.id }}/remove"
-                  class="govuk-link govuk-link--no-visited-state"
-                >
-                  Remove
-                </a>
+        {% if _case.paralegalOfficers.length %}
+          <div class="app-list">
+            {% for cpo in _case.paralegalOfficers %}
+              <div class="app-list__item">
+                <p class="govuk-body govuk-!-margin-bottom-0">
+                  {{ cpo.user.firstName }} {{ cpo.user.lastName }}
+                </p>
+                <div class="app-list__actions">
+                  <a
+                    href="/cases/{{ _case.id }}/paralegal-officers/{{ cpo.id }}/remove"
+                    class="govuk-link govuk-link--no-visited-state"
+                  >
+                    Remove
+                  </a>
+                </div>
               </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        {# <p>There is no paralegal officer assigned.</p> #}
+            {% endfor %}
+          </div>
+        {% else %}
+          {# <p>There is no paralegal officer assigned.</p> #}
+        {% endif %}
       {% endif %}
     </div>
   </div>

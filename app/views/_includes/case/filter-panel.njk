@@ -68,7 +68,7 @@
     },
     items: defendantItems,
     values: selectedDefendantFilters
-  }) }}
+  }) if false}}
 
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[statusMix]",
@@ -82,7 +82,7 @@
     },
     items: statusMixItems,
     values: selectedStatusMixFilters
-  }) }}
+  }) if false}}
 
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[informationRequests]",
@@ -134,7 +134,7 @@
     items: paralegalOfficerItems,
     values: selectedParalegalOfficerFilters,
     selectedItems: selectedParalegalOfficerItems
-  }) }}
+  }) if false}}
 
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[unit]",
@@ -267,7 +267,7 @@
     items: policeUnitItems,
     values: data.caseListFilters.policeUnit,
     selectedItems: selectedPoliceUnitItems
-  }) if policeUnitItems.length }}
+  }) if policeUnitItems.length and false }}
 
 {% endset %}
 
