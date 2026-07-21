@@ -49,8 +49,13 @@ module.exports = (router) => {
   })
 
   router.get('/cases/shortcut/needs-review', (req, res) => {
+    const currentUser = req.session.data.user
     resetFilters(req)
-    res.redirect('/cases/?caseListFilters[review][]=Review+needed')
+    _.set(req.session.data.caseListFilters, 'review', ['Review needed'])
+    if (currentUser.role === 'Prosecutor') {
+      _.set(req.session.data.caseListFilters, 'prosecutors', [currentUser.id.toString()])
+    }
+    res.redirect('/cases')
   })
 
   router.get('/cases/shortcut/prosecutor-needed', (req, res) => {
@@ -64,8 +69,13 @@ module.exports = (router) => {
   })
 
   router.get('/cases/shortcut/charges-pending', (req, res) => {
+    const currentUser = req.session.data.user
     resetFilters(req)
-    res.redirect('/cases/?caseListFilters[statuses][]=Charges+pending')
+    _.set(req.session.data.caseListFilters, 'statuses', [statuses.CHARGES_PENDING])
+    if (currentUser.role === 'Prosecutor') {
+      _.set(req.session.data.caseListFilters, 'prosecutors', [currentUser.id.toString()])
+    }
+    res.redirect('/cases')
   })
 
   router.get('/cases/shortcut/first-hearing-needed', (req, res) => {
@@ -145,8 +155,12 @@ module.exports = (router) => {
   })
 
   router.get('/cases/shortcut/hearing-prep-needed', (req, res) => {
+    const currentUser = req.session.data.user
     resetFilters(req)
     _.set(req.session.data.caseListFilters, 'hearingStatuses', ['Hearing preparation needed'])
+    if (currentUser.role === 'Prosecutor') {
+      _.set(req.session.data.caseListFilters, 'prosecutors', [currentUser.id.toString()])
+    }
     res.redirect('/cases')
   })
 

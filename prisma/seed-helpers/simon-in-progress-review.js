@@ -1,18 +1,14 @@
 const { faker } = require('@faker-js/faker');
-const elementsByChargeCode = require('../../app/data/elements');
 const { createDirectionsForCase } = require('./directions');
 const { SIMON_UNITS } = require('./simon-cases');
-const { findParagraphOccurrence } = require('./case-review-annotations');
 const {
   WALKER_LOCATION,
-  WALKER_ELEMENT_REASONINGS,
-  WALKER_REVIEW_SUMMARY,
-  WALKER_ANNOTATIONS,
   findOrCreateWalkerVictim,
   findWalkerPoliceUnit,
   createWalkerDefendant,
   createWalkerWitnesses,
-  createWalkerDocuments
+  createWalkerDocuments,
+  createFullWalkerReview
 } = require('./walker-case');
 
 const CASE_REFERENCE = '52SW200001';
@@ -81,76 +77,16 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
   await createDirectionsForCase(prisma, _case.id, defendant.id, faker.number.int({ min: 1, max: 3 }));
   await createWalkerWitnesses(prisma, _case.id);
 
-  const elements = [];
-  const elementDescriptions = elementsByChargeCode[defendant.charges[0].chargeCode];
-  for (const [index, description] of elementDescriptions.entries()) {
-    const element = await prisma.element.create({
-      data: {
-        chargeId: defendant.charges[0].id,
-        description,
-        order: index,
-        strength: 'Strong',
-        strengthReasoning: WALKER_ELEMENT_REASONINGS[index]
-      }
-    });
-    elements.push(element);
-  }
-
-  const review = await prisma.caseReview.create({
-    data: {
-      caseId: _case.id,
-      userId: simonWhatley.id,
-      status: 'in_progress',
-      summary: WALKER_REVIEW_SUMMARY,
-      summaryComplete: true,
-      chargingDecisionComplete: true,
-      strengthAssessmentComplete: true,
-      wantsInformationRequest: 'no',
-      informationRequestComplete: true,
-      chargeDecisions: {
-        create: { chargeId: defendant.charges[0].id, decision: 'Charge' }
-      }
-    }
+  // No information-request annotations - the review answers no to the
+  // information request question.
+  await createFullWalkerReview(prisma, {
+    caseId: _case.id,
+    userId: simonWhatley.id,
+    defendant,
+    status: 'in_progress',
+    lastName: 'Palmer',
+    includeChargeDecision: true
   });
-
-  const documents = await prisma.document.findMany({ where: { caseId: _case.id } });
-
-  for (const document of documents) {
-    const docReview = await prisma.caseReviewDocument.create({
-      data: { caseReviewId: review.id, documentId: document.id, status: 'reviewed' }
-    });
-
-    // No information-request annotations - the review answers no to the
-    // information request question.
-    const annotations = WALKER_ANNOTATIONS.filter(annotation => annotation.documentName === document.name);
-
-    for (const snippet of annotations) {
-      const element = snippet.elementIndex != null ? elements[snippet.elementIndex] : null;
-      const { paragraphIndex, occurrenceIndex } = findParagraphOccurrence(document, snippet.selectedText);
-
-      const annotation = await prisma.caseReviewAnnotation.create({
-        data: {
-          caseReviewDocumentId: docReview.id,
-          type: snippet.type,
-          selectedText: snippet.selectedText,
-          paragraphIndex,
-          occurrenceIndex,
-          note: element ? `${element.description}: ${snippet.note}` : snippet.note,
-          timestampSeconds: snippet.timestampSeconds ?? null
-        }
-      });
-
-      if (element) {
-        await prisma.caseReviewAnnotationElement.create({
-          data: {
-            annotationId: annotation.id,
-            elementId: element.id,
-            reasoning: snippet.note
-          }
-        });
-      }
-    }
-  }
 
   return 1;
 }

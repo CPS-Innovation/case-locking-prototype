@@ -1,5 +1,24 @@
 {% set filterOptionsHtml %}
 
+  {{ appCheckboxFilter({
+    idPrefix: "caseListFilters[prosecutors]",
+    name: "caseListFilters[prosecutors]",
+    classes: "govuk-checkboxes--small prosecutor-filter" ,
+    attributes: {
+      id: 'prosecutor-filter'
+    },
+    fieldset: {
+      legend: {
+        text: "Prosecutor",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    maxHeight: true,
+    items: prosecutorItems,
+    values: selectedProsecutorFilters,
+    selectedItems: selectedProsecutorItems
+  }) }}
+
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[statuses]",
     name: "caseListFilters[statuses]",
@@ -96,25 +115,6 @@
     },
     items: informationRequestsItems,
     values: data.caseListFilters.informationRequests
-  }) }}
-
-  {{ appCheckboxFilter({
-    idPrefix: "caseListFilters[prosecutors]",
-    name: "caseListFilters[prosecutors]",
-    classes: "govuk-checkboxes--small prosecutor-filter" ,
-    attributes: {
-      id: 'prosecutor-filter'
-    },
-    fieldset: {
-      legend: {
-        text: "Prosecutor",
-        classes: "govuk-fieldset__legend--s"
-      }
-    },
-    maxHeight: true,
-    items: prosecutorItems,
-    values: selectedProsecutorFilters,
-    selectedItems: selectedProsecutorItems
   }) }}
 
   {{ appCheckboxFilter({

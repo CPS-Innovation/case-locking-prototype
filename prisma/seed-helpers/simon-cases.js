@@ -1,7 +1,6 @@
 const { faker } = require('@faker-js/faker');
 const { generateCaseReference } = require('./identifiers');
 const { generateDocumentsData } = require('./documents');
-const { createDivergedCase } = require('./diverged-cases');
 const { addHearings } = require('./hearings');
 const { nextForcedHasHearing } = require('./charged-hearing-balance');
 const { generateUKMobileNumber, generateUKLandlineNumber, generateUKPhoneNumber } = require('./phone-numbers');
@@ -325,31 +324,6 @@ async function createCTLCase(prisma, user, taskConfig, config) {
   const numDocuments = faker.number.int({ min: 5, max: 15 });
   const documentsData = generateDocumentsData(documentNames, documentTypes, numDocuments);
 
-  const extraDefendants = [];
-  if (faker.datatype.boolean({ probability: 0.3 })) {
-    const extra = await prisma.defendant.create({
-      data: {
-        firstName: faker.helpers.arrayElement(firstNames),
-        lastName: faker.helpers.arrayElement(lastNames),
-        gender: faker.helpers.arrayElement(['Male', 'Female', 'Unknown']),
-        dateOfBirth: faker.date.birthdate({ min: 18, max: 75, mode: 'age' }),
-        remandStatus: faker.helpers.arrayElement(['UNCONDITIONAL_BAIL', 'CONDITIONAL_BAIL', 'REMANDED_IN_CUSTODY']),
-        defenceLawyer: { connect: { id: faker.helpers.arrayElement(defenceLawyers).id } },
-        charges: {
-          create: {
-            chargeCode: SIMON_CHARGE.code,
-            description: SIMON_CHARGE.description,
-            status: 'Charged',
-            offenceDate: faker.date.past(),
-            plea: faker.helpers.arrayElement(pleas),
-            isCount: false
-          }
-        }
-      }
-    });
-    extraDefendants.push(extra);
-  }
-
   const _case = await prisma.case.create({
     data: {
       reference: generateCaseReference(),
@@ -358,7 +332,7 @@ async function createCTLCase(prisma, user, taskConfig, config) {
       complexity: faker.helpers.arrayElement(complexities),
       unit: { connect: { id: unitId } },
       policeUnit: { connect: { id: faker.helpers.arrayElement(policeUnits).id } },
-      defendants: { connect: [{ id: defendant.id }, ...extraDefendants.map(d => ({ id: d.id }))] },
+      defendants: { connect: { id: defendant.id } },
       victims: { connect: victimIds },
       location: {
         create: {
@@ -403,7 +377,7 @@ async function createCTLCase(prisma, user, taskConfig, config) {
     })
   }
   const forceHasHearing = (status === statuses.CHARGED && needsReview) ? nextForcedHasHearing(user.id) : undefined
-  await addHearings(prisma, { caseId: _case.id, unitId, defendants: [defendant, ...extraDefendants], status, forceHasHearing })
+  await addHearings(prisma, { caseId: _case.id, unitId, defendants: [defendant], status, forceHasHearing })
 
   // Create task
   const dueDate = faker.date.soon({ days: 14 });
@@ -812,18 +786,13 @@ async function seedSimonCases(prisma, dependencies, config) {
     await createColleagueCase(prisma, colleagues.prosecutors[i], colleagues.paralegalOfficers[i], fullConfig);
   }
 
-  const divergedCase1 = await createDivergedCase(prisma, simonWhatley, faker.helpers.arrayElement(SIMON_UNITS_ARRAY), SIMON_STATUSES, { ...fullConfig, charges: [SIMON_CHARGE] });
-  await createVictimWitness(prisma, divergedCase1.id, fullConfig);
-  const divergedCase2 = await createDivergedCase(prisma, simonWhatley, faker.helpers.arrayElement(SIMON_UNITS_ARRAY), [statuses.NOT_CHARGED, statuses.CHARGES_PENDING, statuses.CHARGED], { ...fullConfig, charges: [SIMON_CHARGE] });
-  await createVictimWitness(prisma, divergedCase2.id, fullConfig);
-
   // Case awaiting a charging decision (not charged, needs review) - same
   // supporting cast as the Walker/Palmer material (victim, police witnesses,
   // documents) but a different defendant, so it doesn't read as a duplicate
   // of the in-progress Palmer review seeded by seedSimonInProgressReview.
   await createReviewCase(prisma, simonWhatley, 'Make charging decision', fullConfig, { firstName: 'Marcus', lastName: 'Webb' });
 
-  return SIMON_STL_TASKS.length + SIMON_CTL_TASKS.length + 1 + 20 + 1 + 1 + 1;
+  return SIMON_STL_TASKS.length + SIMON_CTL_TASKS.length + 1 + 20 + 1;
 }
 
 module.exports = {

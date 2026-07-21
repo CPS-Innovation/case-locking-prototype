@@ -16,6 +16,10 @@ module.exports = router => {
 
     const unitFilter = userUnitIds.length ? { unitId: { in: userUnitIds } } : {}
 
+    const prosecutorScopeFilter = currentUser.role === 'Prosecutor'
+      ? { prosecutors: { some: { userId: currentUser.id } } }
+      : {}
+
     const unassignedCaseCount = await prisma.case.count({
       where: {
         ...unitFilter,
@@ -26,7 +30,7 @@ module.exports = router => {
     })
 
     const needsReviewCaseCount = await prisma.case.count({
-      where: { ...unitFilter, defendants: { some: { needsReview: true } } }
+      where: { ...unitFilter, ...prosecutorScopeFilter, defendants: { some: { needsReview: true } } }
     })
 
     const chargedCaseCount = await prisma.case.count({
@@ -34,7 +38,7 @@ module.exports = router => {
     })
 
     const chargesPendingCaseCount = await prisma.case.count({
-      where: { ...unitFilter, defendants: { some: { status: statuses.CHARGES_PENDING } } }
+      where: { ...unitFilter, ...prosecutorScopeFilter, defendants: { some: { status: statuses.CHARGES_PENDING } } }
     })
 
     const firstHearingNeededCount = await prisma.case.count({
@@ -50,7 +54,7 @@ module.exports = router => {
     })
 
     const hearingPrepNeededCaseCount = await prisma.case.count({
-      where: { ...unitFilter, hearings: { some: { status: 'Hearing preparation needed' } } }
+      where: { ...unitFilter, ...prosecutorScopeFilter, hearings: { some: { status: 'Hearing preparation needed' } } }
     })
 
     const hearingOutcomeNeededCaseCount = await prisma.case.count({

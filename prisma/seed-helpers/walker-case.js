@@ -1,6 +1,8 @@
 const statuses = require('../../app/data/case-statuses')
 const charges = require('../../app/data/charges')
 const walkerMaterial = require('../../app/data/walker-material')
+const elementsByChargeCode = require('../../app/data/elements')
+const { findParagraphOccurrence } = require('./case-review-annotations')
 
 // R v Daniel Palmer - a domestic ABH against Chloe Barrett on 2 November 2024,
 // built from the realistic material in app/data/walker-material. Used by the
@@ -311,6 +313,87 @@ async function createWalkerDocuments(prisma, caseId) {
   })
 }
 
+// Builds a full case review on top of the Walker material - elements
+// assessed as strong, a written summary, every document marked reviewed and
+// annotated. The curated text (summary, element reasoning, annotation notes)
+// names Palmer by default; pass a different `lastName` to reuse the same
+// material for a different defendant without misnaming them.
+async function createFullWalkerReview(prisma, { caseId, userId, defendant, status, lastName = 'Palmer', includeChargeDecision = false }) {
+  const elements = []
+  const elementDescriptions = elementsByChargeCode[defendant.charges[0].chargeCode]
+  for (const [index, description] of elementDescriptions.entries()) {
+    const element = await prisma.element.create({
+      data: {
+        chargeId: defendant.charges[0].id,
+        description,
+        order: index,
+        strength: 'Strong',
+        strengthReasoning: WALKER_ELEMENT_REASONINGS[index].replaceAll('Palmer', lastName)
+      }
+    })
+    elements.push(element)
+  }
+
+  const review = await prisma.caseReview.create({
+    data: {
+      caseId,
+      userId,
+      status,
+      summary: WALKER_REVIEW_SUMMARY.replaceAll('Palmer', lastName),
+      summaryComplete: true,
+      chargingDecisionComplete: true,
+      strengthAssessmentComplete: true,
+      wantsInformationRequest: 'no',
+      informationRequestComplete: true,
+      ...(includeChargeDecision ? {
+        chargeDecisions: {
+          create: { chargeId: defendant.charges[0].id, decision: 'Charge' }
+        }
+      } : {})
+    }
+  })
+
+  const documents = await prisma.document.findMany({ where: { caseId } })
+
+  for (const document of documents) {
+    const docReview = await prisma.caseReviewDocument.create({
+      data: { caseReviewId: review.id, documentId: document.id, status: 'reviewed' }
+    })
+
+    const annotations = WALKER_ANNOTATIONS.filter(annotation => annotation.documentName === document.name)
+
+    for (const snippet of annotations) {
+      const element = snippet.elementIndex != null ? elements[snippet.elementIndex] : null
+      const { paragraphIndex, occurrenceIndex } = findParagraphOccurrence(document, snippet.selectedText)
+      const note = snippet.note.replaceAll('Palmer', lastName)
+
+      const annotation = await prisma.caseReviewAnnotation.create({
+        data: {
+          caseReviewDocumentId: docReview.id,
+          type: snippet.type,
+          selectedText: snippet.selectedText,
+          paragraphIndex,
+          occurrenceIndex,
+          note: element ? `${element.description}: ${note}` : note,
+          timestampSeconds: snippet.timestampSeconds ?? null
+        }
+      })
+
+      if (element) {
+        await prisma.caseReviewAnnotationElement.create({
+          data: {
+            annotationId: annotation.id,
+            elementId: element.id,
+            reasoning: note
+          }
+        })
+      }
+    }
+  }
+
+  return review
+}
+
 module.exports = {
   WALKER_CHARGE,
   WALKER_OFFENCE_DATE,
@@ -322,5 +405,6 @@ module.exports = {
   findWalkerPoliceUnit,
   createWalkerDefendant,
   createWalkerWitnesses,
-  createWalkerDocuments
+  createWalkerDocuments,
+  createFullWalkerReview
 }
