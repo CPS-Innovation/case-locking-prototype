@@ -112,6 +112,11 @@
   margin-bottom: 0;
 }
 
+.app-review-annotation-card__source {
+  @include govuk-font($size: 16, $weight: bold);
+  margin-bottom: govuk-spacing(2);
+}
+
 .app-annotation-card__body {
   padding: govuk-spacing(2);
 }

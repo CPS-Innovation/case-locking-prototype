@@ -107,8 +107,7 @@ module.exports = (router) => {
         annotations: {
           include: { elements: { include: { element: { include: { charge: true } } } } }
         },
-        redactions: true,
-        inadmissibles: true
+        redactions: true
       }
     })
 
@@ -124,8 +123,7 @@ module.exports = (router) => {
     documentReviews.forEach(dr => {
       const items = [
         ...dr.annotations.map(annotation => ({ ...annotation, kind: 'annotation' })),
-        ...dr.redactions.map(redaction => ({ ...redaction, kind: 'redaction' })),
-        ...dr.inadmissibles.map(inadmissible => ({ ...inadmissible, kind: 'inadmissible' }))
+        ...dr.redactions.map(redaction => ({ ...redaction, kind: 'redaction' }))
       ].sort(byDocumentPosition)
       docReviewMap[dr.documentId] = {
         ...dr,

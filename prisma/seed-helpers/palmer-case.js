@@ -1,20 +1,20 @@
 const statuses = require('../../app/data/case-statuses')
 const charges = require('../../app/data/charges')
-const walkerMaterial = require('../../app/data/walker-material')
+const palmerMaterial = require('../../app/data/palmer-material')
 const elementsByChargeCode = require('../../app/data/elements')
 const { findParagraphOccurrence } = require('./case-review-annotations')
 
 // R v Daniel Palmer - a domestic ABH against Chloe Barrett on 2 November 2024,
-// built from the realistic material in app/data/walker-material. Used by the
+// built from the realistic material in app/data/palmer-material. Used by the
 // charging-decision cases so the people on the case match the people in the
 // material: defendant Daniel Palmer, victim Chloe Barrett, and police witnesses
 // Imran Shah (arresting officer), Nicola Burke (injury photos) and Callum Rees
 // (officer in the case).
 
-const WALKER_CHARGE = charges.find(charge => charge.code === 'A02')
-const WALKER_OFFENCE_DATE = new Date('2024-11-02')
+const PALMER_CHARGE = charges.find(charge => charge.code === 'A02')
+const PALMER_OFFENCE_DATE = new Date('2024-11-02')
 
-const WALKER_LOCATION = {
+const PALMER_LOCATION = {
   name: '22 Bellhaven Close',
   line1: '22 Bellhaven Close',
   line2: '',
@@ -22,7 +22,7 @@ const WALKER_LOCATION = {
   postcode: 'L2 2YY'
 }
 
-const WALKER_WITNESSES = [
+const PALMER_WITNESSES = [
   {
     firstName: 'Chloe',
     lastName: 'Barrett',
@@ -81,18 +81,19 @@ const WALKER_WITNESSES = [
 ]
 
 // One reasoning per A02 element, in element order.
-const WALKER_ELEMENT_REASONINGS = [
+const PALMER_ELEMENT_REASONINGS = [
   'The victim describes being pulled from the fridge by her hair and slapped repeatedly, and her account is consistent with the CAD report and the WhatsApp messages recovered from Palmer’s phone.',
+  'Pulling the victim to the floor, slapping her with both hands and biting her chin are deliberate acts, and Palmer admits losing his temper and smashing a glass.',
   'Two black eyes, bruising to both forearms and a bite mark to the chin were photographed by PC Burke and seen by PC Shah within hours of the incident.',
-  'Pulling the victim to the floor, slapping her with both hands and biting her chin are deliberate acts, and Palmer admits losing his temper and smashing a glass.'
+  'The injuries match the assault the victim describes and are not explained by Palmer’s account that she fell from the fridge, so the force he used caused the actual bodily harm she suffered.'
 ]
 
-const WALKER_REVIEW_SUMMARY = 'Reviewed all material on the case file. The victim gives a clear and consistent account which is supported by the CAD report, the photographs of her injuries taken by PC Burke and the WhatsApp messages recovered from Palmer’s phone. Palmer denies the assault but offers no credible explanation for the injuries. Each element of the offence is made out and there is a realistic prospect of conviction. Prosecution is required in the public interest given the seriousness of the offence and its domestic context.'
+const PALMER_REVIEW_SUMMARY = 'Reviewed all material on the case file. The victim gives a clear and consistent account which is supported by the CAD report, the photographs of her injuries taken by PC Burke and the WhatsApp messages recovered from Palmer’s phone. Palmer denies the assault but offers no credible explanation for the injuries. Each element of the offence is made out and there is a realistic prospect of conviction. Prosecution is required in the public interest given the seriousness of the offence and its domestic context.'
 
 // Annotations for the seeded in-progress review, anchored to exact substrings
-// of the real document content in app/data/walker-material/content.js.
+// of the real document content in app/data/palmer-material/content.js.
 // elementIndex refers to the A02 elements in order; null means no element link.
-const WALKER_ANNOTATIONS = [
+const PALMER_ANNOTATIONS = [
   {
     documentName: 'Chloe BARRETT statement 1 02-11-2024',
     type: 'evidence',
@@ -103,14 +104,14 @@ const WALKER_ANNOTATIONS = [
   {
     documentName: 'Chloe BARRETT statement 1 02-11-2024',
     type: 'evidence',
-    elementIndex: 1,
+    elementIndex: 2,
     selectedText: 'he has slapped me with a high level of force and has left me with two black eyes',
     note: 'The slaps caused two black eyes.'
   },
   {
     documentName: 'Chloe BARRETT statement 1 02-11-2024',
     type: 'evidence',
-    elementIndex: 2,
+    elementIndex: 1,
     selectedText: 'he has slapped me to the face multiple times with him using both hands',
     note: 'Slapping the victim multiple times with both hands, rather than a single accidental blow, shows the assault was deliberate.'
   },
@@ -124,9 +125,16 @@ const WALKER_ANNOTATIONS = [
   {
     documentName: 'Nicola BURKE statement 2 02-11-2024',
     type: 'evidence',
-    elementIndex: 1,
+    elementIndex: 2,
     selectedText: 'she had two black eyes both were dark with bruising on the side',
     note: 'Injuries seen and photographed by PC Burke on the morning of the incident.'
+  },
+  {
+    documentName: 'Nicola BURKE statement 2 02-11-2024',
+    type: 'evidence',
+    elementIndex: 3,
+    selectedText: 'the injuries she had appeared to be very recent',
+    note: 'The injuries were fresh when seen hours after the assault, linking them to Palmer’s attack rather than any other cause.'
   },
   {
     documentName: 'Imran SHAH statement 3 08-11-2024',
@@ -159,7 +167,7 @@ const WALKER_ANNOTATIONS = [
   {
     documentName: 'MG15 - Record of interview',
     type: 'evidence',
-    elementIndex: 1,
+    elementIndex: 2,
     selectedText: 'That one she has got a black eye and … two black eyes',
     note: 'Palmer accepts the photographs show two black eyes and bruising.'
   },
@@ -173,7 +181,7 @@ const WALKER_ANNOTATIONS = [
   {
     documentName: 'Police report',
     type: 'evidence',
-    elementIndex: 1,
+    elementIndex: 2,
     selectedText: 'two black eyes, bruises on her forearms and a small red mark on her chin',
     note: 'Injuries witnessed by the attending officer shortly after the incident.'
   },
@@ -187,21 +195,21 @@ const WALKER_ANNOTATIONS = [
   {
     documentName: 'WK-01 - PHOTO INJURIES TO ARMS - BURKE, Nicola',
     type: 'evidence',
-    elementIndex: 1,
+    elementIndex: 2,
     selectedText: 'Whole photo',
     note: 'Photograph of bruising to both forearms.'
   },
   {
     documentName: 'WK-02 - PHOTO INJURY TO FACE SHOWING BLACK EYES',
     type: 'evidence',
-    elementIndex: 1,
+    elementIndex: 2,
     selectedText: 'Whole photo',
     note: 'Photograph showing two black eyes.'
   },
   {
     documentName: 'WK-04 Injury to Eye - BURKE, Nicola',
     type: 'evidence',
-    elementIndex: 1,
+    elementIndex: 2,
     selectedText: 'Whole photo',
     note: 'Photograph of the black eye and mark to the left side of the face.'
   },
@@ -229,7 +237,7 @@ const WALKER_ANNOTATIONS = [
   }
 ]
 
-async function findOrCreateWalkerDefenceLawyer(prisma) {
+async function findOrCreatePalmerDefenceLawyer(prisma) {
   const existing = await prisma.defenceLawyer.findFirst({
     where: { firstName: 'Priya', lastName: 'Naidu' }
   })
@@ -240,7 +248,7 @@ async function findOrCreateWalkerDefenceLawyer(prisma) {
   })
 }
 
-async function findOrCreateWalkerVictim(prisma) {
+async function findOrCreatePalmerVictim(prisma) {
   const existing = await prisma.victim.findFirst({
     where: { firstName: 'Chloe', lastName: 'Barrett' }
   })
@@ -251,12 +259,12 @@ async function findOrCreateWalkerVictim(prisma) {
   })
 }
 
-async function findWalkerPoliceUnit(prisma) {
+async function findPalmerPoliceUnit(prisma) {
   return prisma.policeUnit.findUnique({ where: { name: 'Merseyside Police' } })
 }
 
-async function createWalkerDefendant(prisma, { hasCharge = true, firstName = 'Daniel', lastName = 'Palmer' } = {}) {
-  const defenceLawyer = await findOrCreateWalkerDefenceLawyer(prisma)
+async function createPalmerDefendant(prisma, { hasCharge = true, firstName = 'Daniel', lastName = 'Palmer' } = {}) {
+  const defenceLawyer = await findOrCreatePalmerDefenceLawyer(prisma)
 
   return prisma.defendant.create({
     data: {
@@ -272,10 +280,10 @@ async function createWalkerDefendant(prisma, { hasCharge = true, firstName = 'Da
       ...(hasCharge ? {
         charges: {
           create: {
-            chargeCode: WALKER_CHARGE.code,
-            description: WALKER_CHARGE.description,
+            chargeCode: PALMER_CHARGE.code,
+            description: PALMER_CHARGE.description,
             status: 'Pre-charge',
-            offenceDate: WALKER_OFFENCE_DATE,
+            offenceDate: PALMER_OFFENCE_DATE,
             plea: null,
             isCount: false
           }
@@ -286,8 +294,8 @@ async function createWalkerDefendant(prisma, { hasCharge = true, firstName = 'Da
   })
 }
 
-async function createWalkerWitnesses(prisma, caseId) {
-  for (const { statements, ...witnessData } of WALKER_WITNESSES) {
+async function createPalmerWitnesses(prisma, caseId) {
+  for (const { statements, ...witnessData } of PALMER_WITNESSES) {
     const witness = await prisma.witness.create({
       data: {
         ...witnessData,
@@ -314,18 +322,18 @@ async function createWalkerWitnesses(prisma, caseId) {
   }
 }
 
-async function createWalkerDocuments(prisma, caseId) {
+async function createPalmerDocuments(prisma, caseId) {
   await prisma.document.createMany({
-    data: walkerMaterial.documents.map(({ images, ...document }) => ({ ...document, caseId }))
+    data: palmerMaterial.documents.map(({ images, ...document }) => ({ ...document, caseId }))
   })
 }
 
-// Builds a full case review on top of the Walker material - elements
+// Builds a full case review on top of the Palmer material - elements
 // assessed as strong, a written summary, every document marked reviewed and
 // annotated. The curated text (summary, element reasoning, annotation notes)
 // names Palmer by default; pass a different `lastName` to reuse the same
 // material for a different defendant without misnaming them.
-async function createFullWalkerReview(prisma, { caseId, userId, defendant, status, lastName = 'Palmer', includeChargeDecision = false }) {
+async function createFullPalmerReview(prisma, { caseId, userId, defendant, status, lastName = 'Palmer', includeChargeDecision = false }) {
   const elements = []
   const elementDescriptions = elementsByChargeCode[defendant.charges[0].chargeCode]
   for (const [index, description] of elementDescriptions.entries()) {
@@ -335,7 +343,7 @@ async function createFullWalkerReview(prisma, { caseId, userId, defendant, statu
         description,
         order: index,
         strength: 'Strong',
-        strengthReasoning: WALKER_ELEMENT_REASONINGS[index].replaceAll('Palmer', lastName)
+        strengthReasoning: PALMER_ELEMENT_REASONINGS[index].replaceAll('Palmer', lastName)
       }
     })
     elements.push(element)
@@ -346,7 +354,7 @@ async function createFullWalkerReview(prisma, { caseId, userId, defendant, statu
       caseId,
       userId,
       status,
-      summary: WALKER_REVIEW_SUMMARY.replaceAll('Palmer', lastName),
+      summary: PALMER_REVIEW_SUMMARY.replaceAll('Palmer', lastName),
       summaryComplete: true,
       chargingDecisionComplete: true,
       strengthAssessmentComplete: true,
@@ -367,7 +375,7 @@ async function createFullWalkerReview(prisma, { caseId, userId, defendant, statu
       data: { caseReviewId: review.id, documentId: document.id, status: 'reviewed' }
     })
 
-    const annotations = WALKER_ANNOTATIONS.filter(annotation => annotation.documentName === document.name)
+    const annotations = PALMER_ANNOTATIONS.filter(annotation => annotation.documentName === document.name)
 
     for (const snippet of annotations) {
       const element = snippet.elementIndex != null ? elements[snippet.elementIndex] : null
@@ -402,16 +410,16 @@ async function createFullWalkerReview(prisma, { caseId, userId, defendant, statu
 }
 
 module.exports = {
-  WALKER_CHARGE,
-  WALKER_OFFENCE_DATE,
-  WALKER_LOCATION,
-  WALKER_ELEMENT_REASONINGS,
-  WALKER_REVIEW_SUMMARY,
-  WALKER_ANNOTATIONS,
-  findOrCreateWalkerVictim,
-  findWalkerPoliceUnit,
-  createWalkerDefendant,
-  createWalkerWitnesses,
-  createWalkerDocuments,
-  createFullWalkerReview
+  PALMER_CHARGE,
+  PALMER_OFFENCE_DATE,
+  PALMER_LOCATION,
+  PALMER_ELEMENT_REASONINGS,
+  PALMER_REVIEW_SUMMARY,
+  PALMER_ANNOTATIONS,
+  findOrCreatePalmerVictim,
+  findPalmerPoliceUnit,
+  createPalmerDefendant,
+  createPalmerWitnesses,
+  createPalmerDocuments,
+  createFullPalmerReview
 }

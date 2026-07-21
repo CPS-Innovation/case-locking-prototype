@@ -2,18 +2,18 @@ const { faker } = require('@faker-js/faker');
 const { createDirectionsForCase } = require('./directions');
 const { SIMON_UNITS } = require('./simon-cases');
 const {
-  WALKER_LOCATION,
-  findOrCreateWalkerVictim,
-  findWalkerPoliceUnit,
-  createWalkerDefendant,
-  createWalkerWitnesses,
-  createWalkerDocuments,
-  createFullWalkerReview
-} = require('./walker-case');
+  PALMER_LOCATION,
+  findOrCreatePalmerVictim,
+  findPalmerPoliceUnit,
+  createPalmerDefendant,
+  createPalmerWitnesses,
+  createPalmerDocuments,
+  createFullPalmerReview
+} = require('./palmer-case');
 
 const CASE_REFERENCE = '52SW200001';
 
-// Simon has a review of the R v Joseph Walker case that is all but ready to
+// Simon has a review of the R v Daniel Palmer case that is all but ready to
 // submit: every document reviewed, the key material annotated with text from
 // the real documents, summary written, all elements assessed as strong and a
 // decision to charge. The charging decision and information request answer
@@ -32,9 +32,9 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
     return 0;
   }
 
-  const defendant = await createWalkerDefendant(prisma);
-  const victim = await findOrCreateWalkerVictim(prisma);
-  const policeUnit = await findWalkerPoliceUnit(prisma);
+  const defendant = await createPalmerDefendant(prisma);
+  const victim = await findOrCreatePalmerVictim(prisma);
+  const policeUnit = await findPalmerPoliceUnit(prisma);
 
   const _case = await prisma.case.create({
     data: {
@@ -45,11 +45,11 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
       policeUnit: { connect: { id: policeUnit.id } },
       defendants: { connect: { id: defendant.id } },
       victims: { connect: { id: victim.id } },
-      location: { create: WALKER_LOCATION }
+      location: { create: PALMER_LOCATION }
     }
   });
 
-  await createWalkerDocuments(prisma, _case.id);
+  await createPalmerDocuments(prisma, _case.id);
 
   await prisma.caseProsecutor.create({
     data: {
@@ -75,11 +75,11 @@ async function seedSimonInProgressReview(prisma, dependencies, config) {
   });
 
   await createDirectionsForCase(prisma, _case.id, defendant.id, faker.number.int({ min: 1, max: 3 }));
-  await createWalkerWitnesses(prisma, _case.id);
+  await createPalmerWitnesses(prisma, _case.id);
 
   // No information-request annotations - the review answers no to the
   // information request question.
-  await createFullWalkerReview(prisma, {
+  await createFullPalmerReview(prisma, {
     caseId: _case.id,
     userId: simonWhatley.id,
     defendant,

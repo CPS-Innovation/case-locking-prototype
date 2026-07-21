@@ -1,7 +1,6 @@
 const { faker } = require('@faker-js/faker');
 const { generateCaseReference } = require('./identifiers');
 const { createDirectionsForCase } = require('./directions');
-const { addHearings } = require('./hearings');
 const { SIMON_UNITS } = require('./simon-cases');
 const statuses = require('../../app/data/case-statuses');
 const {
@@ -14,13 +13,13 @@ const {
   createFullPalmerReview
 } = require('./palmer-case');
 
-// Simon also has a second, unrelated Palmer-material case - same victim,
-// police witnesses and documents, but a different defendant (Ryan Doyle, not
-// Palmer) - where the review has actually been submitted: a decision to
-// charge, and the police have since sent back authorised charges. This gives
-// Simon a genuinely reviewed Charged case, rather than the generic
-// no-summary review seedCaseReviewAnnotations bolts onto every charged case.
-async function seedSimonChargedReview(prisma, dependencies, config) {
+// Simon also has a third Palmer-material case - same victim, police
+// witnesses and documents, but a different defendant (Craig Ashworth) -
+// where the review has been submitted with a "Charge" decision but the
+// police haven't sent back authorised charges yet. This guarantees Simon
+// exactly 1 case in Charges pending, distinct from the fully Charged case
+// seeded by seedSimonChargedReview.
+async function seedSimonChargesPendingReview(prisma, dependencies, config) {
   const { types, complexities } = config;
 
   const simonWhatley = await prisma.user.findFirst({
@@ -28,11 +27,11 @@ async function seedSimonChargedReview(prisma, dependencies, config) {
   });
 
   if (!simonWhatley) {
-    console.log('⚠️ Simon Whatley not found, skipping charged review');
+    console.log('⚠️ Simon Whatley not found, skipping charges pending review');
     return 0;
   }
 
-  const defendant = await createPalmerDefendant(prisma, { firstName: 'Ryan', lastName: 'Doyle' });
+  const defendant = await createPalmerDefendant(prisma, { firstName: 'Craig', lastName: 'Ashworth' });
   const victim = await findOrCreatePalmerVictim(prisma);
   const policeUnit = await findPalmerPoliceUnit(prisma);
   const unitId = faker.helpers.arrayElement(Object.values(SIMON_UNITS));
@@ -83,36 +82,25 @@ async function seedSimonChargedReview(prisma, dependencies, config) {
     userId: simonWhatley.id,
     defendant,
     status: 'submitted',
-    lastName: 'Doyle',
-    includeChargeDecision: false
+    lastName: 'Ashworth',
+    includeChargeDecision: true
   });
 
   // Mirrors what submitting a "Charge" decision does in the real review
-  // flow (app/routes/case--review.js), plus the police having since sent
-  // back authorised charges.
+  // flow (app/routes/case--review.js): the charge itself records the
+  // decision, while the defendant moves to Charges pending until the
+  // police send back authorised charges.
   await prisma.charge.update({
     where: { id: defendant.charges[0].id },
-    data: { status: 'Charged' }
+    data: { status: 'Charge' }
   });
 
   await prisma.defendant.update({
     where: { id: defendant.id },
-    data: { status: statuses.CHARGED, needsReview: false }
+    data: { status: statuses.CHARGES_PENDING, needsReview: false }
   });
-
-  await prisma.document.create({
-    data: {
-      caseId: _case.id,
-      name: 'Authorised charges (MG04)',
-      description: 'Authorised charges received from the police.',
-      type: 'PDF',
-      size: faker.number.int({ min: 50, max: 5000 }),
-    }
-  });
-
-  await addHearings(prisma, { caseId: _case.id, unitId, defendants: [defendant], status: statuses.CHARGED, forceHasHearing: true });
 
   return 1;
 }
 
-module.exports = { seedSimonChargedReview };
+module.exports = { seedSimonChargesPendingReview };

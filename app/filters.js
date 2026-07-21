@@ -40,6 +40,19 @@ addFilter('severityTagClass', (severity) => {
   }
 })
 
+addFilter('strengthTagClass', (strength) => {
+  switch (strength) {
+    case 'Strong':
+      return 'govuk-tag--green'
+    case 'Moderate':
+      return 'govuk-tag--yellow'
+    case 'Weak':
+      return 'govuk-tag--red'
+    default:
+      return 'govuk-tag--grey'
+  }
+})
+
 addFilter('directionStatusTagClass', (status) => {
   switch (status) {
     case 'Overdue':

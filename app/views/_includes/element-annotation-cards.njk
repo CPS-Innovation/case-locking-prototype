@@ -26,6 +26,16 @@
           {% endif %}
         </div>
         <div class="app-review-annotation-card__body">
+          {% if annotationCardsShowSourceDocument %}
+            <p class="app-review-annotation-card__source">
+              <a
+                href="/cases/{{ _case.id }}/documents/{{ annotation.caseReviewDocument.documentId }}"
+                class="govuk-link govuk-link--no-visited-state"
+              >
+                {{ annotation.caseReviewDocument.document.name }}
+              </a>
+            </p>
+          {% endif %}
           {% if annotation.selectedText == 'Whole photo' %}
             <img
               src="/public/images/evidence-photo-placeholder.jpg"

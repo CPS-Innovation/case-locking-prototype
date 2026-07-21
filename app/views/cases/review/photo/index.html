@@ -8,7 +8,7 @@
   {{
     govukBackLink({
       text: 'Back',
-      href: '/cases/' + caseId + '/review'
+      href: '/cases/' + caseId + '/documents' if isMaterialsView else '/cases/' + caseId + '/review'
     })
   }}
 {% endblock %}
@@ -17,11 +17,17 @@
   <span class="govuk-caption-l">{{ _case.reference }}</span>
   <h1 class="govuk-heading-l">{{ document.name }}</h1>
 
-  {% include "_includes/review/offences.njk" %}
+  <div class="{{ 'app-actions-disabled' if isMaterialsView }}">
+    {% include "_includes/review/offences.njk" %}
+  </div>
 
-  {% include "_includes/review/toolbar.njk" %}
+  {% if isMaterialsView %}
+    {% include "_includes/document/toolbar.njk" %}
+  {% else %}
+    {% include "_includes/review/toolbar.njk" %}
+  {% endif %}
 
-  <div class="app-document-area">
+  <div class="app-document-area {{ 'app-actions-disabled' if isMaterialsView }}">
     <div class="app-document-layout">
       {% include "cases/documents/_document-pane-photo.html" %}
       {% include "_includes/review/annotation-sidebar.njk" %}
@@ -34,6 +40,9 @@
 {% block pageScripts %}
   {{ super() }}
   <script src="/public/javascripts/components/photo-annotation-panel.js"></script>
+  {% if isMaterialsView %}
+    <script src="/public/javascripts/components/actions-disabled-guard.js"></script>
+  {% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -43,5 +52,8 @@
     $('.js-annotation-note').each(function () {
       new App.TextExpander({ container: $(this), maxLength: 50 })
     })
+    {% if isMaterialsView %}
+      new App.ActionsDisabledGuard()
+    {% endif %}
   </script>
 {% endblock %}

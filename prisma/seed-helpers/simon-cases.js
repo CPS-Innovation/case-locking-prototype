@@ -12,13 +12,13 @@ const {
 const { createDirectionsForCase } = require('./directions');
 const { createCtlLogEntries } = require('./ctl-log-entries');
 const {
-  WALKER_LOCATION,
-  findOrCreateWalkerVictim,
-  findWalkerPoliceUnit,
-  createWalkerDefendant,
-  createWalkerWitnesses,
-  createWalkerDocuments
-} = require('./walker-case');
+  PALMER_LOCATION,
+  findOrCreatePalmerVictim,
+  findPalmerPoliceUnit,
+  createPalmerDefendant,
+  createPalmerWitnesses,
+  createPalmerDocuments
+} = require('./palmer-case');
 
 const SIMON_UNITS = {
   NORTH_YORKSHIRE_MAGISTRATES_COURT: 9,
@@ -42,6 +42,12 @@ const SIMON_STATUSES = [
   statuses.SENTENCED,
   statuses.NO_FURTHER_ACTION,
 ];
+
+// Cases where Simon is the prosecutor (CTL, many-statements) never roll
+// Charges pending or needsReview at random - both counts on Simon's overview
+// come entirely from dedicated guaranteed cases (see createReviewCase,
+// seedSimonChargesPendingReview) so they stay stable across reseeds.
+const SIMON_OWN_CASE_STATUSES = SIMON_STATUSES.filter(status => status !== statuses.CHARGES_PENDING);
 
 // STL tasks (pre-charge, no hearing)
 const SIMON_STL_TASKS = [
@@ -359,8 +365,8 @@ async function createCTLCase(prisma, user, taskConfig, config) {
     }
   });
 
-  const status = faker.helpers.arrayElement(SIMON_STATUSES)
-  const needsReview = (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean()
+  const status = faker.helpers.arrayElement(SIMON_OWN_CASE_STATUSES)
+  const needsReview = false
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }
@@ -476,8 +482,8 @@ async function createManyStatementsCase(prisma, user, config) {
     }
   });
 
-  const status = faker.helpers.arrayElement(SIMON_STATUSES)
-  const needsReview = (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean()
+  const status = faker.helpers.arrayElement(SIMON_OWN_CASE_STATUSES)
+  const needsReview = false
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }
@@ -689,9 +695,9 @@ async function createReviewCase(prisma, user, taskName, config, { hasCharge = tr
 
   const unitId = faker.helpers.arrayElement(SIMON_UNITS_ARRAY);
 
-  const defendant = await createWalkerDefendant(prisma, { hasCharge, firstName, lastName });
-  const victim = await findOrCreateWalkerVictim(prisma);
-  const policeUnit = await findWalkerPoliceUnit(prisma);
+  const defendant = await createPalmerDefendant(prisma, { hasCharge, firstName, lastName });
+  const victim = await findOrCreatePalmerVictim(prisma);
+  const policeUnit = await findPalmerPoliceUnit(prisma);
 
   const _case = await prisma.case.create({
     data: {
@@ -702,11 +708,11 @@ async function createReviewCase(prisma, user, taskName, config, { hasCharge = tr
       policeUnit: { connect: { id: policeUnit.id } },
       defendants: { connect: { id: defendant.id } },
       victims: { connect: { id: victim.id } },
-      location: { create: WALKER_LOCATION }
+      location: { create: PALMER_LOCATION }
     }
   });
 
-  await createWalkerDocuments(prisma, _case.id);
+  await createPalmerDocuments(prisma, _case.id);
 
   await prisma.caseProsecutor.create({
     data: {
@@ -733,7 +739,7 @@ async function createReviewCase(prisma, user, taskName, config, { hasCharge = tr
 
   await createDirectionsForCase(prisma, _case.id, defendant.id, faker.number.int({ min: 1, max: 3 }));
 
-  await createWalkerWitnesses(prisma, _case.id);
+  await createPalmerWitnesses(prisma, _case.id);
 
   return _case;
 }
@@ -786,13 +792,17 @@ async function seedSimonCases(prisma, dependencies, config) {
     await createColleagueCase(prisma, colleagues.prosecutors[i], colleagues.paralegalOfficers[i], fullConfig);
   }
 
-  // Case awaiting a charging decision (not charged, needs review) - same
-  // supporting cast as the Walker/Palmer material (victim, police witnesses,
-  // documents) but a different defendant, so it doesn't read as a duplicate
+  // Cases awaiting a charging decision (not charged, needs review) - same
+  // supporting cast as the Palmer material (victim, police witnesses,
+  // documents) but different defendants, so they don't read as duplicates
   // of the in-progress Palmer review seeded by seedSimonInProgressReview.
+  // Together with that in-progress review, these three give Simon exactly
+  // 4 cases needing review, regardless of the random status rolls above.
   await createReviewCase(prisma, simonWhatley, 'Make charging decision', fullConfig, { firstName: 'Marcus', lastName: 'Webb' });
+  await createReviewCase(prisma, simonWhatley, 'Make charging decision', fullConfig, { firstName: 'Aisha', lastName: 'Coleman' });
+  await createReviewCase(prisma, simonWhatley, 'Make charging decision', fullConfig, { firstName: 'Declan', lastName: 'Murphy' });
 
-  return SIMON_STL_TASKS.length + SIMON_CTL_TASKS.length + 1 + 20 + 1;
+  return SIMON_STL_TASKS.length + SIMON_CTL_TASKS.length + 1 + 20 + 3;
 }
 
 module.exports = {

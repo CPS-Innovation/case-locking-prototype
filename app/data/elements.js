@@ -64,9 +64,10 @@ module.exports = {
     "The defendant intended to steal, inflict grievous bodily harm or cause criminal damage, or in fact did so having entered"
   ],
   A02: [
-    "The defendant assaulted or battered the victim",
-    "The assault or battery caused actual bodily harm",
-    "The defendant acted intentionally or recklessly"
+    "The suspect was the person who committed the act",
+    "The force applied was unlawful, with no lawful justification",
+    "The injury amounted to more than transient or trifling harm",
+    "The unlawful force applied caused the actual bodily harm suffered"
   ],
   T01: [
     "The defendant used threatening, abusive or insulting words or behaviour",

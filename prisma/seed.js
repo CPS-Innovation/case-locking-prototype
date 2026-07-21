@@ -51,6 +51,7 @@ const { seedElements } = require("./seed-helpers/elements");
 const { seedCaseReviewAnnotations } = require("./seed-helpers/case-review-annotations");
 const { seedSimonInProgressReview } = require("./seed-helpers/simon-in-progress-review");
 const { seedSimonChargedReview } = require("./seed-helpers/simon-charged-review");
+const { seedSimonChargesPendingReview } = require("./seed-helpers/simon-charges-pending");
 
 const prisma = new PrismaClient();
 
@@ -170,9 +171,9 @@ async function main() {
   // done(createdCases.length);
   const createdCases = [];
 
-  step("DGA cases");
-  const dgaCasesCount = await seedDGAMonths(prisma, defendants);
-  done(dgaCasesCount);
+  // step("DGA cases");
+  // const dgaCasesCount = await seedDGAMonths(prisma, defendants);
+  // done(dgaCasesCount);
 
   const availableOperationNames = faker.helpers.shuffle([
     'Ragnarok', 'Valhalla', 'Odin', 'Mjolnir', 'Bifrost',
@@ -298,6 +299,14 @@ async function main() {
     { types, complexities }
   );
   done(chargedReviewCount);
+
+  step("Simon's charges pending review");
+  const chargesPendingReviewCount = await seedSimonChargesPendingReview(
+    prisma,
+    { defenceLawyers, victims, policeUnits },
+    { types, complexities }
+  );
+  done(chargesPendingReviewCount);
 
   console.log("\n✅ Seed complete\n");
 }

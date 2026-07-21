@@ -8,7 +8,7 @@
   {{
     govukBackLink({
       text: 'Back',
-      href: '/cases/' + caseId + '/review'
+      href: '/cases/' + caseId + '/documents' if isMaterialsView else '/cases/' + caseId + '/review'
     })
   }}
 {% endblock %}
@@ -17,18 +17,24 @@
   <span class="govuk-caption-l">{{ _case.reference }}</span>
   <h1 class="govuk-heading-l">{{ document.name }}</h1>
 
-  {% include "_includes/review/offences.njk" %}
+  <div class="{{ 'app-actions-disabled' if isMaterialsView }}">
+    {% include "_includes/review/offences.njk" %}
+  </div>
 
-  {% include "_includes/review/toolbar.njk" %}
+  {% if isMaterialsView %}
+    {% include "_includes/document/toolbar.njk" %}
+  {% else %}
+    {% include "_includes/review/toolbar.njk" %}
+  {% endif %}
 
-  <div class="app-document-area">
+  <div class="app-document-area {{ 'app-actions-disabled' if isMaterialsView }}">
     <div class="app-document-layout">
       {% include "cases/documents/_document-pane-text.html" %}
       {% include "_includes/review/annotation-sidebar.njk" %}
     </div>
   </div>
 
-  <div class="app-annotation-popup js-annotation-popup" hidden aria-hidden="true">
+  <div class="app-annotation-popup js-annotation-popup {{ 'app-actions-disabled' if isMaterialsView }}" hidden aria-hidden="true">
     <div class="app-annotation-popup__actions js-selection-actions">
       {% if offences.length %}
         <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="evidence">
@@ -55,18 +61,10 @@
         Note
       </button>
       <button type="button" class="app-annotation-popup__btn js-redact-btn">Redact</button>
-      <button type="button" class="app-annotation-popup__btn js-inadmissible-btn">
-        Inadmissible
-      </button>
     </div>
     <div class="app-annotation-popup__actions js-redaction-actions" hidden>
       <button type="button" class="app-annotation-popup__btn js-delete-redaction-btn">
         Unredact
-      </button>
-    </div>
-    <div class="app-annotation-popup__actions js-inadmissible-actions" hidden>
-      <button type="button" class="app-annotation-popup__btn js-delete-inadmissible-btn">
-        Restore
       </button>
     </div>
   </div>
@@ -85,24 +83,14 @@
   </form>
 
   <form method="post" id="redaction-delete-form" hidden></form>
-
-  <form
-    method="post"
-    action="/cases/{{ caseId }}/review/documents/{{ documentId }}/inadmissibles/add"
-    id="inadmissible-form"
-    hidden
-  >
-    <input type="hidden" name="selectedText" id="inadmissible-selected-text" />
-    <input type="hidden" name="paragraphIndex" id="inadmissible-paragraph-index" />
-    <input type="hidden" name="occurrenceIndex" id="inadmissible-occurrence-index" />
-  </form>
-
-  <form method="post" id="inadmissible-delete-form" hidden></form>
 {% endblock %}
 
 {% block pageScripts %}
   {{ super() }}
   <script src="/public/javascripts/components/annotation-panel.js"></script>
+  {% if isMaterialsView %}
+    <script src="/public/javascripts/components/actions-disabled-guard.js"></script>
+  {% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -112,5 +100,8 @@
     $('.js-annotation-note').each(function () {
       new App.TextExpander({ container: $(this), maxLength: 50 })
     })
+    {% if isMaterialsView %}
+      new App.ActionsDisabledGuard()
+    {% endif %}
   </script>
 {% endblock %}

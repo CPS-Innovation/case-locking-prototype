@@ -64,7 +64,7 @@ module.exports = [
     "size": 93,
     "description": "Screenshot of the WhatsApp message sent by PALMER to the victim’s mother at 01:53 on 2 November 2024.",
     "images": [
-      "/public/images/walker-material/sh-01-message-to-olivia-mum.png"
+      "/public/images/palmer-material/sh-01-message-to-olivia-mum.png"
     ]
   },
   {
@@ -74,13 +74,13 @@ module.exports = [
     "size": 509,
     "description": "XRY export of the WhatsApp conversation between the victim and PALMER on 2 November 2024.",
     "images": [
-      "/public/images/walker-material/sh-02-communication-page-1.png",
-      "/public/images/walker-material/sh-02-communication-page-2.png",
-      "/public/images/walker-material/sh-02-communication-page-3.png",
-      "/public/images/walker-material/sh-02-communication-page-4.png",
-      "/public/images/walker-material/sh-02-communication-page-5.png",
-      "/public/images/walker-material/sh-02-communication-page-6.png",
-      "/public/images/walker-material/sh-02-communication-page-7.png"
+      "/public/images/palmer-material/sh-02-communication-page-1.png",
+      "/public/images/palmer-material/sh-02-communication-page-2.png",
+      "/public/images/palmer-material/sh-02-communication-page-3.png",
+      "/public/images/palmer-material/sh-02-communication-page-4.png",
+      "/public/images/palmer-material/sh-02-communication-page-5.png",
+      "/public/images/palmer-material/sh-02-communication-page-6.png",
+      "/public/images/palmer-material/sh-02-communication-page-7.png"
     ]
   },
   {

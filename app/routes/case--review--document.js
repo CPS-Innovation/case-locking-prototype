@@ -3,68 +3,9 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
 const { findOrCreateReview, findOrCreateDocumentReview, getElementAnnotations, resetReviewCompletionAfterOffenceChange } = require('../helpers/caseReview')
+const { applyHighlights, applyRedactions, buildOffencesWithAnnotations } = require('../helpers/documentAnnotations')
 const charges = require('../data/charges')
 const elementsByChargeCode = require('../data/elements')
-
-// Targets the exact paragraph/occurrence the user selected, rather than
-// replacing every matching string across the document (mirrors applyRedactions).
-function applyMarks(sections, items, markUp) {
-  if (!items.length) return sections
-  const flatParagraphs = sections.flatMap(s => s.paragraphs)
-  items.forEach(item => {
-    const paraIdx = item.paragraphIndex
-    if (paraIdx < 0 || paraIdx >= flatParagraphs.length) return
-    const escaped = item.selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(escaped, 'g')
-    const target = item.occurrenceIndex
-    let count = 0
-    flatParagraphs[paraIdx] = flatParagraphs[paraIdx].replace(regex, function(match) {
-      return count++ === target ? markUp(item) : match
-    })
-  })
-  let flatIdx = 0
-  return sections.map(section => ({
-    heading: section.heading,
-    paragraphs: section.paragraphs.map(() => flatParagraphs[flatIdx++])
-  }))
-}
-
-function applyHighlights(sections, annotations) {
-  return applyMarks(sections, annotations, annotation =>
-    `<mark class="app-annotation app-annotation--${annotation.type}" data-annotation-id="${annotation.id}">${annotation.selectedText}</mark>`
-  )
-}
-
-function applyInadmissibles(sections, inadmissibles) {
-  return applyMarks(sections, inadmissibles, item =>
-    `<mark class="app-inadmissible" data-inadmissible-id="${item.id}">${item.selectedText}</mark>`
-  )
-}
-
-function applyRedactions(sections, redactions) {
-  return applyMarks(sections, redactions, redaction =>
-    `<mark class="app-redaction" data-redaction-id="${redaction.id}">${redaction.selectedText}</mark>`
-  )
-}
-
-function buildElementCheckboxItems(elements, options) {
-  const idPrefix = options?.idPrefix || 'reasoning'
-  const linkedByElementId = options?.linkedByElementId || {}
-  return elements.map(element => {
-    const linkedReasoning = linkedByElementId[element.id]
-    return {
-      value: String(element.id),
-      text: element.description,
-      checked: linkedReasoning !== undefined,
-      conditional: {
-        html: `<div class="govuk-form-group govuk-!-margin-bottom-0">
-  <label class="govuk-label govuk-label--s" for="${idPrefix}-${element.id}">Reason</label>
-  <textarea class="govuk-textarea govuk-!-margin-bottom-0 js-annotation-element-reasoning" id="${idPrefix}-${element.id}" name="${idPrefix}-${element.id}" rows="2" data-element-id="${element.id}">${_.escape(linkedReasoning || '')}</textarea>
-</div>`
-      }
-    }
-  })
-}
 
 function formatTimestamp(totalSeconds) {
   const seconds = Math.max(0, Math.round(totalSeconds))
@@ -112,90 +53,20 @@ module.exports = (router) => {
       include: { elements: { include: { element: true } } }
     })
 
-    const [redactions, inadmissibles] = (isVideo || isAudio || isPhoto) ? [[], []] : await Promise.all([
-      prisma.caseReviewRedaction.findMany({
-        where: { caseReviewDocumentId: docReview.id },
-        orderBy: { createdAt: 'asc' }
-      }),
-      prisma.caseReviewInadmissible.findMany({
-        where: { caseReviewDocumentId: docReview.id },
-        orderBy: { createdAt: 'asc' }
-      })
-    ])
+    const redactions = (isVideo || isAudio || isPhoto) ? [] : await prisma.caseReviewRedaction.findMany({
+      where: { caseReviewDocumentId: docReview.id },
+      orderBy: { createdAt: 'asc' }
+    })
 
     const defendantCharges = _case.defendants[0]?.charges || []
 
-    function buildElementRows(elements) {
-      return elements.map(element => ({
-        key: { text: element.description },
-        value: {
-          html: _.escape(element.strength || 'Not assessed') +
-            (element.strengthReasoning
-              ? `<br><span class="govuk-hint govuk-!-margin-bottom-0">${_.escape(element.strengthReasoning)}</span>`
-              : '')
-        },
-        actions: {
-          items: [
-            {
-              href: `/cases/${caseId}/review/documents/${documentId}/elements/${element.id}/edit`,
-              text: 'Change',
-              visuallyHiddenText: element.description
-            }
-          ]
-        }
-      }))
-    }
-
-    // Evidence annotations can link elements from any offence, so each
-    // offence gets its own checkbox group in the sidebar rather than one
-    // flat list assuming a single offence.
-    const offences = defendantCharges.map(charge => ({
-      charge,
-      elementRows: buildElementRows(charge.elements || []),
-      elementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
-        idPrefix: `reasoning-charge-${charge.id}`
-      }),
-      disclosureElementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
-        idPrefix: `disclosure-reasoning-charge-${charge.id}`
-      })
-    }))
-
-    const hasElements = offences.some(offence => offence.elementCheckboxItems.length)
-
-    // Each evidence, disclosure or note annotation gets its own copy of the checkbox
-    // groups, pre-checked and pre-filled with whatever elements it's already linked
-    // to, so "Change" can re-open the same form used when it was first added.
-    annotations.forEach(annotation => {
-      if (!['evidence', 'disclosure', 'note'].includes(annotation.type)) return
-      const linkedByElementId = {}
-      annotation.elements.forEach(item => { linkedByElementId[item.elementId] = item.reasoning })
-      annotation.editOffences = offences.map(offence => ({
-        charge: offence.charge,
-        elementCheckboxItems: buildElementCheckboxItems(offence.charge.elements || [], {
-          idPrefix: `reasoning-${annotation.id}-charge-${offence.charge.id}`,
-          linkedByElementId
-        })
-      }))
-
-      // A note isn't evidence or disclosure yet, so it needs both checkbox
-      // groups on offer — whichever one gets linked turns the note into that type.
-      if (annotation.type === 'note') {
-        annotation.editDisclosureOffences = offences.map(offence => ({
-          charge: offence.charge,
-          elementCheckboxItems: buildElementCheckboxItems(offence.charge.elements || [], {
-            idPrefix: `disclosure-reasoning-${annotation.id}-charge-${offence.charge.id}`,
-            linkedByElementId
-          })
-        }))
-      }
-    })
+    const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, annotations, caseId, documentId)
 
     let sections = []
     if (!isVideo && !isAudio && !isPhoto) {
       const rawSections = generateDocumentContent(document)
       const annotatedSections = applyHighlights(rawSections, annotations)
-      const redactedSections = applyRedactions(annotatedSections, redactions)
-      sections = applyInadmissibles(redactedSections, inadmissibles)
+      sections = applyRedactions(annotatedSections, redactions)
     }
 
     let template = 'cases/review/document/index'
@@ -211,7 +82,6 @@ module.exports = (router) => {
       sections,
       annotations,
       redactions,
-      inadmissibles,
       isVideo,
       isAudio,
       isPhoto,
@@ -712,41 +582,6 @@ module.exports = (router) => {
     const redactionId = parseInt(req.params.redactionId)
 
     await prisma.caseReviewRedaction.delete({ where: { id: redactionId } })
-
-    res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
-  })
-
-  // Add inadmissible
-  router.post('/cases/:caseId/review/documents/:documentId/inadmissibles/add', async (req, res) => {
-    const caseId = parseInt(req.params.caseId)
-    const documentId = parseInt(req.params.documentId)
-    const userId = req.session.data.user.id
-
-    const review = await findOrCreateReview(prisma, caseId, userId)
-    const docReview = await findOrCreateDocumentReview(prisma, review.id, documentId)
-
-    const { selectedText } = req.body
-    if (selectedText) {
-      await prisma.caseReviewInadmissible.create({
-        data: {
-          caseReviewDocumentId: docReview.id,
-          selectedText,
-          paragraphIndex: parseInt(req.body.paragraphIndex) || 0,
-          occurrenceIndex: parseInt(req.body.occurrenceIndex) || 0
-        }
-      })
-    }
-
-    res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
-  })
-
-  // Delete inadmissible
-  router.post('/cases/:caseId/review/documents/:documentId/inadmissibles/:inadmissibleId/delete', async (req, res) => {
-    const caseId = parseInt(req.params.caseId)
-    const documentId = parseInt(req.params.documentId)
-    const inadmissibleId = parseInt(req.params.inadmissibleId)
-
-    await prisma.caseReviewInadmissible.delete({ where: { id: inadmissibleId } })
 
     res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
   })

@@ -6,36 +6,11 @@ const documentCategories = require('../data/document-categories')
 const { addTimeLimitDates } = require('../helpers/timeLimit')
 const { addCaseStatus } = require('../helpers/caseStatus')
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
+const { applyHighlights, applyRedactions, buildOffencesWithAnnotations } = require('../helpers/documentAnnotations')
+const { getReview } = require('../helpers/caseReview')
 
 function deriveDocumentType(filename) {
   return (filename || '').split('.').pop().toUpperCase()
-}
-
-// Targets the exact paragraph/occurrence the user selected, rather than
-// replacing every matching string across the document.
-function applyHighlights(sections, annotations) {
-  if (!annotations.length) return sections
-  const flatParagraphs = sections.flatMap(s => s.paragraphs)
-  annotations.forEach(annotation => {
-    const paraIdx = annotation.paragraphIndex
-    if (paraIdx < 0 || paraIdx >= flatParagraphs.length) return
-    const escaped = annotation.selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(escaped, 'g')
-    const cls = `app-annotation app-annotation--${annotation.type}`
-    const target = annotation.occurrenceIndex
-    let count = 0
-    flatParagraphs[paraIdx] = flatParagraphs[paraIdx].replace(regex, function(match) {
-      if (count++ === target) {
-        return `<mark class="${cls}" data-annotation-id="${annotation.id}">${annotation.selectedText}</mark>`
-      }
-      return match
-    })
-  })
-  let flatIdx = 0
-  return sections.map(section => ({
-    heading: section.heading,
-    paragraphs: section.paragraphs.map(() => flatParagraphs[flatIdx++])
-  }))
 }
 
 function resetFilters(req) {
@@ -235,53 +210,82 @@ module.exports = router => {
     res.redirect(`/cases/${caseId}/documents`)
   })
 
+  // Reuses the review flow's document viewer templates so the two views stay
+  // visually identical. Actions are still rendered (so the page looks the
+  // same as review) but are inert client-side — see actions-disabled-guard.js
+  // — since opening a document from the materials list isn't part of a review.
   router.get('/cases/:caseId/documents/:documentId', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const userId = req.session.data.user.id
 
     const [_case, document] = await Promise.all([
-      prisma.case.findUnique({ where: { id: caseId } }),
+      prisma.case.findUnique({
+        where: { id: caseId },
+        include: {
+          defendants: {
+            include: { charges: { include: { elements: { orderBy: { order: 'asc' } } } } }
+          }
+        }
+      }),
       prisma.document.findUnique({ where: { id: documentId } })
     ])
 
-    const review = await prisma.caseReview.findFirst({
-      where: { caseId, userId },
-      orderBy: { updatedAt: 'desc' }
-    })
-
-    let annotations = []
-    if (review) {
-      const docReview = await prisma.caseReviewDocument.findFirst({
-        where: { caseReviewId: review.id, documentId }
-      })
-      if (docReview) {
-        annotations = await prisma.caseReviewAnnotation.findMany({
-          where: { caseReviewDocumentId: docReview.id },
-          orderBy: { createdAt: 'asc' }
-        })
-      }
-    }
+    const review = await getReview(prisma, caseId)
+    const docReview = review
+      ? await prisma.caseReviewDocument.findFirst({ where: { caseReviewId: review.id, documentId } })
+      : null
 
     const isVideo = document.type === 'MP4'
     const isAudio = document.type === 'MP3'
     const isPhoto = document.type === 'JPG' || document.type === 'PNG'
-    const sections = (isVideo || isAudio || isPhoto) ? [] : applyHighlights(generateDocumentContent(document), annotations)
 
-    res.render('cases/documents/document', {
+    const annotations = docReview
+      ? await prisma.caseReviewAnnotation.findMany({
+          where: { caseReviewDocumentId: docReview.id },
+          orderBy: { createdAt: 'asc' },
+          include: { elements: { include: { element: true } } }
+        })
+      : []
+
+    const redactions = (docReview && !isVideo && !isAudio && !isPhoto) ? await prisma.caseReviewRedaction.findMany({
+      where: { caseReviewDocumentId: docReview.id },
+      orderBy: { createdAt: 'asc' }
+    }) : []
+
+    const defendantCharges = _case.defendants[0]?.charges || []
+    const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, annotations, caseId, documentId)
+
+    let sections = []
+    if (!isVideo && !isAudio && !isPhoto) {
+      const rawSections = generateDocumentContent(document)
+      const annotatedSections = applyHighlights(rawSections, annotations)
+      sections = applyRedactions(annotatedSections, redactions)
+    }
+
+    let template = 'cases/review/document/index'
+    if (isVideo) template = 'cases/review/video/index'
+    if (isAudio) template = 'cases/review/audio/index'
+    if (isPhoto) template = 'cases/review/photo/index'
+
+    res.render(template, {
       _case,
       document,
+      offences,
+      hasElements,
       sections,
       annotations,
-      caseId,
-      documentId,
+      redactions,
       isVideo,
       isAudio,
       isPhoto,
       videoUrl: isVideo ? '/public/videos/cctv-placeholder.mp4' : null,
       audioUrl: isAudio ? '/public/audio/999-call-placeholder.mp3' : null,
       photoUrls: isPhoto ? getDocumentPhotoUrls(document) : null,
-      user: req.session.data.user
+      caseId,
+      documentId,
+      user: req.session.data.user,
+      isReviewMode: true,
+      isMaterialsView: true
     })
   })
 

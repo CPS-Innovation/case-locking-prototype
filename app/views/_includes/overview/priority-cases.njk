@@ -4,7 +4,7 @@
 {% set hasHearings = caseHearingPrepCountsByRange.today > 0 or caseHearingPrepCountsByRange.tomorrow > 0 or caseHearingPrepCountsByRange.thisWeek > 0 or caseHearingPrepCountsByRange.nextWeek > 0 %}
 {% set hasDirections = (data.user.role == "Prosecutor" or data.user.role == "Paralegal officer") and (dueTodayDirectionCount > 0 or dueTomorrowDirectionCount > 0) %}
 
-{% if hasCTL or hasSTL or hasPace or hasHearings or hasDirections %}
+{% if hasCTL or hasSTL or hasPace or hasHearings %}
   <div class="app-overview-section">
     <h2 class="govuk-heading-m">High priority cases</h2>
 
@@ -98,7 +98,7 @@
       </div>
     {% endif %}
 
-    {% if hasDirections %}
+    {% if hasDirections and false %}
       <h3 class="govuk-heading-s">Directions due soon</h3>
       <div class="app-overview-cards govuk-!-margin-bottom-6">
         {% if dueTodayDirectionCount > 0 %}

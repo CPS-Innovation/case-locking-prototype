@@ -1,4 +1,4 @@
-const walkerMaterial = require('../data/walker-material')
+const palmerMaterial = require('../data/palmer-material')
 
 const templates = {
   policeReport: [
@@ -201,11 +201,11 @@ function selectTemplate(documentName) {
 }
 
 function generateDocumentContent(document) {
-  return walkerMaterial.getContent(document.name) || selectTemplate(document.name)
+  return palmerMaterial.getContent(document.name) || selectTemplate(document.name)
 }
 
 function getDocumentPhotoUrls(document) {
-  return walkerMaterial.getImages(document.name) || ['/public/images/evidence-photo-placeholder.jpg']
+  return palmerMaterial.getImages(document.name) || ['/public/images/evidence-photo-placeholder.jpg']
 }
 
 module.exports = { generateDocumentContent, getDocumentPhotoUrls }

@@ -1,9 +1,0 @@
-{% if isVideo %}
-  {% include "cases/documents/_document-pane-video.html" %}
-{% elif isAudio %}
-  {% include "cases/documents/_document-pane-audio.html" %}
-{% elif isPhoto %}
-  {% include "cases/documents/_document-pane-photo.html" %}
-{% else %}
-  {% include "cases/documents/_document-pane-text.html" %}
-{% endif %}

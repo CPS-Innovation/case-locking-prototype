@@ -72,32 +72,48 @@
         })
       }}
 
-      <h2 class="govuk-heading-m">Offence and strength assessment</h2>
-
       {% if charges.length %}
         {% for charge in charges %}
-          <h3 class="govuk-heading-s">{{ charge.description }}</h3>
+          <h2 class="govuk-heading-m">{{ charge.description }}</h2>
 
-          {% set elementRows = [] %}
           {% for element in charge.elements %}
-            {%
-              set elementRows = elementRows.concat([{
-                key: { text: element.description },
-                value: {
-                  html: ((element.strength or "Not assessed") | e) + ('<br><span class="govuk-hint govuk-!-margin-bottom-0">' + (element.strengthReasoning | e) + '</span>' if element.strengthReasoning else "") + ('<br><a class="govuk-link" href="#">View evidence</a>' if element.hasEvidence else "")
-                },
-                actions: {
-                  items: [{
-                    href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
-                    text: "Change",
-                    visuallyHiddenText: element.description
-                  }]
-                }
-              }])
-            %}
-          {% endfor %}
+            <h3 class="govuk-heading-s govuk-!-margin-top-8">{{ element.description }}</h3>
 
-          {{ govukSummaryList({ classes: "govuk-!-margin-bottom-4", rows: elementRows }) }}
+            {{
+              govukSummaryList({
+                classes: "govuk-!-margin-bottom-4",
+                rows: [
+                  {
+                    key: { text: "Strength" },
+                    value: { html: govukTag({ text: element.strength or "Not assessed", classes: (element.strength or "Not assessed") | strengthTagClass }) },
+                    actions: {
+                      items: [{
+                        href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
+                        text: "Change",
+                        visuallyHiddenText: "strength of " + (element.description | lower)
+                      }]
+                    }
+                  },
+                  {
+                    key: { text: "Reason" },
+                    value: { text: element.strengthReasoning },
+                    actions: {
+                      items: [{
+                        href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
+                        text: "Change",
+                        visuallyHiddenText: "reason for " + (element.description | lower)
+                      }]
+                    }
+                  } if element.strengthReasoning
+                ]
+              })
+            }}
+
+            {% set annotations = element.reviewAnnotations %}
+            {% set annotationCardsShowElementMeta = false %}
+            {% set annotationCardsShowSourceDocument = true %}
+            {% include "_includes/element-annotation-cards.njk" %}
+          {% endfor %}
         {% endfor %}
       {% else %}
         <p class="govuk-body">No offences.</p>
@@ -131,7 +147,7 @@
       {% endif %}
       #}
 
-      {% if _case.hearings.length %}
+      {% if _case.hearings.length and false %}
         <h2 class="govuk-heading-m govuk-!-margin-top-7">Hearings</h2>
         <div class="app-list">
           {% for hearing in _case.hearings %}

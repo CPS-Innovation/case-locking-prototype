@@ -46,11 +46,19 @@ module.exports = router => {
     const elementIds = _case.defendants.flatMap(defendant =>
       defendant.charges.flatMap(charge => charge.elements.map(element => element.id))
     )
-    const evidenceLinks = await prisma.caseReviewAnnotationElement.findMany({
-      where: { elementId: { in: elementIds }, annotation: { type: 'evidence' } },
-      select: { elementId: true }
+    const annotationLinks = await prisma.caseReviewAnnotationElement.findMany({
+      where: { elementId: { in: elementIds }, annotation: { type: { in: ['evidence', 'disclosure'] } } },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        annotation: {
+          include: {
+            caseReviewDocument: { include: { document: true } },
+            elements: { include: { element: { include: { charge: true } } } }
+          }
+        }
+      }
     })
-    const elementIdsWithEvidence = new Set(evidenceLinks.map(link => link.elementId))
+    const annotationsByElementId = _.groupBy(annotationLinks, 'elementId')
 
     const submittedReview = await prisma.caseReview.findFirst({
       where: { caseId: _case.id, status: 'submitted' }
@@ -64,7 +72,9 @@ module.exports = router => {
           ...element,
           strength: submittedReview ? element.strength : null,
           strengthReasoning: submittedReview ? element.strengthReasoning : null,
-          hasEvidence: submittedReview ? elementIdsWithEvidence.has(element.id) : false
+          reviewAnnotations: submittedReview
+            ? (annotationsByElementId[element.id] || []).map(link => link.annotation)
+            : []
         }))
       }))
     )
