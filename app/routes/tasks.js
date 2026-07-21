@@ -4,6 +4,7 @@ const prisma = new PrismaClient()
 const Pagination = require('../helpers/pagination')
 const { groupTasks, getDateGroup, getPaceClockGroup } = require('../helpers/taskGrouping')
 const { addTimeLimitDates } = require('../helpers/timeLimit')
+const { addCaseStatus } = require('../helpers/caseStatus')
 const taskNames = require('../data/task-names')
 
 function resetFilters(req) {
