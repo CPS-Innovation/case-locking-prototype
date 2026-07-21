@@ -1,7 +1,8 @@
 const _ = require('lodash')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
-const documentTypes = require('../data/document-types')
+const { mediaTypes, fileTypesByMediaType, getMediaType } = require('../data/document-media-types')
+const documentCategories = require('../data/document-categories')
 const { addTimeLimitDates } = require('../helpers/timeLimit')
 const { addCaseStatus } = require('../helpers/caseStatus')
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
@@ -38,23 +39,34 @@ function applyHighlights(sections, annotations) {
 }
 
 function resetFilters(req) {
-  _.set(req, 'session.data.documentListFilters.documentTypes', null)
+  _.set(req, 'session.data.documentListFilters.types', null)
+  _.set(req, 'session.data.documentListFilters.categories', null)
 }
 
 module.exports = router => {
   router.get("/cases/:caseId/documents", async (req, res) => {
     const caseId = parseInt(req.params.caseId)
 
-    let selectedDocumentTypeFilters = _.get(req.session.data.documentListFilters, 'documentTypes', [])
+    let selectedMediaTypeFilters = _.get(req.session.data.documentListFilters, 'types', [])
+    let selectedCategoryFilters = _.get(req.session.data.documentListFilters, 'categories', [])
 
     let selectedFilters = { categories: [] }
 
-    // Document type filter display
-    if (selectedDocumentTypeFilters?.length) {
+    // Selected filter chip display
+    if (selectedMediaTypeFilters?.length) {
       selectedFilters.categories.push({
         heading: { text: 'Type' },
-        items: selectedDocumentTypeFilters.map(function(label) {
+        items: selectedMediaTypeFilters.map(function(label) {
           return { text: label, href: `/cases/${caseId}/documents/remove-type/${label}` }
+        })
+      })
+    }
+
+    if (selectedCategoryFilters?.length) {
+      selectedFilters.categories.push({
+        heading: { text: 'Category' },
+        items: selectedCategoryFilters.map(function(label) {
+          return { text: label, href: `/cases/${caseId}/documents/remove-category/${label}` }
         })
       })
     }
@@ -62,8 +74,13 @@ module.exports = router => {
     // Build Prisma where clause for documents
     let where = { caseId: caseId, AND: [] }
 
-    if (selectedDocumentTypeFilters?.length) {
-      where.AND.push({ type: { in: selectedDocumentTypeFilters } })
+    if (selectedMediaTypeFilters?.length) {
+      const fileTypes = selectedMediaTypeFilters.flatMap(mediaType => fileTypesByMediaType[mediaType])
+      where.AND.push({ type: { in: fileTypes } })
+    }
+
+    if (selectedCategoryFilters?.length) {
+      where.AND.push({ category: { in: selectedCategoryFilters } })
     }
 
     if (where.AND.length === 0) {
@@ -101,6 +118,8 @@ module.exports = router => {
       where: where
     })
 
+    documents = documents.map(document => ({ ...document, mediaType: getMediaType(document.type) }))
+
     // Search by material name or description
     let keywords = _.get(req.session.data.documentSearch, 'keywords')
 
@@ -113,21 +132,32 @@ module.exports = router => {
       })
     }
 
-    let documentTypeItems = documentTypes.map(docType => ({
-      text: docType,
-      value: docType
+    let mediaTypeItems = mediaTypes.map(mediaType => ({
+      text: mediaType,
+      value: mediaType
+    }))
+
+    let categoryItems = documentCategories.map(category => ({
+      text: category,
+      value: category
     }))
 
     res.render("cases/documents/index", {
       _case,
       documents,
-      documentTypeItems,
+      mediaTypeItems,
+      categoryItems,
       selectedFilters
     })
   })
 
   router.get('/cases/:caseId/documents/remove-type/:type', (req, res) => {
-    _.set(req, 'session.data.documentListFilters.documentTypes', _.pull(req.session.data.documentListFilters.documentTypes, req.params.type))
+    _.set(req, 'session.data.documentListFilters.types', _.pull(req.session.data.documentListFilters.types, req.params.type))
+    res.redirect(`/cases/${req.params.caseId}/documents`)
+  })
+
+  router.get('/cases/:caseId/documents/remove-category/:category', (req, res) => {
+    _.set(req, 'session.data.documentListFilters.categories', _.pull(req.session.data.documentListFilters.categories, req.params.category))
     res.redirect(`/cases/${req.params.caseId}/documents`)
   })
 

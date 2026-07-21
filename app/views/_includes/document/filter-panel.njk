@@ -1,8 +1,8 @@
 {% set filterOptionsHtml %}
 
   {{ govukCheckboxes({
-    idPrefix: "documentListFilters[documentTypes]",
-    name: "documentListFilters[documentTypes]",
+    idPrefix: "documentListFilters[types]",
+    name: "documentListFilters[types]",
     classes: "govuk-checkboxes--small",
     fieldset: {
       legend: {
@@ -10,8 +10,22 @@
         classes: "govuk-fieldset__legend--s"
       }
     },
-    items: documentTypeItems,
-    values: data.documentListFilters.documentTypes
+    items: mediaTypeItems,
+    values: data.documentListFilters.types
+  }) }}
+
+  {{ govukCheckboxes({
+    idPrefix: "documentListFilters[categories]",
+    name: "documentListFilters[categories]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Category",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: categoryItems,
+    values: data.documentListFilters.categories
   }) }}
 
 {% endset %}

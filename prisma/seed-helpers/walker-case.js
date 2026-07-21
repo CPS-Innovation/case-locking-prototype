@@ -109,6 +109,13 @@ const WALKER_ANNOTATIONS = [
   },
   {
     documentName: 'Chloe BARRETT statement 1 02-11-2024',
+    type: 'evidence',
+    elementIndex: 2,
+    selectedText: 'he has slapped me to the face multiple times with him using both hands',
+    note: 'Slapping the victim multiple times with both hands, rather than a single accidental blow, shows the assault was deliberate.'
+  },
+  {
+    documentName: 'Chloe BARRETT statement 1 02-11-2024',
     type: 'note',
     elementIndex: null,
     selectedText: 'COME AND PICK UP YOUR DAUGHTER IF YOU DON’T WANT TO LOSE ANOTHER KID',

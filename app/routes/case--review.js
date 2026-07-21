@@ -10,12 +10,12 @@ const {
   shapeFirstHearing,
 } = require('../helpers/caseReview')
 const { createInformationRequestFromSession } = require('../helpers/informationRequest')
+const categoryOrder = require('../data/document-categories')
 
-// Material with categories (mirroring the folder structure of the source
-// material) is grouped under category headings, in the order a prosecutor
-// would work through it. Uncategorised material renders as a single flat list.
+// Material with categories is grouped under category headings, in the order
+// a prosecutor would work through it. Uncategorised material renders as a
+// single flat list.
 function groupDocumentsByCategory(documents) {
-  const categoryOrder = ['Police report', 'Witness statements', 'Exhibits', 'Previous convictions', 'Other material']
   const categorised = documents.filter(document => document.category)
   const uncategorised = documents.filter(document => !document.category)
 
