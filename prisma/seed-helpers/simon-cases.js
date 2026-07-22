@@ -44,9 +44,11 @@ const SIMON_STATUSES = [
 ];
 
 // Cases where Simon is the prosecutor (CTL, many-statements) never roll
-// Charges pending or needsReview at random - both counts on Simon's overview
-// come entirely from dedicated guaranteed cases (see createReviewCase,
-// seedSimonChargesPendingReview) so they stay stable across reseeds.
+// Charges pending, and needsReview is fixed by status (true for Not charged,
+// false otherwise) rather than randomised - the guaranteed "Charges pending"
+// and "Review needed" counts on Simon's overview come entirely from
+// dedicated guaranteed cases (see createReviewCase, seedSimonChargesPendingReview)
+// so they stay stable across reseeds.
 const SIMON_OWN_CASE_STATUSES = SIMON_STATUSES.filter(status => status !== statuses.CHARGES_PENDING);
 
 // STL tasks (pre-charge, no hearing)
@@ -265,7 +267,7 @@ async function createSTLCase(prisma, user, taskConfig, config) {
 
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
-    data: { status: statuses.NOT_CHARGED, needsReview: false }
+    data: { status: statuses.NOT_CHARGED, needsReview: true }
   });
 
   // Create task (no hearing for STL/pre-charge tasks)
@@ -366,7 +368,7 @@ async function createCTLCase(prisma, user, taskConfig, config) {
   });
 
   const status = faker.helpers.arrayElement(SIMON_OWN_CASE_STATUSES)
-  const needsReview = false
+  const needsReview = status === statuses.NOT_CHARGED
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }
@@ -483,7 +485,7 @@ async function createManyStatementsCase(prisma, user, config) {
   });
 
   const status = faker.helpers.arrayElement(SIMON_OWN_CASE_STATUSES)
-  const needsReview = false
+  const needsReview = status === statuses.NOT_CHARGED
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }
@@ -651,7 +653,7 @@ async function createColleagueCase(prisma, prosecutor, paralegalOfficer, config)
   });
 
   const status = faker.helpers.arrayElement(SIMON_STATUSES)
-  const needsReview = (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean()
+  const needsReview = status === statuses.NOT_CHARGED || (status === statuses.CHARGED && faker.datatype.boolean())
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }

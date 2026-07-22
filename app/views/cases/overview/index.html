@@ -15,214 +15,241 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Overview</h1>
 
-      {{
-        govukSummaryList({
-          rows: [
-            {
-              key: {
-                text: "URN"
+      <div class="app-panel">
+        {{
+          govukSummaryList({
+            rows: [
+              {
+                key: {
+                  text: "URN"
+                },
+                value: {
+                  html: _case.reference
+                }
               },
-              value: {
-                html: _case.reference
+              {
+                key: {
+                  text: "Operation name"
+                },
+                value: {
+                  html: _case.operationName
+                }
+              } if _case.operationName,
+              {
+                key: {
+                  text: "Unit"
+                },
+                value: {
+                  html: _case.unit.name
+                },
+                actions: {
+                  items: [
+                    {
+                      href: "#",
+                      text: "Change",
+                      visuallyHiddenText: "Unit"
+                    }
+                  ]
+                }
+              },
+              {
+                key: {
+                  text: "Complexity"
+                },
+                value: {
+                  html: _case.complexity + '<div class="govuk-!-margin-top-1"><a href="/cases/:caseId/complexity-calculation">How we calculated complexity</a></div>' | replace(':caseId', _case.id)
+                },
+                actions: {
+                  items: [
+                    {
+                      href: "/cases/:caseId/edit-complexity" | replace(':caseId', _case.id),
+                      text: "Change",
+                      visuallyHiddenText: "Complexity"
+                    }
+                  ]
+                }
+              } if false,
+              {
+                key: {
+                  text: "Case summary"
+                },
+                value: {
+                  text: summary if summary else "Not provided"
+                },
+                actions: {
+                  items: [
+                    {
+                      href: "/cases/" + _case.id + "/review/summary",
+                      text: "Change",
+                      visuallyHiddenText: "case summary"
+                    }
+                  ]
+                }
               }
-            },
-            {
-              key: {
-                text: "Operation name"
-              },
-              value: {
-                html: _case.operationName
-              }
-            } if _case.operationName,
-            {
-              key: {
-                text: "Unit"
-              },
-              value: {
-                html: _case.unit.name
-              },
-              actions: {
-                items: [
-                  {
-                    href: "#",
-                    text: "Change",
-                    visuallyHiddenText: "Unit"
-                  }
-                ]
-              }
-            },
-            {
-              key: {
-                text: "Complexity"
-              },
-              value: {
-                html: _case.complexity + '<div class="govuk-!-margin-top-1"><a href="/cases/:caseId/complexity-calculation">How we calculated complexity</a></div>' | replace(':caseId', _case.id)
-              },
-              actions: {
-                items: [
-                  {
-                    href: "/cases/:caseId/edit-complexity" | replace(':caseId', _case.id),
-                    text: "Change",
-                    visuallyHiddenText: "Complexity"
-                  }
-                ]
-              }
-            } if false
-          ]
-        })
-      }}
+            ]
+          })
+        }}
+      </div>
 
       {% if charges.length %}
         {% for charge in charges %}
-          <h2 class="govuk-heading-m">{{ charge.description }}</h2>
+          <div class="app-panel">
+            <h2 class="govuk-heading-m">{{ charge.description }}</h2>
 
-          {% for element in charge.elements %}
-            <h3 class="govuk-heading-s govuk-!-margin-top-8">{{ element.description }}</h3>
+            {% for element in charge.elements %}
+              <h3 class="govuk-heading-s govuk-!-margin-top-">{{ element.description }}</h3>
 
-            {{
-              govukSummaryList({
-                classes: "govuk-!-margin-bottom-4",
-                rows: [
-                  {
-                    key: { text: "Strength" },
-                    value: { html: govukTag({ text: element.strength or "Not assessed", classes: (element.strength or "Not assessed") | strengthTagClass }) },
-                    actions: {
-                      items: [{
-                        href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
-                        text: "Change",
-                        visuallyHiddenText: "strength of " + (element.description | lower)
-                      }]
-                    }
-                  },
-                  {
-                    key: { text: "Reason" },
-                    value: { text: element.strengthReasoning },
-                    actions: {
-                      items: [{
-                        href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
-                        text: "Change",
-                        visuallyHiddenText: "reason for " + (element.description | lower)
-                      }]
-                    }
-                  } if element.strengthReasoning
-                ]
-              })
-            }}
+              {{
+                govukSummaryList({
+                  classes: "govuk-!-margin-bottom-4",
+                  rows: [
+                    {
+                      key: { text: "Strength" },
+                      value: { html: govukTag({ text: element.strength or "Not assessed", classes: (element.strength or "Not assessed") | strengthTagClass }) },
+                      actions: {
+                        items: [{
+                          href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
+                          text: "Change",
+                          visuallyHiddenText: "strength of " + (element.description | lower)
+                        }]
+                      }
+                    },
+                    {
+                      key: { text: "Reason" },
+                      value: { text: element.strengthReasoning },
+                      actions: {
+                        items: [{
+                          href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
+                          text: "Change",
+                          visuallyHiddenText: "reason for " + (element.description | lower)
+                        }]
+                      }
+                    } if element.strengthReasoning
+                  ]
+                })
+              }}
 
-            {% set annotations = element.reviewAnnotations %}
-            {% set annotationCardsShowElementMeta = false %}
-            {% set annotationCardsShowSourceDocument = true %}
-            {% include "_includes/element-annotation-cards.njk" %}
-          {% endfor %}
+              {% set annotations = element.reviewAnnotations %}
+              {% include "_includes/element-overview-annotation-cards.njk" %}
+            {% endfor %}
+          </div>
         {% endfor %}
       {% else %}
         <p class="govuk-body">No offences.</p>
       {% endif %}
 
       {# Temporarily hidden while this is a single defendant case
-      <h2 class="govuk-heading-m">Defendants</h2>
+      <div class="app-panel">
+        <h2 class="govuk-heading-m">Defendants</h2>
 
-      {% if _case.defendants.length %}
-        <div class="app-list">
-          {% for defendant in _case.defendants %}
-            <div class="app-list__item">
-              <p class="govuk-body govuk-!-margin-bottom-0">
-                <a
-                  href="/cases/{{ _case.id }}/defendants/{{ defendant.id }}"
-                  class="govuk-link govuk-link--no-visited-state"
-                >
-                  {{ defendant.firstName }} {{ defendant.lastName }}
-                </a>
-              </p>
-              <div class="app-list__actions">
-                <strong class="govuk-tag {{ defendant.status | caseStatusTagClass }}">
-                  {{ defendant.status }}
-                </strong>
+        {% if _case.defendants.length %}
+          <div class="app-list">
+            {% for defendant in _case.defendants %}
+              <div class="app-list__item">
+                <p class="govuk-body govuk-!-margin-bottom-0">
+                  <a
+                    href="/cases/{{ _case.id }}/defendants/{{ defendant.id }}"
+                    class="govuk-link govuk-link--no-visited-state"
+                  >
+                    {{ defendant.firstName }} {{ defendant.lastName }}
+                  </a>
+                </p>
+                <div class="app-list__actions">
+                  <strong class="govuk-tag {{ defendant.status | caseStatusTagClass }}">
+                    {{ defendant.status }}
+                  </strong>
+                </div>
               </div>
-            </div>
-          {% endfor %}
-        </div>
-      {% else %}
-        <p class="govuk-body">No defendants.</p>
-      {% endif %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="govuk-body">No defendants.</p>
+        {% endif %}
+      </div>
       #}
 
       {% if _case.hearings.length and false %}
-        <h2 class="govuk-heading-m govuk-!-margin-top-7">Hearings</h2>
-        <div class="app-list">
-          {% for hearing in _case.hearings %}
-            <div class="app-list__item">
-              <p class="govuk-body govuk-!-margin-bottom-0">
-                <a
-                  href="/cases/{{ _case.id }}/hearings/{{ hearing.id }}"
-                  class="govuk-link govuk-link--no-visited-state"
-                >
-                  {{ hearing.type }}
-                </a>
-              </p>
-              <div class="app-list__actions">
-                <strong class="govuk-tag {{ hearing.status | hearingStatusTagClass }}">
-                  {{ hearing.status | replace("Hearing ", "") | capitalize }}
-                </strong>
+        <div class="app-panel">
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">Hearings</h2>
+          <div class="app-list">
+            {% for hearing in _case.hearings %}
+              <div class="app-list__item">
+                <p class="govuk-body govuk-!-margin-bottom-0">
+                  <a
+                    href="/cases/{{ _case.id }}/hearings/{{ hearing.id }}"
+                    class="govuk-link govuk-link--no-visited-state"
+                  >
+                    {{ hearing.type }}
+                  </a>
+                </p>
+                <div class="app-list__actions">
+                  <strong class="govuk-tag {{ hearing.status | hearingStatusTagClass }}">
+                    {{ hearing.status | replace("Hearing ", "") | capitalize }}
+                  </strong>
+                </div>
               </div>
-            </div>
-          {% endfor %}
+            {% endfor %}
+          </div>
         </div>
       {% endif %}
 
       {% if false %}
-        <h2 class="govuk-heading-m govuk-!-margin-top-7">Prosecutor</h2>
+        <div class="app-panel">
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">Prosecutor</h2>
 
-        <p><a href="/cases/{{ _case.id }}/add-prosecutor">Add prosecutor</a></p>
+          <p><a href="/cases/{{ _case.id }}/add-prosecutor">Add prosecutor</a></p>
 
-        {% if _case.prosecutors.length %}
-          <div class="app-list">
-            {% for cp in _case.prosecutors %}
-              <div class="app-list__item">
-                <p class="govuk-body govuk-!-margin-bottom-0">
-                  {{ cp.user.firstName }}
-                  {{ cp.user.lastName }}{% if _case.prosecutors.length > 1 and cp.isLead %}(lead){% endif %}
-                </p>
-                <div class="app-list__actions">
-                  <a
-                    href="/cases/{{ _case.id }}/prosecutors/{{ cp.id }}/remove"
-                    class="govuk-link govuk-link--no-visited-state"
-                  >
-                    Remove
-                  </a>
+          {% if _case.prosecutors.length %}
+            <div class="app-list">
+              {% for cp in _case.prosecutors %}
+                <div class="app-list__item">
+                  <p class="govuk-body govuk-!-margin-bottom-0">
+                    {{ cp.user.firstName }}
+                    {{ cp.user.lastName }}{% if _case.prosecutors.length > 1 and cp.isLead %}(lead){% endif %}
+                  </p>
+                  <div class="app-list__actions">
+                    <a
+                      href="/cases/{{ _case.id }}/prosecutors/{{ cp.id }}/remove"
+                      class="govuk-link govuk-link--no-visited-state"
+                    >
+                      Remove
+                    </a>
+                  </div>
                 </div>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          {# <p>There is no assigned prosecutor.</p> #}
-        {% endif %}
+              {% endfor %}
+            </div>
+          {% else %}
+            {# <p>There is no assigned prosecutor.</p> #}
+          {% endif %}
+        </div>
 
-        <h2 class="govuk-heading-m govuk-!-margin-top-7">Paralegal officer</h2>
+        <div class="app-panel">
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">Paralegal officer</h2>
 
-        <p><a href="/cases/{{ _case.id }}/add-paralegal-officer">Add paralegal officer</a></p>
+          <p><a href="/cases/{{ _case.id }}/add-paralegal-officer">Add paralegal officer</a></p>
 
-        {% if _case.paralegalOfficers.length %}
-          <div class="app-list">
-            {% for cpo in _case.paralegalOfficers %}
-              <div class="app-list__item">
-                <p class="govuk-body govuk-!-margin-bottom-0">
-                  {{ cpo.user.firstName }} {{ cpo.user.lastName }}
-                </p>
-                <div class="app-list__actions">
-                  <a
-                    href="/cases/{{ _case.id }}/paralegal-officers/{{ cpo.id }}/remove"
-                    class="govuk-link govuk-link--no-visited-state"
-                  >
-                    Remove
-                  </a>
+          {% if _case.paralegalOfficers.length %}
+            <div class="app-list">
+              {% for cpo in _case.paralegalOfficers %}
+                <div class="app-list__item">
+                  <p class="govuk-body govuk-!-margin-bottom-0">
+                    {{ cpo.user.firstName }} {{ cpo.user.lastName }}
+                  </p>
+                  <div class="app-list__actions">
+                    <a
+                      href="/cases/{{ _case.id }}/paralegal-officers/{{ cpo.id }}/remove"
+                      class="govuk-link govuk-link--no-visited-state"
+                    >
+                      Remove
+                    </a>
+                  </div>
                 </div>
-              </div>
-            {% endfor %}
-          </div>
-        {% else %}
-          {# <p>There is no paralegal officer assigned.</p> #}
-        {% endif %}
+              {% endfor %}
+            </div>
+          {% else %}
+            {# <p>There is no paralegal officer assigned.</p> #}
+          {% endif %}
+        </div>
       {% endif %}
     </div>
   </div>

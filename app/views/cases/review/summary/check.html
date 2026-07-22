@@ -1,7 +1,7 @@
 {% extends "_layouts/main.html" %}
 
 {% set navId = 'cases' %}
-{% set pageName = "Summary of review" %}
+{% set pageName = "Case summary" %}
 
 {% block beforeContent %}
   {{
@@ -28,7 +28,7 @@
                 items: [{
                   href: '/cases/' + _case.id + '/review/summary',
                   text: "Change",
-                  visuallyHiddenText: "summary of review"
+                  visuallyHiddenText: "case summary"
                 }]
               }
             }

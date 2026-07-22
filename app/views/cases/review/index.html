@@ -94,7 +94,7 @@
       {%
         set additionalInformationItems = [
           {
-            title: { text: "Summary of review" },
+            title: { text: "Case summary" },
             href: "/cases/" + _case.id + "/review/summary/check" if (review.summaryComplete == true or review.summary) else "/cases/" + _case.id + "/review/summary",
             status: summaryStatus
           }

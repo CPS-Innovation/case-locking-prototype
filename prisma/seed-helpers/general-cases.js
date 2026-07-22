@@ -288,7 +288,7 @@ async function seedGeneralCases(prisma, dependencies, config) {
     let anyChargedNeedsReview = false
     for (const defendant of assignedDefendants) {
       const defendantStatus = isDiverged ? faker.helpers.arrayElement(defendantStatusPool) : status
-      const defendantNeedsReview = (defendantStatus === statuses.NOT_CHARGED || defendantStatus === statuses.CHARGED) && faker.datatype.boolean()
+      const defendantNeedsReview = defendantStatus === statuses.NOT_CHARGED || (defendantStatus === statuses.CHARGED && faker.datatype.boolean())
       if (defendantStatus === statuses.CHARGED && defendantNeedsReview) anyChargedNeedsReview = true
       await prisma.defendant.update({
         where: { id: defendant.id },

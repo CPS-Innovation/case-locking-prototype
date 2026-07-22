@@ -187,10 +187,10 @@ module.exports = router => {
       if (defendantIds?.length) {
         await prisma.defendant.updateMany({
           where: { id: { in: defendantIds.map(id => parseInt(id)) } },
-          data: { status },
+          data: { status, needsReview: false },
         })
       } else {
-        await prisma.defendant.update({ where: { id: defendantId }, data: { status } })
+        await prisma.defendant.update({ where: { id: defendantId }, data: { status, needsReview: false } })
       }
     }
     delete req.session.data.chargingDecision

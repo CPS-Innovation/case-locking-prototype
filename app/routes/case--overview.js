@@ -79,7 +79,9 @@ module.exports = router => {
       }))
     )
 
-    res.render("cases/overview/index", { _case, charges })
+    const summary = submittedReview ? submittedReview.summary : null
+
+    res.render("cases/overview/index", { _case, charges, summary })
   })
 
   router.get("/cases/:caseId/complexity-calculation", async (req, res) => {

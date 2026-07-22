@@ -160,19 +160,19 @@
         {% endfor %}
       {% endfor %}
 
-      <h2 class="govuk-heading-m govuk-!-margin-top-6">Summary of review</h2>
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">Case summary</h2>
 
       {{
         govukSummaryList({
           rows: [
             {
-              key: { text: "Summary of review" },
+              key: { text: "Case summary" },
               value: { text: review.summary if review.summary else "Not provided" },
               actions: {
                 items: [{
                   href: "/cases/" + _case.id + "/review/summary",
                   text: "Change",
-                  visuallyHiddenText: "summary of review"
+                  visuallyHiddenText: "case summary"
                 }]
               }
             }

@@ -250,7 +250,7 @@ async function createCaseWithTask(prisma, user, taskConfig, config) {
   });
 
   const status = faker.helpers.arrayElement(RACHAEL_STATUSES)
-  const needsReview = (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean()
+  const needsReview = status === statuses.NOT_CHARGED || (status === statuses.CHARGED && faker.datatype.boolean())
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }
@@ -421,7 +421,7 @@ async function createManyWitnessesCase(prisma, user, config) {
   });
 
   const status = faker.helpers.arrayElement(RACHAEL_STATUSES)
-  const needsReview = (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean()
+  const needsReview = status === statuses.NOT_CHARGED || (status === statuses.CHARGED && faker.datatype.boolean())
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }
@@ -537,7 +537,7 @@ async function createColleagueCase(prisma, prosecutor, paralegalOfficer, config)
   });
 
   const status = faker.helpers.arrayElement(RACHAEL_STATUSES)
-  const needsReview = (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean()
+  const needsReview = status === statuses.NOT_CHARGED || (status === statuses.CHARGED && faker.datatype.boolean())
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }

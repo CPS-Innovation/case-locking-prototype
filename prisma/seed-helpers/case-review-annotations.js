@@ -61,11 +61,11 @@ function buildCandidates(document) {
   return selectSnippets(document.name)
 }
 
-// Evidence annotations link to a real element about half the time,
-// mirroring how the review page joins "description: reasoning" into the
-// annotation note when elements are selected via the UI.
+// Evidence and disclosure annotations link to a real element about half the
+// time, mirroring how the review page joins "description: reasoning" into
+// the annotation note when elements are selected via the UI.
 function buildNoteAndLinks(snippet, elements) {
-  if (snippet.type === 'evidence' && elements.length && faker.datatype.boolean()) {
+  if ((snippet.type === 'evidence' || snippet.type === 'disclosure') && elements.length && faker.datatype.boolean()) {
     const element = faker.helpers.arrayElement(elements)
     return {
       note: `${element.description}: ${snippet.note}`,

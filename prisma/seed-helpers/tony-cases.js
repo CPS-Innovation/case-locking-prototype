@@ -45,7 +45,7 @@ const CROWN_RASSO_CCU_UNITS = [TONY_UNITS.WESSEX_CROWN_COURT, TONY_UNITS.WESSEX_
 // STL tasks (pre-charge, no hearing) - Dorset/Hampshire Magistrates only
 const ADMIN_STL_TASKS = [
   { name: 'Check new PCD case', stlGenerator: generateTodaySTL, units: MAGISTRATES_UNITS, fixedStatus: statuses.NOT_CHARGED, fixedNeedsReview: true },
-  { name: 'Check resubmitted PCD case', stlGenerator: generateTomorrowSTL, units: MAGISTRATES_UNITS, fixedStatus: statuses.NOT_CHARGED, fixedNeedsReview: false }
+  { name: 'Check resubmitted PCD case', stlGenerator: generateTomorrowSTL, units: MAGISTRATES_UNITS, fixedStatus: statuses.NOT_CHARGED, fixedNeedsReview: true }
 ];
 
 // PACE clock tasks (pre-charge, no hearing) - Dorset/Hampshire Magistrates only
@@ -154,7 +154,7 @@ async function createSTLCaseForAdminPool(prisma, taskConfig, config) {
     where: { cases: { some: { id: _case.id } } },
     data: {
       status: adminStlStatus,
-      needsReview: fixedStatus ? fixedNeedsReview : (adminStlStatus === statuses.NOT_CHARGED || adminStlStatus === statuses.CHARGED) && faker.datatype.boolean()
+      needsReview: fixedStatus ? fixedNeedsReview : (adminStlStatus === statuses.NOT_CHARGED || (adminStlStatus === statuses.CHARGED && faker.datatype.boolean()))
     }
   });
 
@@ -253,7 +253,7 @@ async function createPACECaseForAdminPool(prisma, taskConfig, config) {
   const adminPaceStatus = faker.helpers.arrayElement(TONY_STATUSES)
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
-    data: { status: adminPaceStatus, needsReview: (adminPaceStatus === statuses.NOT_CHARGED || adminPaceStatus === statuses.CHARGED) && faker.datatype.boolean() }
+    data: { status: adminPaceStatus, needsReview: adminPaceStatus === statuses.NOT_CHARGED || (adminPaceStatus === statuses.CHARGED && faker.datatype.boolean()) }
   });
   if (adminPaceStatus === statuses.CHARGED) {
     await prisma.document.create({
@@ -388,7 +388,7 @@ async function createCTLCaseForAdminPool(prisma, taskConfig, config) {
   const status = faker.helpers.arrayElement(TONY_STATUSES)
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
-    data: { status, needsReview: (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean() }
+    data: { status, needsReview: status === statuses.NOT_CHARGED || (status === statuses.CHARGED && faker.datatype.boolean()) }
   });
   if (status === statuses.CHARGED) {
     await prisma.document.create({
@@ -485,7 +485,7 @@ async function createColleagueCase(prisma, prosecutor, paralegalOfficer, config)
   });
 
   const status = faker.helpers.arrayElement(TONY_STATUSES)
-  const needsReview = (status === statuses.NOT_CHARGED || status === statuses.CHARGED) && faker.datatype.boolean()
+  const needsReview = status === statuses.NOT_CHARGED || (status === statuses.CHARGED && faker.datatype.boolean())
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
     data: { status, needsReview }

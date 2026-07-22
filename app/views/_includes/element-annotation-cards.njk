@@ -13,29 +13,17 @@
           class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
         >
           <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
-          {% if annotationCardsShowChange | default(true) %}
-            <p class="govuk-!-margin-bottom-0">
-              <a
-                href="/cases/{{ _case.id }}/review/documents/{{ annotation.caseReviewDocument.documentId }}#annotation-{{ annotation.id }}"
-                class="govuk-link govuk-link--no-visited-state"
-              >
-                Change
-                <span class="govuk-visually-hidden">{{ typeLabel | lower }} annotation</span>
-              </a>
-            </p>
-          {% endif %}
+          <p class="govuk-!-margin-bottom-0">
+            <a
+              href="/cases/{{ _case.id }}/review/documents/{{ annotation.caseReviewDocument.documentId }}#annotation-{{ annotation.id }}"
+              class="govuk-link govuk-link--no-visited-state"
+            >
+              Change
+              <span class="govuk-visually-hidden">{{ typeLabel | lower }} annotation</span>
+            </a>
+          </p>
         </div>
         <div class="app-review-annotation-card__body">
-          {% if annotationCardsShowSourceDocument %}
-            <p class="app-review-annotation-card__source">
-              <a
-                href="/cases/{{ _case.id }}/documents/{{ annotation.caseReviewDocument.documentId }}"
-                class="govuk-link govuk-link--no-visited-state"
-              >
-                {{ annotation.caseReviewDocument.document.name }}
-              </a>
-            </p>
-          {% endif %}
           {% if annotation.selectedText == 'Whole photo' %}
             <img
               src="/public/images/evidence-photo-placeholder.jpg"
@@ -65,19 +53,15 @@
           {% endif %}
 
           {% for link in annotation.elements %}
-            {% if annotationCardsShowElementMeta | default(true) %}
-              <p class="app-review-annotation-card__label">
-                {{ link.element.description }}
-              </p>
-              <p class="govuk-!-margin-bottom-0">{{ link.reasoning }}</p>
-              <p
-                class="govuk-!-font-size-16 govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}"
-              >
-                {{ link.element.charge.description }}
-              </p>
-            {% else %}
-              <p class="govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}">{{ link.reasoning }}</p>
-            {% endif %}
+            <p class="app-review-annotation-card__label">
+              {{ link.element.description }}
+            </p>
+            <p class="govuk-!-margin-bottom-0">{{ link.reasoning }}</p>
+            <p
+              class="govuk-!-font-size-16 govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}"
+            >
+              {{ link.element.charge.description }}
+            </p>
           {% endfor %}
         </div>
       </div>

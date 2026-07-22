@@ -65,6 +65,14 @@
   }
 }
 
+.app-inset-text--blue {
+  border-left-color: mix(govuk-colour("white"), govuk-colour("blue"), 88%);
+}
+
+.app-inset-text--purple {
+  border-left-color: #f3e5f5;
+}
+
 .app-review-annotation-card {
   background: govuk-colour("white");
   border: 1px solid $govuk-border-colour;
