@@ -5,7 +5,9 @@
     <h2 class="app-activity-log__title govuk-heading-s govuk-!-margin-bottom-1">{{ params.eventTitle }}</h2>
     <p class="app-activity-log__byline">
       By
-      {% if params.event.user -%}
+      {% if params.event.title == 'Case added' and params.event.meta.policeUnit -%}
+        {{ params.event.meta.policeUnit }}
+      {%- elif params.event.user -%}
         {{params.event.user.firstName}}
         {{params.event.user.lastName}}
       {%- else -%}
@@ -17,17 +19,17 @@
     </p>
   </div>
   <div class="app-activity-log__description">
-    {% if params.event.title == 'DGA dispute outcome recorded' or params.event.title == 'DGA dispute outcome updated' %}
-      {% set methodsHtml %}
-        {% if params.event.meta.discussionMethods %}
-          <ul class="govuk-list govuk-list--bullet">
-            {% for method in params.event.meta.discussionMethods %}
-              <li>{{ method }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-      {% endset %}
+    {% if params.event.title == 'Case added' %}
       <div class="app-activity-log__box">
+        {% set materialHtml %}
+          {% if params.event.meta.documents and params.event.meta.documents.length %}
+            <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+              {% for document in params.event.meta.documents %}
+                <li>{{ document.name }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endset %}
         {{ govukSummaryList({
           rows: [
             {
@@ -35,75 +37,81 @@
               value: { text: params.event.case.reference }
             } if params.showUrn,
             {
-              key: { text: "Failure reason" },
-              value: { text: params.event.meta.failureReason }
-            },
+              key: { text: "Unit" },
+              value: { text: params.event.meta.unit }
+            } if params.event.meta.unit,
             {
               key: { text: "Police force" },
               value: { text: params.event.meta.policeUnit }
-            },
+            } if params.event.meta.policeUnit,
             {
-              key: { text: "Reporting month" },
-              value: { text: params.event.meta.monthName }
-            },
+              key: { text: "Custody time limit" },
+              value: { text: params.event.meta.custodyTimeLimit | govukDate }
+            } if params.event.meta.custodyTimeLimit,
             {
-              key: { text: "Did the police dispute this failure?" },
-              value: { text: params.event.meta.didPoliceDisputeFailure }
-            },
+              key: { text: "Statutory time limit" },
+              value: { text: params.event.meta.statutoryTimeLimit | govukDate }
+            } if params.event.meta.statutoryTimeLimit,
             {
-              key: { text: "Did CPS accept the dispute?" },
-              value: { text: params.event.meta.didCpsAcceptDispute }
-            } if params.event.meta.didPoliceDisputeFailure == 'Yes',
+              key: { text: "PACE clock" },
+              value: { text: params.event.meta.paceClock | govukDate }
+            } if params.event.meta.paceClock,
             {
-              key: { text: "Reason for outcome" },
-              value: { text: params.event.meta.reasonForOutcome }
-            } if params.event.meta.didPoliceDisputeFailure == 'Yes' and params.event.meta.reasonForOutcome,
-            {
-              key: { text: "How did you discuss this dispute with the police?" },
-              value: { html: methodsHtml }
-            } if params.event.meta.didPoliceDisputeFailure == 'Yes' and params.event.meta.discussionMethods
+              key: { text: "Material" },
+              value: { html: materialHtml }
+            } if params.event.meta.documents and params.event.meta.documents.length
           ]
         }) }}
       </div>
       <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/dga">View outcome</a>
+        <a class="govuk-link" href="/cases/{{ params.event.case.id }}">View case</a>
       </p>
     {% endif %}
 
-    {% if params.event.title == 'DGA reporting month exported' %}
-      {% set weeksHtml %}
-        {% if params.event.meta.weeks %}
-          <ul class="govuk-list govuk-list--bullet">
-            {% for week in params.event.meta.weeks %}
-              <li>{{ week }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-      {% endset %}
+    {% if params.event.title == 'Review submitted' %}
       <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "Are you sharing this export outside the CPS?" },
-              value: { text: params.event.meta.shareOutsideCps }
-            },
-            {
-              key: { text: "Police force" },
-              value: { text: params.event.meta.policeUnit }
-            },
-            {
-              key: { text: "Reporting month" },
-              value: { text: params.event.meta.monthName }
-            },
-            {
-              key: { text: "Time period" },
-              value: { html: weeksHtml }
-            }
-          ]
-        }) }}
+        {% set reviewRows = [] %}
+        {% if params.showUrn %}
+          {% set reviewRows = (reviewRows.push({ key: { text: "URN" }, value: { text: params.event.case.reference } }), reviewRows) %}
+        {% endif %}
+        {% for chargeDecision in params.event.meta.chargeDecisions %}
+          {% set reviewRows = (reviewRows.push({
+            key: { text: chargeDecision.description },
+            value: { text: chargeDecision.decision }
+          }), reviewRows) %}
+        {% endfor %}
+        {% for elementStrength in params.event.meta.elementStrengths %}
+          {% set elementStrengthHtml %}
+            {{ elementStrength.strength }}
+            {% if elementStrength.reasoning %}
+              <br><span class="govuk-hint govuk-!-margin-bottom-0">{{ elementStrength.reasoning }}</span>
+            {% endif %}
+          {% endset %}
+          {% set reviewRows = (reviewRows.push({
+            key: { text: elementStrength.element },
+            value: { html: elementStrengthHtml }
+          }), reviewRows) %}
+        {% endfor %}
+        {% if params.event.meta.informationRequest %}
+          {% set reviewRows = (reviewRows.push({
+            key: { text: "Information requested" },
+            value: { text: "Yes" }
+          }), reviewRows) %}
+          {% set reviewRows = (reviewRows.push({
+            key: { text: "Information request details" },
+            value: { text: params.event.meta.informationRequest.description }
+          }), reviewRows) %}
+        {% endif %}
+        {% if params.event.meta.summary %}
+          {% set reviewRows = (reviewRows.push({
+            key: { text: "Review summary" },
+            value: { text: params.event.meta.summary }
+          }), reviewRows) %}
+        {% endif %}
+        {{ govukSummaryList({ rows: reviewRows }) }}
       </div>
       <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/dga-reporting/{{ params.event.meta.monthKey }}">View reporting month</a>
+        <a class="govuk-link" href="/cases/{{ params.event.case.id }}">View case</a>
       </p>
     {% endif %}
 
@@ -245,550 +253,6 @@
       </p>
     {% endif %}
 
-    {% if params.event.title == 'Case note added' %}
-      <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Note' },
-              value: { text: params.event.meta.content }
-            }
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/notes/{{ params.event.recordId }}">View note</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task note added' %}
-      <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Task' },
-              value: { text: params.event.meta.task.name }
-            },
-            {
-              key: { text: 'Note' },
-              value: { text: params.event.meta.description }
-            }
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.meta.task.id }}">View task</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Direction note added' %}
-      <div class="app-activity-log__box">
-        {% set directionDisplay %}
-          {% if params.event.meta.direction.description.length > 75 %}
-            {{ params.event.meta.direction.description | truncate(75) }}
-          {% else %}
-            {{ params.event.meta.direction.description }}
-          {% endif %}
-        {% endset %}
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Direction' },
-              value: { text: directionDisplay | trim }
-            },
-            {
-              key: { text: 'Note' },
-              value: { text: params.event.meta.description }
-            }
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/directions/{{ params.event.meta.direction.id }}">View direction</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task added' %}
-      <div class="app-activity-log__box">
-        {% set taskRows = [] %}
-
-        {% if params.showUrn %}
-          {% set taskRows = (taskRows.push({ key: { text: "URN" }, value: { text: params.event.case.reference } }), taskRows) %}
-        {% endif %}
-
-        {% set taskRows = (taskRows.push({
-          key: { text: 'Task' },
-          value: { text: params.event.meta.task.name }
-        }), taskRows) %}
-
-        {% if params.event.meta.assignedToUser %}
-          {% set taskRows = (taskRows.push({
-            key: { text: 'Owner' },
-            value: { text: params.event.meta.assignedToUser.firstName + ' ' + params.event.meta.assignedToUser.lastName }
-          }), taskRows) %}
-        {% elif params.event.meta.assignedToTeam %}
-          {% set taskRows = (taskRows.push({
-            key: { text: 'Owner' },
-            value: { text: params.event.meta.assignedToTeam.name + ' (' + params.event.meta.assignedToTeam.unit.name + ')' }
-          }), taskRows) %}
-        {% endif %}
-
-        {{ govukSummaryList({ rows: taskRows }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.recordId }}">View task</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task completed' %}
-      <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Task' },
-              value: { text: params.event.meta.task.name }
-            },
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToUser.firstName + ' ' + params.event.meta.assignedToUser.lastName }
-            } if params.event.meta.assignedToUser,
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToTeam.name + ' (' + params.event.meta.assignedToTeam.unit.name + ')' }
-            } if params.event.meta.assignedToTeam
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.recordId }}">View task</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task completed: Check New PCD case' %}
-      <div class="app-activity-log__box">
-        {% set reasonsHtml %}
-          {% if params.event.meta.rejectionReasons %}
-            <ul class="govuk-list govuk-list--spaced govuk-!-margin-bottom-0">
-              {% for reason in params.event.meta.rejectionReasons %}
-                <li>
-                  {% if params.event.meta.rejectionDetails and params.event.meta.rejectionDetails[reason] and params.event.meta.rejectionDetails[reason] | trim %}
-                    {{ reason }}:
-                    <p>{{ params.event.meta.rejectionDetails[reason] }}</p>
-                  {% else %}
-                    {{ reason }}
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        {% endset %}
-
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Task' },
-              value: { text: params.event.meta.task.name }
-            },
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToUser.firstName + ' ' + params.event.meta.assignedToUser.lastName }
-            } if params.event.meta.assignedToUser,
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToTeam.name + ' (' + params.event.meta.assignedToTeam.unit.name + ')' }
-            } if params.event.meta.assignedToTeam,
-            {
-              key: { text: 'Decision' },
-              value: { text: params.event.meta.decision }
-            } if params.event.meta.decision,
-            {
-              key: { text: 'Reasons for rejection' },
-              value: { html: reasonsHtml }
-            } if params.event.meta.decision == "Reject" and params.event.meta.rejectionReasons and params.event.meta.rejectionReasons.length,
-            {
-              key: { text: 'Review task type' },
-              value: { text: params.event.meta.reviewTaskType }
-            } if params.event.meta.reviewTaskType,
-            {
-              key: { text: 'Case type' },
-              value: { text: params.event.meta.caseType }
-            } if params.event.meta.caseType,
-            {
-              key: { text: 'Do you want to transfer the case?' },
-              value: { text: params.event.meta.transferCase }
-            } if params.event.meta.decision == "Accept" and params.event.meta.transferCase,
-            {
-              key: { text: 'Do you want to change the area?' },
-              value: { text: params.event.meta.changeArea }
-            } if params.event.meta.transferCase == "Yes" and params.event.meta.changeArea,
-            {
-              key: { text: 'Area' },
-              value: { text: params.event.meta.area }
-            } if params.event.meta.transferCase == "Yes" and params.event.meta.changeArea == "Yes" and params.event.meta.area,
-            {
-              key: { text: 'Unit' },
-              value: { text: params.event.meta.unit.name }
-            } if params.event.meta.transferCase == "Yes" and params.event.meta.unit,
-            {
-              key: { text: "Who do you want to assign the 'early advice manager triage' task to?" },
-              value: { text: params.event.meta.taskOwner.name }
-            } if params.event.meta.decision == "Accept" and params.event.meta.transferCase == "Yes" and params.event.meta.reviewTaskType == "Early advice" and params.event.meta.caseType == "RASSO" and params.event.meta.taskOwner,
-            {
-              key: { text: 'Prosecutor to assign the case to' },
-              value: { text: params.event.meta.prosecutor.firstName + ' ' + params.event.meta.prosecutor.lastName }
-            } if params.event.meta.decision == "Accept" and params.event.meta.reviewTaskType == "Early advice" and params.event.meta.caseType != "RASSO" and params.event.meta.prosecutor,
-            {
-              key: { text: 'Date the police should respond by' },
-              value: { text: params.event.meta.policeResponseDate | govukDate }
-            } if params.event.meta.decision == "Reject" and params.event.meta.policeResponseDate,
-            {
-              key: { text: 'Do you want to create a task to remind you about when the police should respond back to you?' },
-              value: { text: "Yes" if params.event.meta.createReminderTask == "Yes" else "No" }
-            } if params.event.meta.decision == "Reject",
-            {
-              key: { text: "Date you'll be reminded" },
-              value: { text: params.event.meta.reminderDueDate | govukDate }
-            } if params.event.meta.decision == "Reject" and params.event.meta.createReminderTask == "Yes" and params.event.meta.reminderDueDate
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.recordId }}">View task</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task completed: Early advice manager triage' %}
-      <div class="app-activity-log__box">
-        {% set reasonsHtml %}
-          {% if params.event.meta.rejectionReasons %}
-            <ul class="govuk-list govuk-list--spaced govuk-!-margin-bottom-0">
-              {% for reason in params.event.meta.rejectionReasons %}
-                <li>
-                  {% if params.event.meta.rejectionDetails and params.event.meta.rejectionDetails[reason] and params.event.meta.rejectionDetails[reason] | trim %}
-                    {{ reason }}:
-                    <p>{{ params.event.meta.rejectionDetails[reason] }}</p>
-                  {% else %}
-                    {{ reason }}
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        {% endset %}
-
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Task' },
-              value: { text: params.event.meta.task.name }
-            },
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToUser.firstName + ' ' + params.event.meta.assignedToUser.lastName }
-            } if params.event.meta.assignedToUser,
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToTeam.name + ' (' + params.event.meta.assignedToTeam.unit.name + ')' }
-            } if params.event.meta.assignedToTeam,
-            {
-              key: { text: 'Decision' },
-              value: { text: params.event.meta.decision }
-            } if params.event.meta.decision,
-            {
-              key: { text: 'Prosecutor' },
-              value: { text: params.event.meta.prosecutor.firstName + ' ' + params.event.meta.prosecutor.lastName }
-            } if params.event.meta.decision == "Accept" and params.event.meta.prosecutor,
-            {
-              key: { text: 'Reasons for rejection' },
-              value: { html: reasonsHtml }
-            } if params.event.meta.decision == "Reject" and params.event.meta.rejectionReasons and params.event.meta.rejectionReasons.length,
-            {
-              key: { text: 'Date the police should respond by' },
-              value: { text: params.event.meta.policeResponseDate | govukDate }
-            } if params.event.meta.decision == "Reject" and params.event.meta.policeResponseDate,
-            {
-              key: { text: 'Do you want to create a task to remind you about when the police should respond back to you?' },
-              value: { text: "Yes" if params.event.meta.createReminderTask == "Yes" else "No" }
-            } if params.event.meta.decision == "Reject",
-            {
-              key: { text: "Date you'll be reminded" },
-              value: { text: params.event.meta.reminderDueDate | govukDate }
-            } if params.event.meta.decision == "Reject" and params.event.meta.createReminderTask == "Yes" and params.event.meta.reminderDueDate
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.recordId }}">View task</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task completed: Priority PCD review' %}
-      <div class="app-activity-log__box">
-        {% set nfsReasonsHtml %}
-          {% if params.event.meta.nfsReasons %}
-            <ul class="govuk-list govuk-list--spaced govuk-!-margin-bottom-0">
-              {% for reason in params.event.meta.nfsReasons %}
-                <li>
-                  {% if params.event.meta.rejectionDetails and params.event.meta.rejectionDetails[reason] and params.event.meta.rejectionDetails[reason] | trim %}
-                    <p class="govuk-!-margin-bottom-0">{{ reason }}:</p>
-                    <p>{{ params.event.meta.rejectionDetails[reason] }}</p>
-                  {% else %}
-                    {{ reason }}
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        {% endset %}
-
-        {% set priorityReasonHtml %}
-          {% if params.event.meta.priorityReason %}
-            {% if params.event.meta.rejectionDetails and params.event.meta.rejectionDetails[params.event.meta.priorityReason] and params.event.meta.rejectionDetails[params.event.meta.priorityReason] | trim %}
-              <p class="govuk-!-margin-bottom-0">{{ params.event.meta.priorityReason }}:</p>
-              <p>{{ params.event.meta.rejectionDetails[params.event.meta.priorityReason] }}</p>
-            {% else %}
-              {{ params.event.meta.priorityReason }}
-            {% endif %}
-          {% endif %}
-        {% endset %}
-
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Task' },
-              value: { text: params.event.meta.task.name }
-            },
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToUser.firstName + ' ' + params.event.meta.assignedToUser.lastName }
-            } if params.event.meta.assignedToUser,
-            {
-              key: { text: 'Owner' },
-              value: { text: params.event.meta.assignedToTeam.name + ' (' + params.event.meta.assignedToTeam.unit.name + ')' }
-            } if params.event.meta.assignedToTeam,
-            {
-              key: { text: 'Decision' },
-              value: { text: params.event.meta.decision }
-            } if params.event.meta.decision,
-            {
-              key: { text: 'Case type' },
-              value: { text: params.event.meta.caseType }
-            } if params.event.meta.caseType,
-            {
-              key: { text: 'Reasons for rejection' },
-              value: { html: nfsReasonsHtml }
-            } if params.event.meta.decision == "NFS non-compliant" and params.event.meta.nfsReasons and params.event.meta.nfsReasons.length,
-            {
-              key: { text: 'Reason for rejection' },
-              value: { html: priorityReasonHtml }
-            } if params.event.meta.decision == "Priority / Red rejection" and params.event.meta.priorityReason,
-            {
-              key: { text: 'Are you CPS Direct?' },
-              value: { text: params.event.meta.cpsd }
-            } if params.event.meta.cpsd,
-            {
-              key: { text: 'Do you want to transfer the case?' },
-              value: { text: params.event.meta.transferCase }
-            } if params.event.meta.cpsd == "No" and params.event.meta.transferCase,
-            {
-              key: { text: 'Do you want to change the area?' },
-              value: { text: params.event.meta.changeArea }
-            } if params.event.meta.transferCase == "Yes" and params.event.meta.changeArea,
-            {
-              key: { text: 'Area' },
-              value: { text: params.event.meta.area }
-            } if params.event.meta.transferCase == "Yes" and params.event.meta.changeArea == "Yes" and params.event.meta.area,
-            {
-              key: { text: 'Unit' },
-              value: { text: params.event.meta.unit.name }
-            } if params.event.meta.transferCase == "Yes" and params.event.meta.unit,
-            {
-              key: { text: 'Date the police should respond by' },
-              value: { text: params.event.meta.policeResponseDate | govukDate }
-            } if (params.event.meta.decision == "NFS non-compliant" or params.event.meta.decision == "Priority / Red rejection") and params.event.meta.policeResponseDate
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.recordId }}">View task</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Direction completed' %}
-      <div class="app-activity-log__box">
-        {% set directionDisplay %}
-          {% if params.event.meta.direction.description.length > 75 %}
-            {{ params.event.meta.direction.description | truncate(75) }}
-          {% else %}
-            {{ params.event.meta.direction.description }}
-          {% endif %}
-        {% endset %}
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Direction' },
-              value: { text: directionDisplay | trim }
-            }
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/directions/{{ params.event.meta.direction.id }}">View direction</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Working pattern added' or params.event.title == 'Working pattern updated' %}
-      <div class="app-activity-log__box">
-        {% set workingPatternRows = [] %}
-
-        {% set workingPatternRows = (workingPatternRows.push({
-          key: { text: "Prosecutor" },
-          value: { text: params.event.meta.prosecutor.firstName + ' ' + params.event.meta.prosecutor.lastName }
-        }), workingPatternRows) %}
-
-        {% for item in params.event.meta.workingPattern %}
-          {% set workingPatternRows = (workingPatternRows.push({
-            key: { text: item.day },
-            value: { text: item.hours + (' hour' if item.hours == '1' else ' hours') }
-          }), workingPatternRows) %}
-        {% endfor %}
-
-        {{ govukSummaryList({ rows: workingPatternRows }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/prosecutors/{{ params.event.meta.prosecutor.id }}">View prosecutor</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Leave added' or params.event.title == 'Leave removed' %}
-      <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "Prosecutor" },
-              value: { text: params.event.meta.prosecutor.firstName + ' ' + params.event.meta.prosecutor.lastName }
-            },
-            {
-              key: { text: "Start date" },
-              value: { text: params.event.meta.leave.startDate | govukDate }
-            },
-            {
-              key: { text: "End date" },
-              value: { text: params.event.meta.leave.endDate | govukDate }
-            } if params.event.meta.leave.endDate
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/prosecutors/{{ params.event.meta.prosecutor.id }}">View prosecutor</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Complexity updated' %}
-      <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: "Complexity" },
-              value: { text: params.event.meta.complexity }
-            }
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}">View case</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task marked as urgent' %}
-      <div class="app-activity-log__box">
-        {% set urgentTaskRows = [] %}
-
-        {% if params.showUrn %}
-          {% set urgentTaskRows = (urgentTaskRows.push({ key: { text: "URN" }, value: { text: params.event.case.reference } }), urgentTaskRows) %}
-        {% endif %}
-
-        {% set urgentTaskRows = (urgentTaskRows.push({
-          key: { text: 'Task' },
-          value: { text: params.event.meta.task.name }
-        }), urgentTaskRows) %}
-
-        {% set urgentTaskRows = (urgentTaskRows.push({
-          key: { text: 'Reason for marking as urgent' },
-          value: { text: params.event.meta.urgentNote }
-        }), urgentTaskRows) %}
-
-        {{ govukSummaryList({ rows: urgentTaskRows }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.recordId }}">View task</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Specialist areas updated' or params.event.title == 'Preferred areas updated' or params.event.title == 'Restricted areas updated' %}
-      {% set areasLabel = 'Specialist areas' if params.event.title == 'Specialist areas updated' else ('Preferred areas' if params.event.title == 'Preferred areas updated' else 'Restricted areas') %}
-      {% set areasHtml %}
-        {% if params.event.meta.areas and params.event.meta.areas.length %}
-          <ul class="govuk-list govuk-list--bullet">
-            {% for area in params.event.meta.areas %}
-              <li>{{ area }}</li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          None
-        {% endif %}
-      {% endset %}
-      <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: areasLabel },
-              value: { html: areasHtml }
-            }
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/prosecutors/{{ params.event.recordId }}">View prosecutor</a>
-      </p>
-    {% endif %}
-
     {% if params.event.title == 'Paralegal officer added to case' or params.event.title == 'Paralegal officer removed from case' %}
       <div class="app-activity-log__box">
         {{ govukSummaryList({
@@ -806,31 +270,6 @@
       </div>
       <p class="app-log-card__note--link">
         <a class="govuk-link" href="/cases/{{ params.event.case.id }}">View case</a>
-      </p>
-    {% endif %}
-
-    {% if params.event.title == 'Task marked as not urgent' %}
-      <div class="app-activity-log__box">
-        {% set notUrgentTaskRows = [] %}
-
-        {% if params.showUrn %}
-          {% set notUrgentTaskRows = (notUrgentTaskRows.push({ key: { text: "URN" }, value: { text: params.event.case.reference } }), notUrgentTaskRows) %}
-        {% endif %}
-
-        {% set notUrgentTaskRows = (notUrgentTaskRows.push({
-          key: { text: 'Task' },
-          value: { text: params.event.meta.task.name }
-        }), notUrgentTaskRows) %}
-
-        {% set notUrgentTaskRows = (notUrgentTaskRows.push({
-          key: { text: 'Reason for marking as not urgent' },
-          value: { text: params.event.meta.notUrgentNote }
-        }), notUrgentTaskRows) %}
-
-        {{ govukSummaryList({ rows: notUrgentTaskRows }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/tasks/{{ params.event.recordId }}">View task</a>
       </p>
     {% endif %}
 
@@ -1082,24 +521,5 @@
       </p>
     {% endif %}
 
-    {% if params.event.title == 'CTL log entry added' %}
-      <div class="app-activity-log__box">
-        {{ govukSummaryList({
-          rows: [
-            {
-              key: { text: "URN" },
-              value: { text: params.event.case.reference }
-            } if params.showUrn,
-            {
-              key: { text: 'Description' },
-              value: { text: params.event.meta.description }
-            }
-          ]
-        }) }}
-      </div>
-      <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}/ctl-log">View CTL log</a>
-      </p>
-    {% endif %}
   </div>
 </div>

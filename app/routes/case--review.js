@@ -265,17 +265,46 @@ module.exports = (router) => {
       },
     })
 
+    const chargeDecisions = charges
+      .filter(charge => decisions[charge.id])
+      .map(charge => ({ description: charge.description, decision: decisions[charge.id] }))
+
+    const elementStrengths = charges.flatMap(charge =>
+      (charge.elements || []).map(element => ({
+        charge: charge.description,
+        element: element.description,
+        strength: element.strength || 'Not assessed',
+        reasoning: element.strengthReasoning || null,
+      }))
+    )
+
+    const reviewMeta = {
+      chargeDecisions,
+      caseReviewId: review.id,
+    }
+
+    if (elementStrengths.length) {
+      reviewMeta.elementStrengths = elementStrengths
+    }
+
+    if (review.summary) {
+      reviewMeta.summary = review.summary
+    }
+
+    if (informationRequest?.complete && informationRequest?.wantsInformationRequest === 'yes') {
+      reviewMeta.informationRequest = {
+        description: informationRequest.description,
+      }
+    }
+
     await prisma.activityLog.create({
       data: {
         userId,
         model: 'Case',
         recordId: caseId,
         action: 'UPDATE',
-        title: 'Charging decision made',
-        meta: {
-          decisions,
-          caseReviewId: review.id,
-        },
+        title: 'Review submitted',
+        meta: reviewMeta,
         caseId,
       },
     })

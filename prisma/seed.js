@@ -44,7 +44,7 @@ const { seedDGAMonths } = require("./seed-helpers/dga-months");
 const { seedGeneralCases } = require("./seed-helpers/general-cases");
 const { seedCaseNotes } = require("./seed-helpers/case-notes");
 const { seedDirectionNotes } = require("./seed-helpers/direction-notes");
-const { seedActivityLogs } = require("./seed-helpers/activity-logs");
+const { seedActivityLogs, seedCaseJourneyEvents } = require("./seed-helpers/activity-logs");
 const { seedRecentCases } = require("./seed-helpers/recent-cases");
 const { seedInformationRequests } = require("./seed-helpers/information-requests");
 const { seedElements } = require("./seed-helpers/elements");
@@ -307,6 +307,10 @@ async function main() {
     { types, complexities }
   );
   done(chargesPendingReviewCount);
+
+  step("Case journey events");
+  const caseJourneyEventsCount = await seedCaseJourneyEvents(prisma, users);
+  done(caseJourneyEventsCount);
 
   console.log("\n✅ Seed complete\n");
 }

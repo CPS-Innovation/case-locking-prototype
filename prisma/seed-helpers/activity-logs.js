@@ -1,6 +1,18 @@
 const { faker } = require('@faker-js/faker');
+const statuses = require('../../app/data/case-statuses');
+const { addTimeLimitDates } = require('../../app/helpers/timeLimit');
+const { addCaseStatus } = require('../../app/helpers/caseStatus');
 
 // Constants
+const reviewSummaries = [
+  "Evidential test met on all charges - realistic prospect of conviction based on witness and forensic evidence.",
+  "Full Code Test applied; public interest favours prosecution given the seriousness of the offence.",
+  "Charging decision made following review of all disclosed material and witness statements.",
+  "Sufficient evidence to charge - key witness account is consistent and supported by CCTV.",
+  "Reviewed alongside investigating officer; evidential and public interest stages both satisfied.",
+  "Decision made in line with CPS guidance on this offence category after considering all material."
+];
+
 const witnessNotAppearingReasons = [
   "Witness is ill and unable to attend",
   "Witness has moved abroad",
@@ -14,43 +26,11 @@ const witnessNotAppearingReasons = [
 
 // Helper: Build context with pre-fetched data
 async function buildCaseContext(prisma, fullCase) {
-  // Fetch tasks with notes (once, not per event)
-  const tasksWithNotes = await prisma.task.findMany({
-    where: {
-      caseId: fullCase.id,
-      notes: { some: {} }
-    },
-    include: {
-      notes: true
-    }
-  });
-
-  // Fetch directions with notes (once, not per event)
-  const directionsWithNotes = await prisma.direction.findMany({
-    where: {
-      caseId: fullCase.id,
-      notes: { some: {} }
-    },
-    include: {
-      notes: true
-    }
-  });
-
-  // Fetch case notes (once, not per event)
-  const caseNotes = await prisma.note.findMany({
-    where: {
-      caseId: fullCase.id
-    }
-  });
-
   // Pre-compute derived data
   const witnessesWithStatements = fullCase.witnesses?.filter(w => w.statements.length > 0) || [];
 
   return {
     fullCase,
-    tasksWithNotes,
-    directionsWithNotes,
-    caseNotes,
     witnessesWithStatements
   };
 }
@@ -58,10 +38,6 @@ async function buildCaseContext(prisma, fullCase) {
 // Helper: Determine possible events based on context
 function getPossibleEvents(context) {
   const possible = [];
-
-  if (context.fullCase.prosecutors && context.fullCase.prosecutors.length > 0) {
-    possible.push('Prosecutor added to case');
-  }
 
   if (context.fullCase.witnesses && context.fullCase.witnesses.length > 0) {
     possible.push('Witness marked as required to attend court');
@@ -73,45 +49,11 @@ function getPossibleEvents(context) {
     possible.push('Witness statement unmarked as Section 9');
   }
 
-  if (context.tasksWithNotes.length > 0) {
-    possible.push('Task note added');
-  }
-
-  if (context.directionsWithNotes.length > 0) {
-    possible.push('Direction note added');
-  }
-
-  if (context.caseNotes.length > 0) {
-    possible.push('Case note added');
-  }
-
   return possible;
 }
 
 // Event generators: One function per event type
 const eventGenerators = {
-  'Prosecutor added to case': (context, randomUser, eventDate) => {
-    const prosecutorAssignment = faker.helpers.arrayElement(context.fullCase.prosecutors);
-    const prosecutor = prosecutorAssignment.user;
-
-    return {
-      userId: randomUser.id,
-      caseId: context.fullCase.id,
-      action: 'UPDATE',
-      title: 'Prosecutor added to case',
-      model: 'Case',
-      recordId: context.fullCase.id,
-      createdAt: eventDate,
-      meta: {
-        prosecutor: {
-          id: prosecutor.id,
-          firstName: prosecutor.firstName,
-          lastName: prosecutor.lastName
-        }
-      }
-    };
-  },
-
   'Witness marked as required to attend court': (context, randomUser, eventDate) => {
     const witness = faker.helpers.arrayElement(context.fullCase.witnesses);
 
@@ -207,66 +149,6 @@ const eventGenerators = {
     };
   },
 
-  'Task note added': (context, randomUser, eventDate) => {
-    const task = faker.helpers.arrayElement(context.tasksWithNotes);
-    const note = faker.helpers.arrayElement(task.notes);
-
-    return {
-      userId: randomUser.id,
-      caseId: context.fullCase.id,
-      action: 'CREATE',
-      title: 'Task note added',
-      model: 'TaskNote',
-      recordId: note.id,
-      createdAt: eventDate,
-      meta: {
-        task: {
-          id: task.id,
-          name: task.name
-        },
-        description: note.description
-      }
-    };
-  },
-
-  'Direction note added': (context, randomUser, eventDate) => {
-    const direction = faker.helpers.arrayElement(context.directionsWithNotes);
-    const note = faker.helpers.arrayElement(direction.notes);
-
-    return {
-      userId: randomUser.id,
-      caseId: context.fullCase.id,
-      action: 'CREATE',
-      title: 'Direction note added',
-      model: 'DirectionNote',
-      recordId: note.id,
-      createdAt: eventDate,
-      meta: {
-        direction: {
-          id: direction.id,
-          description: direction.description
-        },
-        description: note.description
-      }
-    };
-  },
-
-  'Case note added': (context, randomUser, eventDate) => {
-    const note = faker.helpers.arrayElement(context.caseNotes);
-
-    return {
-      userId: randomUser.id,
-      caseId: context.fullCase.id,
-      action: 'CREATE',
-      title: 'Case note added',
-      model: 'Note',
-      recordId: note.id,
-      createdAt: eventDate,
-      meta: {
-        content: note.content
-      }
-    };
-  }
 };
 
 // Main seeding function
@@ -339,6 +221,125 @@ async function seedActivityLogs(prisma, cases, users) {
   return totalActivityLogs;
 }
 
+// Gives every case its origin story: it arrived from the police force
+// ("Case added"), a prosecutor was assigned ("Prosecutor added to case"),
+// and, if a defendant has moved past Not charged, a review was submitted
+// ("Review submitted"). Dates are generated in chronological order so the
+// log reads as a real case journey.
+async function seedCaseJourneyEvents(prisma, users) {
+  const cases = await prisma.case.findMany({
+    include: {
+      unit: true,
+      policeUnit: true,
+      documents: true,
+      prosecutors: { include: { user: true } },
+      defendants: { include: { charges: { include: { elements: true } } } }
+    }
+  });
+
+  let totalEvents = 0;
+
+  for (const _case of cases) {
+    addTimeLimitDates(_case);
+    addCaseStatus(_case);
+
+    const events = [];
+    const now = new Date();
+    const caseAddedDate = faker.date.past({ years: 1 });
+
+    events.push({
+      userId: null,
+      caseId: _case.id,
+      action: 'CREATE',
+      title: 'Case added',
+      model: 'Case',
+      recordId: _case.id,
+      createdAt: caseAddedDate,
+      meta: {
+        unit: _case.unit ? _case.unit.name : null,
+        policeUnit: _case.policeUnit ? _case.policeUnit.name : null,
+        custodyTimeLimit: _case.custodyTimeLimit,
+        statutoryTimeLimit: _case.statutoryTimeLimit,
+        paceClock: _case.paceClock,
+        documents: _case.documents
+          .filter(document => document.name !== 'Authorised charges (MG04)')
+          .map(document => ({ name: document.name, category: document.category }))
+      }
+    });
+
+    let cursor = caseAddedDate;
+
+    if (_case.prosecutors.length > 0) {
+      cursor = faker.date.between({ from: cursor, to: now });
+      const prosecutorAssignment = faker.helpers.arrayElement(_case.prosecutors);
+      const prosecutor = prosecutorAssignment.user;
+
+      events.push({
+        userId: faker.helpers.arrayElement(users).id,
+        caseId: _case.id,
+        action: 'UPDATE',
+        title: 'Prosecutor added to case',
+        model: 'Case',
+        recordId: _case.id,
+        createdAt: cursor,
+        meta: {
+          prosecutor: {
+            id: prosecutor.id,
+            firstName: prosecutor.firstName,
+            lastName: prosecutor.lastName
+          }
+        }
+      });
+    }
+
+    const hasBeenReviewed = _case.defendants.some(defendant => defendant.status && defendant.status !== statuses.NOT_CHARGED);
+
+    if (hasBeenReviewed) {
+      cursor = faker.date.between({ from: cursor, to: now });
+      const caseCharges = _case.defendants.flatMap(defendant => defendant.charges);
+      const chargeDecisions = caseCharges
+        .map(charge => ({ description: charge.description, decision: 'Charge' }));
+
+      const elementStrengths = caseCharges.flatMap(charge =>
+        (charge.elements || []).map(element => ({
+          charge: charge.description,
+          element: element.description,
+          strength: element.strength || 'Not assessed',
+          reasoning: element.strengthReasoning || null
+        }))
+      );
+
+      const reviewMeta = {
+        chargeDecisions,
+        summary: faker.helpers.arrayElement(reviewSummaries)
+      };
+
+      if (elementStrengths.length) {
+        reviewMeta.elementStrengths = elementStrengths;
+      }
+
+      events.push({
+        userId: faker.helpers.arrayElement(users).id,
+        caseId: _case.id,
+        action: 'UPDATE',
+        title: 'Review submitted',
+        model: 'Case',
+        recordId: _case.id,
+        createdAt: cursor,
+        meta: reviewMeta
+      });
+    }
+
+    for (const eventData of events) {
+      await prisma.activityLog.create({ data: eventData });
+      totalEvents++;
+    }
+  }
+
+  return totalEvents;
+}
+
 module.exports = {
-  seedActivityLogs
+  seedActivityLogs,
+  seedCaseJourneyEvents
 };

@@ -74,7 +74,7 @@
                   text: "Case summary"
                 },
                 value: {
-                  text: summary if summary else "Not provided"
+                  text: summary
                 },
                 actions: {
                   items: [
@@ -85,7 +85,7 @@
                     }
                   ]
                 }
-              }
+              } if summary
             ]
           })
         }}
