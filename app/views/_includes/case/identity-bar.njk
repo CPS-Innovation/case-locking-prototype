@@ -56,29 +56,9 @@
     }
   ] %}
 {% elif hasPendingInformationRequest %}
-  {% set identityBarMenus = [
-    {
-      items: [
-        {
-          text: 'Simulate: Information received',
-          href: '/cases/' + _case.id + '/information-requests/simulate-received?referrer=' + path,
-          classes: 'app-button--blue'
-        }
-      ]
-    }
-  ] %}
+  {% set identityBarMenus = [] %}
 {% elif _case.status == caseStatuses.CHARGES_PENDING %}
-  {% set identityBarMenus = [
-    {
-      items: [
-        {
-          text: 'Simulate: Receiving authorised charges',
-          href: '/cases/' + _case.id + '/simulate-authorised-charges?referrer=' + path,
-          classes: 'app-button--blue'
-        }
-      ]
-    }
-  ] %}
+  {% set identityBarMenus = [] %}
 {% elif activeHearings.length == 1 %}
   {% if activeHearings[0].status == 'Hearing preparation needed' %}
     {% set identityBarMenus = [
@@ -92,17 +72,7 @@
       }
     ] %}
   {% elif activeHearings[0].status == 'Hearing pending' %}
-    {% set identityBarMenus = [
-      {
-        items: [
-          {
-            text: 'Simulate: Hearing started',
-            action: '/cases/' + _case.id + '/hearings/' + activeHearings[0].id + '/mark-as-happened?referrer=' + path,
-            classes: 'app-button--blue'
-          }
-        ]
-      }
-    ] %}
+    {% set identityBarMenus = [] %}
   {% elif activeHearings[0].status == 'Hearing outcome needed' %}
     {% set identityBarMenus = [
       {

@@ -15,6 +15,14 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Overview</h1>
 
+      {% set offencesValue %}
+        <ul class="govuk-list govuk-list--bullet">
+          {% for charge in charges %}
+            <li>{{ charge.description }}</li>
+          {% endfor %}
+        </ul>
+      {% endset %}
+
       <div class="app-panel">
         {{
           govukSummaryList({
@@ -41,15 +49,6 @@
                 },
                 value: {
                   html: _case.unit.name
-                },
-                actions: {
-                  items: [
-                    {
-                      href: "#",
-                      text: "Change",
-                      visuallyHiddenText: "Unit"
-                    }
-                  ]
                 }
               },
               {
@@ -85,12 +84,30 @@
                     }
                   ]
                 }
-              } if summary
+              } if summary,
+              {
+                key: {
+                  text: "Offences"
+                },
+                value: {
+                  html: offencesValue
+                },
+                actions: {
+                  items: [
+                    {
+                      href: "/cases/" + _case.id + "/review/strength-assessment/check",
+                      text: "Change",
+                      visuallyHiddenText: "offences"
+                    }
+                  ]
+                } if elementsAssessed
+              } if charges.length
             ]
           })
         }}
       </div>
 
+      {% if elementsAssessed %}
       {% if charges.length %}
         {% for charge in charges %}
           <div class="app-panel">
@@ -136,6 +153,7 @@
         {% endfor %}
       {% else %}
         <p class="govuk-body">No offences.</p>
+      {% endif %}
       {% endif %}
 
       {# Temporarily hidden while this is a single defendant case

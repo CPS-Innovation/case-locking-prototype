@@ -80,8 +80,9 @@ module.exports = router => {
     )
 
     const summary = submittedReview ? submittedReview.summary : null
+    const elementsAssessed = !!submittedReview
 
-    res.render("cases/overview/index", { _case, charges, summary })
+    res.render("cases/overview/index", { _case, charges, summary, elementsAssessed })
   })
 
   router.get("/cases/:caseId/complexity-calculation", async (req, res) => {

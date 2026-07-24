@@ -49,7 +49,13 @@ const SIMON_STATUSES = [
 // and "Review needed" counts on Simon's overview come entirely from
 // dedicated guaranteed cases (see createReviewCase, seedSimonChargesPendingReview)
 // so they stay stable across reseeds.
-const SIMON_OWN_CASE_STATUSES = SIMON_STATUSES.filter(status => status !== statuses.CHARGES_PENDING);
+//
+// Not guilty, Sentenced and No further action are each guaranteed exactly
+// once across the 6 CTL cases + 1 many-statements case, so those counts
+// don't fluctuate to 0 (or several) on a reseed; the remaining slots split
+// randomly between Not charged and Charged.
+const SIMON_GUARANTEED_OWN_CASE_STATUSES = [statuses.NOT_GUILTY, statuses.SENTENCED, statuses.NO_FURTHER_ACTION];
+const SIMON_RANDOM_OWN_CASE_STATUS_POOL = [statuses.NOT_CHARGED, statuses.CHARGED];
 
 // STL tasks (pre-charge, no hearing)
 const SIMON_STL_TASKS = [
@@ -293,7 +299,7 @@ async function createSTLCase(prisma, user, taskConfig, config) {
   return _case;
 }
 
-async function createCTLCase(prisma, user, taskConfig, config) {
+async function createCTLCase(prisma, user, taskConfig, config, forcedStatus) {
   const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, policeUnits, ukCities, availableOperationNames, documentNames, documentTypes } = config;
   const { name, isReminder } = taskConfig;
 
@@ -367,7 +373,7 @@ async function createCTLCase(prisma, user, taskConfig, config) {
     }
   });
 
-  const status = faker.helpers.arrayElement(SIMON_OWN_CASE_STATUSES)
+  const status = forcedStatus
   const needsReview = status === statuses.NOT_CHARGED
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
@@ -413,7 +419,7 @@ async function createCTLCase(prisma, user, taskConfig, config) {
   return _case;
 }
 
-async function createManyStatementsCase(prisma, user, config) {
+async function createManyStatementsCase(prisma, user, config, forcedStatus) {
   const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, taskNames, policeUnits, ukCities, availableOperationNames, documentNames, documentTypes } = config;
 
   const defendant = await prisma.defendant.create({
@@ -484,7 +490,7 @@ async function createManyStatementsCase(prisma, user, config) {
     }
   });
 
-  const status = faker.helpers.arrayElement(SIMON_OWN_CASE_STATUSES)
+  const status = forcedStatus
   const needsReview = status === statuses.NOT_CHARGED
   await prisma.defendant.updateMany({
     where: { cases: { some: { id: _case.id } } },
@@ -781,13 +787,22 @@ async function seedSimonCases(prisma, dependencies, config) {
     await createSTLCase(prisma, simonWhatley, taskConfig, fullConfig);
   }
 
+  // Build the status for each CTL/many-statements case up front (see
+  // SIMON_GUARANTEED_OWN_CASE_STATUSES above), then shuffle so which case
+  // gets which status varies between reseeds.
+  const remainingSlots = SIMON_CTL_TASKS.length + 1 - SIMON_GUARANTEED_OWN_CASE_STATUSES.length;
+  const ownCaseStatuses = faker.helpers.shuffle([
+    ...SIMON_GUARANTEED_OWN_CASE_STATUSES,
+    ...Array.from({ length: remainingSlots }, () => faker.helpers.arrayElement(SIMON_RANDOM_OWN_CASE_STATUS_POOL))
+  ]);
+
   // Create CTL cases (with hearing)
-  for (const taskConfig of SIMON_CTL_TASKS) {
-    await createCTLCase(prisma, simonWhatley, taskConfig, fullConfig);
+  for (const [i, taskConfig] of SIMON_CTL_TASKS.entries()) {
+    await createCTLCase(prisma, simonWhatley, taskConfig, fullConfig, ownCaseStatuses[i]);
   }
 
   // Create the 10-statements case (5 witnesses, one with 10 statements)
-  await createManyStatementsCase(prisma, simonWhatley, fullConfig);
+  await createManyStatementsCase(prisma, simonWhatley, fullConfig, ownCaseStatuses[SIMON_CTL_TASKS.length]);
 
   // Create colleague cases
   for (let i = 0; i < 20; i++) {

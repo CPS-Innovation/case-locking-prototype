@@ -53,7 +53,9 @@
       {% endif %}
 
       {% for link in annotation.elements %}
+        {# Reason capture disabled — restore to re-enable:
         <p class="govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}">{{ link.reasoning }}</p>
+        #}
       {% endfor %}
     </div>
   </div>
@@ -72,7 +74,7 @@
 
     {% if annotationGroups.disclosure.length %}
       <div class="govuk-inset-text govuk-!-margin-top-0 app-inset-text--purple">
-        <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Disclosure</h4>
+        <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Issues</h4>
         {% for annotation in annotationGroups.disclosure %}
           {{ overviewAnnotationCard(annotation, 'purple') }}
         {% endfor %}

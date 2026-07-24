@@ -1,6 +1,38 @@
 {% block footer %}
-  {% set footerHtml %}
+  {% if defendant %}
+    {% if defendant.status == 'Not charged' and not defendant.needsReview %}
+      {% set simulateAction = {
+        text: 'Simulate: Information received',
+        href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/simulate-advance'
+      } %}
+    {% endif %}
+  {% elif hearing %}
+    {% if hearing.status == 'Hearing pending' %}
+      {% set simulateAction = {
+        text: 'Simulate: Hearing started',
+        action: '/cases/' + _case.id + '/hearings/' + hearing.id + '/mark-as-happened'
+      } %}
+    {% endif %}
+  {% elif _case %}
+    {% if hasPendingInformationRequest %}
+      {% set simulateAction = {
+        text: 'Simulate: Information received',
+        href: '/cases/' + _case.id + '/information-requests/simulate-received?referrer=' + path
+      } %}
+    {% elif _case.status == caseStatuses.CHARGES_PENDING %}
+      {% set simulateAction = {
+        text: 'Simulate: Receiving authorised charges',
+        href: '/cases/' + _case.id + '/simulate-authorised-charges?referrer=' + path
+      } %}
+    {% elif activeHearings.length == 1 and activeHearings[0].status == 'Hearing pending' %}
+      {% set simulateAction = {
+        text: 'Simulate: Hearing started',
+        action: '/cases/' + _case.id + '/hearings/' + activeHearings[0].id + '/mark-as-happened?referrer=' + path
+      } %}
+    {% endif %}
+  {% endif %}
 
+  {% set footerHtml %}
     <h2 class="govuk-heading-m">Get help</h2>
     <p class="govuk-!-font-size-16">Email: <a href="#">help@cps.gov.uk</a><br>
       You’ll get a response within 5 working days.
@@ -33,6 +65,16 @@
         </a>
       </li>
     </ul>
+
+    {% if simulateAction %}
+      {% if simulateAction.action %}
+        <form method="post" action="{{ simulateAction.action }}">
+          {{ govukButton({ text: simulateAction.text, classes: 'app-button--blue' }) }}
+        </form>
+      {% else %}
+        {{ govukButton({ text: simulateAction.text, classes: 'app-button--blue', href: simulateAction.href }) }}
+      {% endif %}
+    {% endif %}
   {% endset %}
 
   {{ govukFooter({

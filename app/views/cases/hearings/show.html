@@ -46,15 +46,6 @@
               })
             }}
           </form>
-        {% elif hearing.status == 'Hearing pending' %}
-          <form method="post" action="/cases/{{ _case.id }}/hearings/{{ hearing.id }}/mark-as-happened">
-            {{
-              govukButton({
-                text: "Simulate: Hearing started",
-                classes: "app-button--blue"
-              })
-            }}
-          </form>
         {% elif hearing.status == 'Hearing outcome needed' %}
           {{
             govukButton({

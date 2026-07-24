@@ -14,7 +14,7 @@ const {
 } = require('./palmer-case');
 
 // Simon also has a third Palmer-material case - same victim, police
-// witnesses and documents, but a different defendant (Craig Ashworth) -
+// witnesses and documents, but a different defendant (Ryan Doyle) -
 // where the review has been submitted with a "Charge" decision but the
 // police haven't sent back authorised charges yet. This guarantees Simon
 // exactly 1 case in Charges pending, distinct from the fully Charged case
@@ -31,7 +31,7 @@ async function seedSimonChargesPendingReview(prisma, dependencies, config) {
     return 0;
   }
 
-  const defendant = await createPalmerDefendant(prisma, { firstName: 'Craig', lastName: 'Ashworth' });
+  const defendant = await createPalmerDefendant(prisma, { firstName: 'Ryan', lastName: 'Doyle' });
   const victim = await findOrCreatePalmerVictim(prisma);
   const policeUnit = await findPalmerPoliceUnit(prisma);
   const unitId = faker.helpers.arrayElement(Object.values(SIMON_UNITS));
@@ -82,7 +82,7 @@ async function seedSimonChargesPendingReview(prisma, dependencies, config) {
     userId: simonWhatley.id,
     defendant,
     status: 'submitted',
-    lastName: 'Ashworth',
+    lastName: 'Doyle',
     includeChargeDecision: true
   });
 

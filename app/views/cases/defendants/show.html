@@ -39,8 +39,6 @@
         {% if defendant.status == 'Not charged' and defendant.needsReview %}
           {{ govukButton({ text: 'Make charging decision', href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/make-charging-decision' }) }}
           {{ govukButton({ text: 'Request more information', classes: 'govuk-button--secondary', href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/request-more-information' }) }}
-        {% elif defendant.status == 'Not charged' %}
-          {{ govukButton({ text: 'Simulate: Information received', classes: 'app-button--blue', href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/simulate-advance' }) }}
         {% endif %}
       </div>
 

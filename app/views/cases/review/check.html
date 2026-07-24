@@ -53,7 +53,7 @@
                   {% set typeLabel = 'Evidence' %}
                   {% set typeColour = 'blue' %}
                 {% elif item.type == 'disclosure' %}
-                  {% set typeLabel = 'Disclosure' %}
+                  {% set typeLabel = 'Issue' %}
                   {% set typeColour = 'purple' %}
                 {% elif item.type == 'note' %}
                   {% set typeLabel = 'Note' %}
@@ -131,7 +131,9 @@
                           <p class="app-review-annotation-card__label">
                             {{ link.element.description }}
                           </p>
+                          {# Reason capture disabled — restore to re-enable:
                           <p class="govuk-!-margin-bottom-0">{{ link.reasoning }}</p>
+                          #}
                           <p
                             class="govuk-!-font-size-16 govuk-!-margin-top-3 govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}"
                           >

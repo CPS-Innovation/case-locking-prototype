@@ -15,8 +15,8 @@ const {
 } = require('./palmer-case');
 
 // Simon also has a second, unrelated Palmer-material case - same victim,
-// police witnesses and documents, but a different defendant (Ryan Doyle, not
-// Palmer) - where the review has actually been submitted: a decision to
+// police witnesses and documents, but a different defendant (Pamela Cage,
+// not Palmer) - where the review has actually been submitted: a decision to
 // charge, and the police have since sent back authorised charges. This gives
 // Simon a genuinely reviewed Charged case, rather than the generic
 // no-summary review seedCaseReviewAnnotations bolts onto every charged case.
@@ -32,7 +32,7 @@ async function seedSimonChargedReview(prisma, dependencies, config) {
     return 0;
   }
 
-  const defendant = await createPalmerDefendant(prisma, { firstName: 'Ryan', lastName: 'Doyle' });
+  const defendant = await createPalmerDefendant(prisma, { firstName: 'Pamela', lastName: 'Cage' });
   const victim = await findOrCreatePalmerVictim(prisma);
   const policeUnit = await findPalmerPoliceUnit(prisma);
   const unitId = faker.helpers.arrayElement(Object.values(SIMON_UNITS));
@@ -83,7 +83,7 @@ async function seedSimonChargedReview(prisma, dependencies, config) {
     userId: simonWhatley.id,
     defendant,
     status: 'submitted',
-    lastName: 'Doyle',
+    lastName: 'Cage',
     includeChargeDecision: false
   });
 

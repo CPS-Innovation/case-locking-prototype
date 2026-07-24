@@ -427,7 +427,8 @@ module.exports = (router) => {
 
     const reasoningByElementId = req.body.elements || {}
     const elementIds = Object.keys(reasoningByElementId)
-      .filter(id => reasoningByElementId[id])
+      // Reason capture disabled — restore to re-enable:
+      // .filter(id => reasoningByElementId[id])
       .map(id => parseInt(id))
 
     // Evidence and disclosure are only linked to elements when some are selected —
@@ -474,7 +475,8 @@ module.exports = (router) => {
     const { linkAsType } = req.body
     const reasoningByElementId = req.body.elements || {}
     const elementIds = Object.keys(reasoningByElementId)
-      .filter(id => reasoningByElementId[id])
+      // Reason capture disabled — restore to re-enable:
+      // .filter(id => reasoningByElementId[id])
       .map(id => parseInt(id))
 
     if (elementIds.length) {
