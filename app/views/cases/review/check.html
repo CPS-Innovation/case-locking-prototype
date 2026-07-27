@@ -161,7 +161,9 @@
         {% endfor %}
       {% endfor %}
 
-      <h2 class="govuk-heading-m govuk-!-margin-top-6">Case summary</h2>
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">Assessment and decisions</h2>
+
+      <h3 class="govuk-heading-m govuk-!-margin-top-4">Case summary</h3>
 
       {{
         govukSummaryList({
@@ -181,7 +183,7 @@
         })
       }}
 
-      <h2 class="govuk-heading-m govuk-!-margin-top-6">Information request</h2>
+      <h3 class="govuk-heading-m govuk-!-margin-top-6">Information request</h3>
 
       {{
         govukSummaryList({
@@ -227,7 +229,7 @@
         }}
 
         {% for item in informationRequest.items %}
-          <h3 class="govuk-heading-s">Item {{ loop.index }}</h3>
+          <h4 class="govuk-heading-s">Item {{ loop.index }}</h4>
           {{
             govukSummaryList({
               classes: "govuk-!-margin-bottom-4",
@@ -259,14 +261,14 @@
       {% endif %}
 
       {% if needsChargingDecision %}
-        <h2 class="govuk-heading-m govuk-!-margin-top-6">
+        <h3 class="govuk-heading-m govuk-!-margin-top-6">
           Offences and element strength assessment
-        </h2>
+        </h3>
 
         {% for charge in charges %}
-          <h3 class="govuk-heading-s">
+          <h4 class="govuk-heading-s">
             {{ (charge.defendant.firstName + " " + charge.defendant.lastName + " – " + charge.description) if showDefendantName else charge.description }}
-          </h3>
+          </h4>
 
           {% set elementRows = [] %}
           {% for element in charge.elements %}
@@ -290,7 +292,7 @@
           {{ govukSummaryList({ classes: "govuk-!-margin-bottom-4", rows: elementRows }) }}
         {% endfor %}
 
-        <h2 class="govuk-heading-m govuk-!-margin-top-6">Charging decision</h2>
+        <h3 class="govuk-heading-m govuk-!-margin-top-6">Charging decision</h3>
 
         {% set chargingDecisionRows = [] %}
         {% for charge in charges %}
@@ -313,7 +315,7 @@
       {% endif %}
 
       {% if not firstHearings.length and not needsChargingDecision %}
-        <h2 class="govuk-heading-m govuk-!-margin-top-6">First hearing</h2>
+        <h3 class="govuk-heading-m govuk-!-margin-top-6">First hearing</h3>
 
         {{
           govukSummaryList({

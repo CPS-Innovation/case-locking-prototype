@@ -144,7 +144,8 @@ async function seedCaseReviewAnnotations(prisma, { users }) {
             paragraphIndex,
             occurrenceIndex,
             note,
-            timestampSeconds: snippet.timestampSeconds ?? null
+            timestampSeconds: snippet.timestampSeconds ?? null,
+            userId
           }
         })
         annotationCount++

@@ -16,7 +16,9 @@
 
       {% for group in documentGroups %}
         {% if group.heading %}
-          <h2 class="govuk-heading-m{% if not loop.first %} govuk-!-margin-top-6{% endif %}">{{ group.heading }}</h2>
+          <h2 class="govuk-heading-m{% if not loop.first %}govuk-!-margin-top-6{% endif %}">
+            {{ group.heading }}
+          </h2>
         {% endif %}
 
         {% set documentItems = [] %}
@@ -49,7 +51,7 @@
         }}
       {% endfor %}
 
-      <h2 class="govuk-heading-m govuk-!-margin-top-4">Additional information</h2>
+      <h2 class="govuk-heading-m govuk-!-margin-top-4">Assessment and decisions</h2>
 
       {% if review.summaryComplete == true %}
         {% set summaryStatus = { text: "Completed" } %}
@@ -144,11 +146,13 @@
         })
       }}
 
-      <h2 class="govuk-heading-m govuk-!-margin-top-4">Check and submit review</h2>
+      <h2 class="govuk-heading-m govuk-!-margin-top-4">Check details and submit review</h2>
+
+      <p>You can check all of the details of your review.</p>
 
       {{
         govukButton({
-          text: "Check and submit review",
+          text: "Check details and submit review",
           href: "/cases/" + _case.id + "/review/check"
         })
       }}

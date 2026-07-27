@@ -37,5 +37,12 @@
     {% else %}
       <p>‘{{ params.item.selectedText | truncate(80) }}’</p>
     {% endif %}
+
+    {% if params.item.addedByName %}
+      <p class="govuk-!-font-size-16">
+        {{ params.item.addedByName }},
+        <time datetime="{{ params.item.createdAt }}">{{ params.item.createdAt | isoDateString | govukDateTime }}</time>
+      </p>
+    {% endif %}
   </div>
 </div>

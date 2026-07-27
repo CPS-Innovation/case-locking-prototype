@@ -30,6 +30,7 @@ model User {
   restrictedAreas       Specialism[]             @relation("UserRestrictedAreas")
   recentCases           RecentCase[]
   caseReviews           CaseReview[]
+  caseReviewAnnotations CaseReviewAnnotation[]
 }
 
 model ActivityLog {
@@ -476,6 +477,8 @@ model CaseReviewAnnotation {
   occurrenceIndex      Int                @default(0)
   note                 String
   timestampSeconds     Float?
+  userId               Int?
+  user                 User?              @relation(fields: [userId], references: [id])
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
   caseReviewDocument   CaseReviewDocument @relation(fields: [caseReviewDocumentId], references: [id])

@@ -513,7 +513,7 @@ module.exports = (router) => {
         .join('; ')
 
       annotation = await prisma.caseReviewAnnotation.create({
-        data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds }
+        data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds, userId }
       })
 
       await prisma.caseReviewAnnotationElement.createMany({
@@ -527,7 +527,7 @@ module.exports = (router) => {
       const { note } = req.body
       if (selectedText && type && note) {
         annotation = await prisma.caseReviewAnnotation.create({
-          data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds }
+          data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds, userId }
         })
       }
     }

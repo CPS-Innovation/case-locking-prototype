@@ -5,7 +5,7 @@
     <h2 class="app-activity-log__title govuk-heading-s govuk-!-margin-bottom-1">{{ params.eventTitle }}</h2>
     <p class="app-activity-log__byline">
       By
-      {% if params.event.title == 'Case added' and params.event.meta.policeUnit -%}
+      {% if (params.event.title == 'Case added' or params.event.title == 'Authorised charges received') and params.event.meta.policeUnit -%}
         {{ params.event.meta.policeUnit }}
       {%- elif params.event.user -%}
         {{params.event.user.firstName}}
@@ -19,7 +19,7 @@
     </p>
   </div>
   <div class="app-activity-log__description">
-    {% if params.event.title == 'Case added' %}
+    {% if params.event.title == 'Case added' or params.event.title == 'Authorised charges received' %}
       <div class="app-activity-log__box">
         {% set materialHtml %}
           {% if params.event.meta.documents and params.event.meta.documents.length %}
@@ -36,10 +36,6 @@
               key: { text: "URN" },
               value: { text: params.event.case.reference }
             } if params.showUrn,
-            {
-              key: { text: "Unit" },
-              value: { text: params.event.meta.unit }
-            } if params.event.meta.unit,
             {
               key: { text: "Police force" },
               value: { text: params.event.meta.policeUnit }
@@ -64,7 +60,11 @@
         }) }}
       </div>
       <p class="app-log-card__note--link">
-        <a class="govuk-link" href="/cases/{{ params.event.case.id }}">View case</a>
+        {% if params.event.title == 'Authorised charges received' %}
+          <a class="govuk-link" href="/cases/{{ params.event.case.id }}/documents/{{ params.event.recordId }}">View material</a>
+        {% else %}
+          <a class="govuk-link" href="/cases/{{ params.event.case.id }}">View case</a>
+        {% endif %}
       </p>
     {% endif %}
 

@@ -52,6 +52,7 @@ module.exports = router => {
       include: {
         annotation: {
           include: {
+            user: true,
             caseReviewDocument: {
               include: {
                 document: { include: { witnessStatement: { include: { witness: true } } } }

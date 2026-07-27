@@ -16,12 +16,12 @@ module.exports = (router) => {
 
     const _case = await prisma.case.findUnique({
       where: { id: caseId },
-      include: { defendants: true },
+      include: { defendants: true, policeUnit: true },
     })
 
-    const chargedDefendantIds = _case.defendants
+    const chargedDefendants = _case.defendants
       .filter(d => d.status === statuses.CHARGES_PENDING)
-      .map(d => d.id)
+    const chargedDefendantIds = chargedDefendants.map(d => d.id)
 
     if (chargedDefendantIds.length) {
       await prisma.defendant.updateMany({
@@ -42,11 +42,15 @@ module.exports = (router) => {
 
     await prisma.activityLog.create({
       data: {
-        userId,
+        userId: null,
         model: 'Document',
         recordId: document.id,
         action: 'CREATE',
         title: 'Authorised charges received',
+        meta: {
+          policeUnit: _case.policeUnit ? _case.policeUnit.name : null,
+          documents: [{ name: document.name }],
+        },
         caseId,
       },
     })

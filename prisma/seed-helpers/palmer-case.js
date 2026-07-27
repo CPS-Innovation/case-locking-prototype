@@ -395,7 +395,8 @@ async function createFullPalmerReview(prisma, { caseId, userId, defendant, statu
           paragraphIndex,
           occurrenceIndex,
           note: element ? `${element.description}: ${note}` : note,
-          timestampSeconds: snippet.timestampSeconds ?? null
+          timestampSeconds: snippet.timestampSeconds ?? null,
+          userId
         }
       })
 

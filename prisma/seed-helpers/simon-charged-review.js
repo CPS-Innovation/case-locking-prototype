@@ -100,13 +100,30 @@ async function seedSimonChargedReview(prisma, dependencies, config) {
     data: { status: statuses.CHARGED, needsReview: false }
   });
 
-  await prisma.document.create({
+  const authorisedChargesDocument = await prisma.document.create({
     data: {
       caseId: _case.id,
       name: 'Authorised charges (MG04)',
       description: 'Authorised charges received from the police.',
       type: 'PDF',
       size: faker.number.int({ min: 50, max: 5000 }),
+    }
+  });
+
+  // Mirrors the activity log entry created by the real
+  // simulate-authorised-charges flow (app/routes/case--simulate-authorised-charges.js)
+  await prisma.activityLog.create({
+    data: {
+      userId: null,
+      model: 'Document',
+      recordId: authorisedChargesDocument.id,
+      action: 'CREATE',
+      title: 'Authorised charges received',
+      meta: {
+        policeUnit: policeUnit.name,
+        documents: [{ name: authorisedChargesDocument.name }],
+      },
+      caseId: _case.id,
     }
   });
 

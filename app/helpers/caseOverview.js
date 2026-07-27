@@ -47,7 +47,9 @@ function toAnnotationItem(annotation) {
     documentName: document.name,
     documentType: document.type,
     selectedText: annotation.selectedText,
-    timestampSeconds: annotation.timestampSeconds
+    timestampSeconds: annotation.timestampSeconds,
+    addedByName: annotation.user ? `${annotation.user.firstName} ${annotation.user.lastName}` : null,
+    createdAt: annotation.createdAt
   }
 }
 
