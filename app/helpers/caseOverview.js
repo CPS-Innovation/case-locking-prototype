@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const { getDocumentPhotoUrls } = require('./documentContent')
 
 const witnessTypeLabels = [
   ['isChild', 'Child'],
@@ -48,6 +49,7 @@ function toAnnotationItem(annotation) {
     documentType: document.type,
     selectedText: annotation.selectedText,
     timestampSeconds: annotation.timestampSeconds,
+    photoUrl: getDocumentPhotoUrls(document)[0],
     addedByName: annotation.user ? `${annotation.user.firstName} ${annotation.user.lastName}` : null,
     createdAt: annotation.createdAt
   }

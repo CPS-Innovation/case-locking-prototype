@@ -7,13 +7,8 @@ const govukPrototypeKit = require('govuk-prototype-kit')
 const addFilter = govukPrototypeKit.views.addFilter
 const { DateTime } = require('luxon')
 const statuses = require('./data/case-statuses')
-const { getDocumentPhotoUrls } = require('./helpers/documentContent')
 
 // Add your filters here
-addFilter('documentPhotoUrl', (documentName) => {
-  return getDocumentPhotoUrls({ name: documentName })[0]
-})
-
 addFilter('priorityTagClass', (status) => {
   switch (status) {
     case 'High priority':

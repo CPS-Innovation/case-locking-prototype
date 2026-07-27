@@ -1,4 +1,5 @@
 {% from "_includes/annotation-element-groups.njk" import annotationElementGroups %}
+{% from "_includes/annotation-card-body.njk" import annotationCardBody %}
 
 {% if annotations.length %}
   <div class="govuk-!-margin-bottom-6">
@@ -26,33 +27,15 @@
           </p>
         </div>
         <div class="app-review-annotation-card__body">
-          {% if annotation.selectedText == 'Whole photo' %}
-            <img
-              src="/public/images/evidence-photo-placeholder.jpg"
-              alt="{{ annotation.caseReviewDocument.document.name }}"
-              class="app-review-annotation-card__photo"
-            />
-          {% else %}
-            {% if annotation.timestampSeconds != null %}
-              {% if annotation.caseReviewDocument.document.type == 'MP3' %}
-                <audio
-                  src="/public/audio/999-call-placeholder.mp3#t={{ annotation.timestampSeconds }}"
-                  class="app-review-annotation-card__audio"
-                  controls
-                ></audio>
-              {% else %}
-                <video
-                  src="/public/videos/cctv-placeholder.mp4#t={{ annotation.timestampSeconds }}"
-                  class="app-review-annotation-card__video"
-                  controls
-                ></video>
-              {% endif %}
-              <p class="app-review-annotation-card__label">Timestamp</p>
-              <p>{{ annotation.selectedText }}</p>
-            {% else %}
-              <p>‘{{ annotation.selectedText | truncate(80) }}’</p>
-            {% endif %}
-          {% endif %}
+          {{
+            annotationCardBody({
+              selectedText: annotation.selectedText,
+              timestampSeconds: annotation.timestampSeconds,
+              documentType: annotation.caseReviewDocument.document.type,
+              documentName: annotation.caseReviewDocument.document.name,
+              photoUrl: annotation.photoUrl
+            })
+          }}
 
           {{ annotationElementGroups(annotation.elementGroups) }}
         </div>

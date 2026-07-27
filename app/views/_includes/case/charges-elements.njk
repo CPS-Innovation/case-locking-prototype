@@ -1,0 +1,119 @@
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "_components/annotation-card/macro.njk" import appAnnotationCard %}
+
+{% macro chargesElements(charges, _case) %}
+  {% if charges.length %}
+    {% for charge in charges %}
+      <div class="app-section">
+        <h2 class="govuk-heading-m">{{ charge.description }}</h2>
+
+        {% for element in charge.elements %}
+          <div class="app-element">
+            <h3 class="govuk-heading-s govuk-!-margin-top-">{{ element.description }}</h3>
+
+            {{
+              govukSummaryList({
+                classes: "govuk-!-margin-bottom-4",
+                rows: [
+                  {
+                    key: { text: "Strength" },
+                    value: { html: govukTag({ text: element.strength or "Not assessed", classes: (element.strength or "Not assessed") | strengthTagClass }) },
+                    actions: {
+                      items: [{
+                        href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
+                        text: "Change",
+                        visuallyHiddenText: "strength of " + (element.description | lower)
+                      }]
+                    }
+                  },
+                  {
+                    key: { text: "Reason" },
+                    value: { text: element.strengthReasoning },
+                    actions: {
+                      items: [{
+                        href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=overview",
+                        text: "Change",
+                        visuallyHiddenText: "reason for " + (element.description | lower)
+                      }]
+                    }
+                  } if element.strengthReasoning
+                ]
+              })
+            }}
+
+            {% if element.evidence.length %}
+              <div
+                class="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-1 app-inset-text--blue"
+              >
+                <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Evidence</h4>
+                {% for item in element.evidence %}
+                  {{ appAnnotationCard({ item: item, typeColour: "blue", caseId: _case.id }) }}
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            {% if element.witnesses.length %}
+              <div class="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-1 app-inset-text--grey">
+                <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Witnesses</h4>
+                <div class="app-list">
+                  {% for witness in element.witnesses %}
+                    <div class="app-list__item">
+                      <h3 class="govuk-heading-s govuk-!-margin-bottom-1">
+                        <div>
+                          <a
+                            href="/cases/{{ _case.id }}/witnesses/{{ witness.id }}"
+                            class="govuk-link govuk-link--no-visited-state"
+                          >
+                            {{ witness.firstName }} {{ witness.lastName }}
+                          </a>
+                        </div>
+                        <div class="app-list__tag">
+                          {% if witness.isVictim %}
+                            {{ govukTag({ text: "Victim", classes: "govuk-!-margin-left-1" }) }}
+                          {% endif %}
+                          {% if witness.isKeyWitness %}
+                            {{ govukTag({ text: "Key witness", classes: "govuk-!-margin-left-1" }) }}
+                          {% endif %}
+                        </div>
+                      </h3>
+
+                      {{
+                        govukSummaryList({
+                          classes: "govuk-summary-list--no-border app-summary-list--compact app-summary-list--small-text",
+                          rows: [
+                            {
+                              key: { html: "Date of birth" },
+                              value: { html: witness.dateOfBirth | isoDateString | govukDate }
+                            },
+                            {
+                              key: { html: "Type" },
+                              value: { html: witness.typeListHtml }
+                            }
+                          ]
+                        })
+                      }}
+                    </div>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            {% if element.issues.length %}
+              <div
+                class="govuk-inset-text govuk-!-margin-top-0 govuk-!-margin-bottom-1 app-inset-text--red"
+              >
+                <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Issues anticipated</h4>
+                {% for item in element.issues %}
+                  {{ appAnnotationCard({ item: item, typeColour: "red", caseId: _case.id }) }}
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="govuk-body">No offences.</p>
+  {% endif %}
+{% endmacro %}

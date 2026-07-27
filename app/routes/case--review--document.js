@@ -608,6 +608,7 @@ module.exports = (router) => {
 
     const from = req.query.from || 'list'
     annotation.elementGroups = groupElementsByCharge(annotation.elements)
+    annotation.photoUrl = getDocumentPhotoUrls(document)[0]
 
     res.render('cases/review/annotations/delete', { _case, document, annotation, caseId, documentId, from })
   })

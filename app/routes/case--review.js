@@ -11,6 +11,7 @@ const {
 } = require('../helpers/caseReview')
 const { createInformationRequestFromSession } = require('../helpers/informationRequest')
 const { groupElementsByCharge } = require('../helpers/documentAnnotations')
+const { getDocumentPhotoUrls } = require('../helpers/documentContent')
 const categoryOrder = require('../data/document-categories')
 
 // Material with categories is grouped under category headings, in the order
@@ -120,13 +121,18 @@ module.exports = (router) => {
       ((a.timestampSeconds || 0) - (b.timestampSeconds || 0)) ||
       (a.createdAt - b.createdAt)
 
+    const documentsById = {}
+    documents.forEach(document => { documentsById[document.id] = document })
+
     const docReviewMap = {}
     documentReviews.forEach(dr => {
+      const photoUrl = getDocumentPhotoUrls(documentsById[dr.documentId])[0]
       const items = [
         ...dr.annotations.map(annotation => ({
           ...annotation,
           kind: 'annotation',
-          elementGroups: groupElementsByCharge(annotation.elements)
+          elementGroups: groupElementsByCharge(annotation.elements),
+          photoUrl
         })),
         ...dr.redactions.map(redaction => ({ ...redaction, kind: 'redaction' }))
       ].sort(byDocumentPosition)

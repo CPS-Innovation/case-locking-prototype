@@ -72,13 +72,18 @@
   border-left-color: mix(govuk-colour("white"), govuk-colour("mid-grey"), 42%);
 }
 
-.app-review-annotation-card {
+// Shared layout for the two "playback" annotation cards (check-answers and
+// case overview). They deliberately don't share a class name in markup —
+// they're independent pieces of bespoke UI for different pages that happen
+// to look alike today, not one component — so this is a Sass placeholder
+// extended by each page's own class, not a class either page's HTML uses.
+%annotation-playback-card {
   background: govuk-colour("white");
   border: 1px solid $govuk-border-colour;
   margin-bottom: govuk-spacing(4);
 }
 
-.app-review-annotation-card__header {
+%annotation-playback-card__header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -94,7 +99,7 @@
   }
 }
 
-.app-review-annotation-card__body {
+%annotation-playback-card__body {
   padding: govuk-spacing(3);
 
   @include govuk-media-query($from: desktop) {
@@ -106,26 +111,59 @@
   }
 }
 
-.app-review-annotation-card__photo,
-.app-review-annotation-card__video,
-.app-review-annotation-card__audio {
+.app-review-annotation-card {
+  @extend %annotation-playback-card;
+}
+
+.app-review-annotation-card__header {
+  @extend %annotation-playback-card__header;
+}
+
+.app-review-annotation-card__body {
+  @extend %annotation-playback-card__body;
+}
+
+.app-overview-annotation-card {
+  @extend %annotation-playback-card;
+}
+
+.app-overview-annotation-card__header {
+  @extend %annotation-playback-card__header;
+}
+
+.app-overview-annotation-card__body {
+  @extend %annotation-playback-card__body;
+}
+
+// Media rendered inside a playback card's body (photo/audio/video/timestamp),
+// shared via the annotationCardBody macro regardless of which card it's in.
+.app-annotation-media__photo,
+.app-annotation-media__video,
+.app-annotation-media__audio {
   display: block;
   max-width: 100%;
   margin-bottom: govuk-spacing(3);
 }
 
-.app-review-annotation-card__audio {
+.app-annotation-media__audio {
   width: 100%;
 }
 
-.app-review-annotation-card__label {
+%annotation-card-label {
   @include govuk-font($size: 19, $weight: bold);
   margin-bottom: 0;
 }
 
-.app-review-annotation-card__source {
-  @include govuk-font($size: 16, $weight: bold);
-  margin-bottom: govuk-spacing(2);
+// Used for the "Timestamp" label inside the shared media macro
+.app-annotation-media__label {
+  @extend %annotation-card-label;
+}
+
+// Used for the "Note" section label on pages that also use the media macro
+// but need a bold label outside it (check-answers, delete confirmation,
+// information request notes)
+.app-review-annotation-card__label {
+  @extend %annotation-card-label;
 }
 
 .app-annotation-card__body {

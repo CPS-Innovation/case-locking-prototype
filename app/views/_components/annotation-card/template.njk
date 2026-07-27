@@ -1,5 +1,7 @@
-<div class="app-review-annotation-card app-review-annotation-card--{{ params.typeColour }}">
-  <div class="app-review-annotation-card__header app-annotation-card__tag--{{ params.typeColour }}">
+{% from "_includes/annotation-card-body.njk" import annotationCardBody %}
+
+<div class="app-overview-annotation-card app-overview-annotation-card--{{ params.typeColour }}">
+  <div class="app-overview-annotation-card__header app-annotation-card__tag--{{ params.typeColour }}">
     <p class="govuk-!-margin-bottom-0">{{ params.item.documentName }}</p>
     <p class="govuk-!-margin-bottom-0">
       <a
@@ -11,32 +13,16 @@
       </a>
     </p>
   </div>
-  <div class="app-review-annotation-card__body">
-    {% if params.item.selectedText == 'Whole photo' %}
-      <img
-        src="/public/images/evidence-photo-placeholder.jpg"
-        alt="{{ params.item.documentName }}"
-        class="app-review-annotation-card__photo"
-      />
-    {% elif params.item.timestampSeconds != null %}
-      {% if params.item.documentType == 'MP3' %}
-        <audio
-          src="/public/audio/999-call-placeholder.mp3#t={{ params.item.timestampSeconds }}"
-          class="app-review-annotation-card__audio"
-          controls
-        ></audio>
-      {% else %}
-        <video
-          src="/public/videos/cctv-placeholder.mp4#t={{ params.item.timestampSeconds }}"
-          class="app-review-annotation-card__video"
-          controls
-        ></video>
-      {% endif %}
-      <p class="app-review-annotation-card__label">Timestamp</p>
-      <p>{{ params.item.selectedText }}</p>
-    {% else %}
-      <p>‘{{ params.item.selectedText | truncate(80) }}’</p>
-    {% endif %}
+  <div class="app-overview-annotation-card__body">
+    {{
+      annotationCardBody({
+        selectedText: params.item.selectedText,
+        timestampSeconds: params.item.timestampSeconds,
+        documentType: params.item.documentType,
+        documentName: params.item.documentName,
+        photoUrl: params.item.photoUrl
+      })
+    }}
 
     {% if params.item.addedByName %}
       <p class="govuk-!-font-size-16">

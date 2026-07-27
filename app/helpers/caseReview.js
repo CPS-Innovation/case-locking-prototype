@@ -1,6 +1,7 @@
 const statuses = require('../data/case-statuses')
 const { formatDefendantNames } = require('./informationRequest')
 const { groupElementsByCharge } = require('./documentAnnotations')
+const { getDocumentPhotoUrls } = require('./documentContent')
 
 // A case's review is shared - whoever opens it continues the same review
 // rather than getting their own private copy, so document status and
@@ -129,7 +130,8 @@ async function getElementAnnotations(prisma, elementId) {
   })
   return annotationLinks.map(link => ({
     ...link.annotation,
-    elementGroups: groupElementsByCharge(link.annotation.elements)
+    elementGroups: groupElementsByCharge(link.annotation.elements),
+    photoUrl: getDocumentPhotoUrls(link.annotation.caseReviewDocument.document)[0]
   }))
 }
 

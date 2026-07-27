@@ -1,5 +1,6 @@
 {% extends "_layouts/main.html" %}
 {% from "_includes/annotation-element-groups.njk" import annotationElementGroups %}
+{% from "_includes/annotation-card-body.njk" import annotationCardBody %}
 
 {% set navId = 'cases' %}
 {% set pageName = "Check details and submit review" %}
@@ -109,33 +110,15 @@
                         ‘{{ item.selectedText | truncate(80) }}’
                       </p>
                     {% else %}
-                      {% if item.selectedText == 'Whole photo' %}
-                        <img
-                          src="{{ document.name | documentPhotoUrl }}"
-                          alt="{{ document.name }}"
-                          class="app-review-annotation-card__photo"
-                        />
-                      {% else %}
-                        {% if item.timestampSeconds != null %}
-                          {% if document.type == 'MP3' %}
-                            <audio
-                              src="/public/audio/999-call-placeholder.mp3#t={{ item.timestampSeconds }}"
-                              class="app-review-annotation-card__audio"
-                              controls
-                            ></audio>
-                          {% else %}
-                            <video
-                              src="/public/videos/cctv-placeholder.mp4#t={{ item.timestampSeconds }}"
-                              class="app-review-annotation-card__video"
-                              controls
-                            ></video>
-                          {% endif %}
-                          <p class="app-review-annotation-card__label">Timestamp</p>
-                          <p>{{ item.selectedText }}</p>
-                        {% else %}
-                          <p>‘{{ item.selectedText | truncate(80) }}’</p>
-                        {% endif %}
-                      {% endif %}
+                      {{
+                        annotationCardBody({
+                          selectedText: item.selectedText,
+                          timestampSeconds: item.timestampSeconds,
+                          documentType: document.type,
+                          documentName: document.name,
+                          photoUrl: item.photoUrl
+                        })
+                      }}
 
                       {% if item.elementGroups.length %}
                         {{ annotationElementGroups(item.elementGroups, true) }}
