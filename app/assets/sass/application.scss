@@ -38,7 +38,7 @@
 @import "components/prosecutor-cards.scss";
 
 // Panels
-@import "components/panel.scss";
+@import "components/section.scss";
 
 // Search
 @import "components/search-form.scss";
@@ -285,4 +285,8 @@ $statuses: (
       margin-right: 20px;
     }
   }
+}
+
+.app-element {
+  margin-bottom: govuk-spacing(7);
 }

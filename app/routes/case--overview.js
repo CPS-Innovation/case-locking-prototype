@@ -1,8 +1,8 @@
-const _ = require('lodash')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { addTimeLimitDates } = require('../helpers/timeLimit')
 const { addCaseStatus } = require('../helpers/caseStatus')
+const { buildOverviewCharges } = require('../helpers/caseOverview')
 
 module.exports = router => {
   router.get("/cases/:caseId", async (req, res) => {
@@ -56,40 +56,17 @@ module.exports = router => {
               include: {
                 document: { include: { witnessStatement: { include: { witness: true } } } }
               }
-            },
-            elements: { include: { element: { include: { charge: true } } } }
+            }
           }
         }
       }
     })
-    const annotationsByElementId = _.groupBy(annotationLinks, 'elementId')
 
     const submittedReview = await prisma.caseReview.findFirst({
       where: { caseId: _case.id, status: 'submitted' }
     })
 
-    const charges = _case.defendants.flatMap(defendant =>
-      defendant.charges.map(charge => ({
-        ...charge,
-        defendant,
-        elements: charge.elements.map(element => ({
-          ...element,
-          strength: submittedReview ? element.strength : null,
-          strengthReasoning: submittedReview ? element.strengthReasoning : null,
-          reviewAnnotations: submittedReview
-            ? (annotationsByElementId[element.id] || []).map(link => link.annotation)
-            : [],
-          witnesses: submittedReview
-            ? _.uniqBy(
-                (annotationsByElementId[element.id] || [])
-                  .map(link => link.annotation.caseReviewDocument.document.witnessStatement?.witness)
-                  .filter(Boolean),
-                'id'
-              )
-            : []
-        }))
-      }))
-    )
+    const charges = buildOverviewCharges(_case.defendants, annotationLinks, submittedReview)
 
     const summary = submittedReview ? submittedReview.summary : null
     const elementsAssessed = !!submittedReview

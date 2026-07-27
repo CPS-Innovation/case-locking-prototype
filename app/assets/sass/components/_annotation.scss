@@ -68,6 +68,10 @@
   border-left-color: mix(govuk-colour("white"), govuk-colour("red"), 85%);
 }
 
+.app-inset-text--grey {
+  border-left-color: mix(govuk-colour("white"), govuk-colour("mid-grey"), 42%);
+}
+
 .app-review-annotation-card {
   background: govuk-colour("white");
   border: 1px solid $govuk-border-colour;
