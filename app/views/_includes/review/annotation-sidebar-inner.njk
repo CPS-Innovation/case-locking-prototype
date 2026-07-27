@@ -207,14 +207,14 @@
 
         {% if annotation.elementGroups.length %}
           {% for group in annotation.elementGroups %}
-            <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-1">
+            <p class="govuk-!-font-weight-bold govuk-!-margin-bottom-1">
+              {{ group.charge.description }}
+            </p>
+            <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-{{ '0' if loop.last else '2' }}">
               {% for element in group.elements %}
                 <li>{{ element.description }}</li>
               {% endfor %}
             </ul>
-            <p class="app-annotation-card__note govuk-!-margin-bottom-{{ '0' if loop.last else '2' }}">
-              {{ group.charge.description }}
-            </p>
           {% endfor %}
         {% else %}
           <p class="app-annotation-card__note js-annotation-note">{{ annotation.note }}</p>

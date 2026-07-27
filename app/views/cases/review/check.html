@@ -90,6 +90,16 @@
                             {{ typeLabel | lower }} annotation
                           </span>
                         </a>
+                      {% elif item.kind == 'redaction' %}
+                        <a
+                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/redactions/{{ item.id }}/delete?from=check"
+                          class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
+                        >
+                          Delete
+                          <span class="govuk-visually-hidden">
+                            redaction
+                          </span>
+                        </a>
                       {% endif %}
                     </p>
                   </div>

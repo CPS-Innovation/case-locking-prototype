@@ -655,6 +655,23 @@ module.exports = (router) => {
     await respondWithRedactionUpdate(req, res, prisma, { documentId, docReviewId: docReview.id })
   })
 
+  // Delete redaction — confirm GET
+  router.get('/cases/:caseId/review/documents/:documentId/redactions/:redactionId/delete', async (req, res) => {
+    const caseId = parseInt(req.params.caseId)
+    const documentId = parseInt(req.params.documentId)
+    const redactionId = parseInt(req.params.redactionId)
+
+    const [_case, document, redaction] = await Promise.all([
+      prisma.case.findUnique({ where: { id: caseId } }),
+      prisma.document.findUnique({ where: { id: documentId } }),
+      prisma.caseReviewRedaction.findUnique({ where: { id: redactionId } })
+    ])
+
+    const from = req.query.from || 'document'
+
+    res.render('cases/review/redactions/delete', { _case, document, redaction, caseId, documentId, from })
+  })
+
   // Delete redaction
   router.post('/cases/:caseId/review/documents/:documentId/redactions/:redactionId/delete', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
@@ -667,7 +684,16 @@ module.exports = (router) => {
 
     await prisma.caseReviewRedaction.delete({ where: { id: redactionId } })
 
-    await respondWithRedactionUpdate(req, res, prisma, { documentId, docReviewId: docReview.id })
+    // The document page deletes redactions inline via AJAX (jQuery sets
+    // X-Requested-With, so req.xhr is true there); the check page instead
+    // posts a plain form and expects a redirect back.
+    if (req.xhr) {
+      await respondWithRedactionUpdate(req, res, prisma, { documentId, docReviewId: docReview.id })
+    } else if (req.body.from === 'check') {
+      res.redirect(`/cases/${caseId}/review/check`)
+    } else {
+      res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
+    }
   })
 
   // Mark document as reviewed

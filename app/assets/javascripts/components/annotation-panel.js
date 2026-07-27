@@ -418,6 +418,7 @@ App.AnnotationPanel.prototype.onDocumentClick = function(e) {
 App.AnnotationPanel.prototype.onDeleteRedactionClick = function() {
   if (!this.pendingDeleteRedactionId) return
   this.redactionDeleteForm.attr('action', '/cases/' + this.caseId + '/review/documents/' + this.documentId + '/redactions/' + this.pendingDeleteRedactionId + '/delete')
+  this.hidePopup()
   this.submitRedactionForm(this.redactionDeleteForm)
 }
 
