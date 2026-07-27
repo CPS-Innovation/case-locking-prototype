@@ -3,7 +3,7 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
 const { findOrCreateReview, findOrCreateDocumentReview, getElementAnnotations, resetReviewCompletionAfterOffenceChange } = require('../helpers/caseReview')
-const { applyHighlights, applyRedactions, buildOffencesWithAnnotations } = require('../helpers/documentAnnotations')
+const { applyHighlights, applyRedactions, buildOffencesWithAnnotations, groupElementsByCharge } = require('../helpers/documentAnnotations')
 const charges = require('../data/charges')
 const elementsByChargeCode = require('../data/elements')
 
@@ -23,7 +23,7 @@ async function loadAnnotationSidebarData(prisma, caseId, documentId, docReviewId
     prisma.caseReviewAnnotation.findMany({
       where: { caseReviewDocumentId: docReviewId },
       orderBy: { createdAt: 'asc' },
-      include: { elements: { include: { element: true } } }
+      include: { elements: { include: { element: { include: { charge: true } } } } }
     })
   ])
   const defendantCharges = _case.defendants[0]?.charges || []
@@ -66,6 +66,21 @@ async function respondWithAnnotationUpdate(req, res, prisma, { caseId, documentI
   res.json({ sidebarHtml, documentHtml, annotationId })
 }
 
+// Redactions only affect the inline marks in the document body, not the
+// sidebar, so this only needs to re-render the document pane.
+async function respondWithRedactionUpdate(req, res, prisma, { documentId, docReviewId }) {
+  const document = await prisma.document.findUnique({ where: { id: documentId } })
+  const annotations = await prisma.caseReviewAnnotation.findMany({
+    where: { caseReviewDocumentId: docReviewId },
+    orderBy: { createdAt: 'asc' }
+  })
+  const documentHtml = await renderView(res, 'cases/documents/_document-pane-text-inner.njk', {
+    sections: await loadDocumentBodySections(prisma, document, docReviewId, annotations)
+  })
+
+  res.json({ documentHtml })
+}
+
 module.exports = (router) => {
   // Document viewer
   router.get('/cases/:caseId/review/documents/:documentId', async (req, res) => {
@@ -102,7 +117,7 @@ module.exports = (router) => {
     const annotations = await prisma.caseReviewAnnotation.findMany({
       where: { caseReviewDocumentId: docReview.id },
       orderBy: { createdAt: 'asc' },
-      include: { elements: { include: { element: true } } }
+      include: { elements: { include: { element: { include: { charge: true } } } } }
     })
 
     const redactions = (isVideo || isAudio || isPhoto) ? [] : await prisma.caseReviewRedaction.findMany({
@@ -592,6 +607,7 @@ module.exports = (router) => {
     ])
 
     const from = req.query.from || 'list'
+    annotation.elementGroups = groupElementsByCharge(annotation.elements)
 
     res.render('cases/review/annotations/delete', { _case, document, annotation, caseId, documentId, from })
   })
@@ -636,7 +652,7 @@ module.exports = (router) => {
       })
     }
 
-    res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
+    await respondWithRedactionUpdate(req, res, prisma, { documentId, docReviewId: docReview.id })
   })
 
   // Delete redaction
@@ -644,10 +660,14 @@ module.exports = (router) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
     const redactionId = parseInt(req.params.redactionId)
+    const userId = req.session.data.user.id
+
+    const review = await findOrCreateReview(prisma, caseId, userId)
+    const docReview = await findOrCreateDocumentReview(prisma, review.id, documentId)
 
     await prisma.caseReviewRedaction.delete({ where: { id: redactionId } })
 
-    res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
+    await respondWithRedactionUpdate(req, res, prisma, { documentId, docReviewId: docReview.id })
   })
 
   // Mark document as reviewed

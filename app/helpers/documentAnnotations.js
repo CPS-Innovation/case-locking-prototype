@@ -35,6 +35,26 @@ function applyRedactions(sections, redactions) {
   )
 }
 
+// Evidence and disclosure annotations can link elements from more than one
+// offence, so elements are grouped by charge before rendering — each group's
+// elements render as a bullet list followed by a single offence line, rather
+// than repeating the offence once per element.
+function groupElementsByCharge(elements) {
+  const groups = []
+  const groupByChargeId = {}
+  ;(elements || []).forEach(link => {
+    const charge = link.element.charge
+    let group = groupByChargeId[charge.id]
+    if (!group) {
+      group = { charge, elements: [] }
+      groupByChargeId[charge.id] = group
+      groups.push(group)
+    }
+    group.elements.push(link.element)
+  })
+  return groups
+}
+
 function buildElementCheckboxItems(elements, options) {
   const idPrefix = options?.idPrefix || 'reasoning'
   const linkedByElementId = options?.linkedByElementId || {}
@@ -97,6 +117,8 @@ function buildOffencesWithAnnotations(defendantCharges, annotations, caseId, doc
   const hasElements = offences.some(offence => offence.elementCheckboxItems.length)
 
   annotations.forEach(annotation => {
+    annotation.elementGroups = groupElementsByCharge(annotation.elements)
+
     if (!['evidence', 'disclosure', 'note'].includes(annotation.type)) return
     const linkedByElementId = {}
     annotation.elements.forEach(item => { linkedByElementId[item.elementId] = item.reasoning })
@@ -128,5 +150,6 @@ module.exports = {
   applyHighlights,
   applyRedactions,
   buildElementCheckboxItems,
-  buildOffencesWithAnnotations
+  buildOffencesWithAnnotations,
+  groupElementsByCharge
 }

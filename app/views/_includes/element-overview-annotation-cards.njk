@@ -73,10 +73,10 @@
     {% endif %}
 
     {% if annotationGroups.disclosure.length %}
-      <div class="govuk-inset-text govuk-!-margin-top-0 app-inset-text--purple">
-        <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Issues</h4>
+      <div class="govuk-inset-text govuk-!-margin-top-0 app-inset-text--red">
+        <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Issues anticipated</h4>
         {% for annotation in annotationGroups.disclosure %}
-          {{ overviewAnnotationCard(annotation, 'purple') }}
+          {{ overviewAnnotationCard(annotation, 'red') }}
         {% endfor %}
       </div>
     {% endif %}

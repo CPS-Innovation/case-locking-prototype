@@ -32,15 +32,10 @@
 .app-annotation-card__tag {
   padding: 8px 10px;
 
-  // Backgrounds are tints of GOV.UK colours, tuned so each reads as light as
-  // the purple (#f3e5f5) despite differing saturations. Text is always black.
+  // Backgrounds are tints of GOV.UK colours, tuned so each reads equally
+  // light despite differing saturations. Text is always black.
   &--blue {
     background: mix(govuk-colour("white"), govuk-colour("blue"), 88%);
-    color: govuk-colour("black");
-  }
-
-  &--purple {
-    background: #f3e5f5;
     color: govuk-colour("black");
   }
 
@@ -69,8 +64,8 @@
   border-left-color: mix(govuk-colour("white"), govuk-colour("blue"), 88%);
 }
 
-.app-inset-text--purple {
-  border-left-color: #f3e5f5;
+.app-inset-text--red {
+  border-left-color: mix(govuk-colour("white"), govuk-colour("red"), 85%);
 }
 
 .app-review-annotation-card {
@@ -100,6 +95,10 @@
 
   @include govuk-media-query($from: desktop) {
     padding: govuk-spacing(3) govuk-spacing(4);
+  }
+
+  > *:last-child {
+    margin-bottom: 0;
   }
 }
 

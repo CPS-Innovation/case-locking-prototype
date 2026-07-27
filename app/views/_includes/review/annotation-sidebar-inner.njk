@@ -60,8 +60,8 @@
   class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--disclosure"
   hidden
 >
-  <div class="app-annotation-form app-annotation-card--purple">
-    <p class="app-annotation-card__tag app-annotation-card__tag--purple govuk-!-margin-bottom-0">Issue</p>
+  <div class="app-annotation-form app-annotation-card--red">
+    <p class="app-annotation-card__tag app-annotation-card__tag--red govuk-!-margin-bottom-0">Issue anticipated</p>
     <div class="app-annotation-form__body">
       {% if hasElements %}
         {% for offence in offences %}
@@ -87,7 +87,7 @@
         {{
           govukTextarea({
             label: {
-              text: "Issue note",
+              text: "Issue anticipated note",
               classes: "govuk-label--s"
             },
             classes: "govuk-!-margin-bottom-0 js-annotation-note-input",
@@ -173,9 +173,9 @@
 </div>
 
 {% for annotation in annotations %}
-  {% set typeLabel = 'Evidence' if annotation.type == 'evidence' else ('Issue' if annotation.type == 'disclosure' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
-  {% set tagColour = 'blue' if annotation.type == 'evidence' else ('purple' if annotation.type == 'disclosure' else ('yellow' if annotation.type == 'note' else 'orange')) %}
-  {% set noteLabel = 'Evidence note' if annotation.type == 'evidence' else ('Issue note' if annotation.type == 'disclosure' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
+  {% set typeLabel = 'Evidence' if annotation.type == 'evidence' else ('Issue anticipated' if annotation.type == 'disclosure' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
+  {% set tagColour = 'blue' if annotation.type == 'evidence' else ('red' if annotation.type == 'disclosure' else ('yellow' if annotation.type == 'note' else 'orange')) %}
+  {% set noteLabel = 'Evidence note' if annotation.type == 'evidence' else ('Issue anticipated note' if annotation.type == 'disclosure' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
   <div
     class="app-annotation-card js-annotation-card app-annotation-card--{{ tagColour }}"
     data-annotation-id="{{ annotation.id }}"
@@ -205,19 +205,17 @@
           </dl>
         {% endif %}
 
-        {% if annotation.elements.length %}
-          <dl class="app-annotation-card__elements">
-            {% for item in annotation.elements %}
-              <dt class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">
-                {{ item.element.description }}
-              </dt>
-              {# Reason capture disabled — restore to re-enable:
-              <dd class="app-annotation-card__note js-annotation-note govuk-!-margin-left-0">
-                {{ item.reasoning }}
-              </dd>
-              #}
-            {% endfor %}
-          </dl>
+        {% if annotation.elementGroups.length %}
+          {% for group in annotation.elementGroups %}
+            <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-1">
+              {% for element in group.elements %}
+                <li>{{ element.description }}</li>
+              {% endfor %}
+            </ul>
+            <p class="app-annotation-card__note govuk-!-margin-bottom-{{ '0' if loop.last else '2' }}">
+              {{ group.charge.description }}
+            </p>
+          {% endfor %}
         {% else %}
           <p class="app-annotation-card__note js-annotation-note">{{ annotation.note }}</p>
         {% endif %}
@@ -241,11 +239,11 @@
                 Convert to evidence
               </a>
               <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes-disclosure">
-                Convert to issue
+                Convert to issue anticipated
               </a>
             {% else %}
               <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes">
-                Link to {{ 'issue' if annotation.type == 'disclosure' else 'evidence' }}
+                Link to {{ 'issue anticipated' if annotation.type == 'disclosure' else 'evidence' }}
               </a>
             {% endif %}
           {% endif %}
@@ -255,12 +253,12 @@
 
     <div class="app-annotation-form js-annotation-edit-form" hidden>
       {% if isLinkable %}
-        <div class="app-annotation-card--{{ 'purple' if annotation.type == 'disclosure' else 'blue' }} js-annotation-edit-tag-checkboxes" hidden>
-          <p class="app-annotation-card__tag app-annotation-card__tag--{{ 'purple' if annotation.type == 'disclosure' else 'blue' }} govuk-!-margin-bottom-0">{{ 'Issue' if annotation.type == 'disclosure' else 'Evidence' }}</p>
+        <div class="app-annotation-card--{{ 'red' if annotation.type == 'disclosure' else 'blue' }} js-annotation-edit-tag-checkboxes" hidden>
+          <p class="app-annotation-card__tag app-annotation-card__tag--{{ 'red' if annotation.type == 'disclosure' else 'blue' }} govuk-!-margin-bottom-0">{{ 'Issue anticipated' if annotation.type == 'disclosure' else 'Evidence' }}</p>
         </div>
         {% if annotation.type == 'note' %}
-          <div class="app-annotation-card--purple js-annotation-edit-tag-checkboxes-disclosure" hidden>
-            <p class="app-annotation-card__tag app-annotation-card__tag--purple govuk-!-margin-bottom-0">Issue</p>
+          <div class="app-annotation-card--red js-annotation-edit-tag-checkboxes-disclosure" hidden>
+            <p class="app-annotation-card__tag app-annotation-card__tag--red govuk-!-margin-bottom-0">Issue anticipated</p>
           </div>
         {% endif %}
         <div class="app-annotation-card--{{ tagColour }} js-annotation-edit-tag-note" hidden>

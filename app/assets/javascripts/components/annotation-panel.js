@@ -276,6 +276,27 @@ App.AnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
   if (target.length) target.attr('tabindex', '-1').focus({ preventScroll: true })
 }
 
+// Redacting/unredacting never navigates either — only the document body
+// changes (redactions aren't listed in the sidebar), swapped in place.
+App.AnnotationPanel.prototype.submitRedactionForm = function(form) {
+  var self = this
+  $.ajax({
+    url: form.attr('action'),
+    method: 'POST',
+    data: form.serialize(),
+    dataType: 'json'
+  }).done(function(data) {
+    self.applyRedactionUpdate(data)
+  }).fail(function() {
+    // eslint-disable-next-line no-console
+    console.error('Failed to save redaction')
+  })
+}
+
+App.AnnotationPanel.prototype.applyRedactionUpdate = function(data) {
+  this.container.html(data.documentHtml)
+}
+
 // ── Event handlers ────────────────────────────────────────────────────────────
 
 App.AnnotationPanel.prototype.onDocumentMouseup = function(e) {
@@ -373,7 +394,7 @@ App.AnnotationPanel.prototype.onRedactClick = function() {
   this.redactionOccurrenceIndexInput.val(position.occurrenceIndex)
   window.getSelection().removeAllRanges()
   this.hidePopup()
-  this.redactionForm[0].submit()
+  this.submitRedactionForm(this.redactionForm)
 }
 
 App.AnnotationPanel.prototype.onDocumentClick = function(e) {
@@ -397,7 +418,7 @@ App.AnnotationPanel.prototype.onDocumentClick = function(e) {
 App.AnnotationPanel.prototype.onDeleteRedactionClick = function() {
   if (!this.pendingDeleteRedactionId) return
   this.redactionDeleteForm.attr('action', '/cases/' + this.caseId + '/review/documents/' + this.documentId + '/redactions/' + this.pendingDeleteRedactionId + '/delete')
-  this.redactionDeleteForm[0].submit()
+  this.submitRedactionForm(this.redactionDeleteForm)
 }
 
 App.AnnotationPanel.prototype.onToggleRedactionsClick = function() {

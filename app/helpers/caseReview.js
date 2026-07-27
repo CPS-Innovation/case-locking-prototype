@@ -1,5 +1,6 @@
 const statuses = require('../data/case-statuses')
 const { formatDefendantNames } = require('./informationRequest')
+const { groupElementsByCharge } = require('./documentAnnotations')
 
 // A case's review is shared - whoever opens it continues the same review
 // rather than getting their own private copy, so document status and
@@ -126,7 +127,10 @@ async function getElementAnnotations(prisma, elementId) {
       }
     }
   })
-  return annotationLinks.map(link => link.annotation)
+  return annotationLinks.map(link => ({
+    ...link.annotation,
+    elementGroups: groupElementsByCharge(link.annotation.elements)
+  }))
 }
 
 // Offences (charges) can be added, changed or removed after the Charging

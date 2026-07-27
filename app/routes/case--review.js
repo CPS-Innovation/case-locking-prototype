@@ -10,6 +10,7 @@ const {
   shapeFirstHearing,
 } = require('../helpers/caseReview')
 const { createInformationRequestFromSession } = require('../helpers/informationRequest')
+const { groupElementsByCharge } = require('../helpers/documentAnnotations')
 const categoryOrder = require('../data/document-categories')
 
 // Material with categories is grouped under category headings, in the order
@@ -122,7 +123,11 @@ module.exports = (router) => {
     const docReviewMap = {}
     documentReviews.forEach(dr => {
       const items = [
-        ...dr.annotations.map(annotation => ({ ...annotation, kind: 'annotation' })),
+        ...dr.annotations.map(annotation => ({
+          ...annotation,
+          kind: 'annotation',
+          elementGroups: groupElementsByCharge(annotation.elements)
+        })),
         ...dr.redactions.map(redaction => ({ ...redaction, kind: 'redaction' }))
       ].sort(byDocumentPosition)
       docReviewMap[dr.documentId] = {

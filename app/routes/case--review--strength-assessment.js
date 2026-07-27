@@ -2,6 +2,7 @@ const _ = require('lodash')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { getEligibleCharges, getElementAnnotations, findOrCreateReview } = require('../helpers/caseReview')
+const { groupElementsByCharge } = require('../helpers/documentAnnotations')
 
 function elementAssessed (element) {
   return Boolean(element.strength) && element.strength !== 'Not assessed'
@@ -93,10 +94,10 @@ module.exports = (router) => {
 
     // Only show the reasoning relevant to the element being assessed, not
     // every element an annotation happens to be linked to.
-    const annotations = (await getElementAnnotations(prisma, elementId)).map(annotation => ({
-      ...annotation,
-      elements: annotation.elements.filter(link => link.elementId === elementId)
-    }))
+    const annotations = (await getElementAnnotations(prisma, elementId)).map(annotation => {
+      const elements = annotation.elements.filter(link => link.elementId === elementId)
+      return { ...annotation, elements, elementGroups: groupElementsByCharge(elements) }
+    })
 
     res.render('cases/review/strength-assessment/index', {
       _case,

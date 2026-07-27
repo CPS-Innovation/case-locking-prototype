@@ -1,4 +1,5 @@
 {% extends "_layouts/main.html" %}
+{% from "_includes/annotation-element-groups.njk" import annotationElementGroups %}
 
 {% set navId = 'cases' %}
 {% set pageName = "Check details and submit review" %}
@@ -48,13 +49,13 @@
               {% for item in items %}
                 {% if item.kind == 'redaction' %}
                   {% set typeLabel = 'Redaction' %}
-                  {% set typeColour = 'red' %}
+                  {% set typeColour = 'grey' %}
                 {% elif item.type == 'evidence' %}
                   {% set typeLabel = 'Evidence' %}
                   {% set typeColour = 'blue' %}
                 {% elif item.type == 'disclosure' %}
-                  {% set typeLabel = 'Issue' %}
-                  {% set typeColour = 'purple' %}
+                  {% set typeLabel = 'Issue anticipated' %}
+                  {% set typeColour = 'red' %}
                 {% elif item.type == 'note' %}
                   {% set typeLabel = 'Note' %}
                   {% set typeColour = 'yellow' %}
@@ -126,20 +127,8 @@
                         {% endif %}
                       {% endif %}
 
-                      {% if item.elements.length %}
-                        {% for link in item.elements %}
-                          <p class="app-review-annotation-card__label">
-                            {{ link.element.description }}
-                          </p>
-                          {# Reason capture disabled — restore to re-enable:
-                          <p class="govuk-!-margin-bottom-0">{{ link.reasoning }}</p>
-                          #}
-                          <p
-                            class="govuk-!-font-size-16 govuk-!-margin-top-3 govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}"
-                          >
-                            {{ link.element.charge.description }}
-                          </p>
-                        {% endfor %}
+                      {% if item.elementGroups.length %}
+                        {{ annotationElementGroups(item.elementGroups, true) }}
                       {% else %}
                         <p class="app-review-annotation-card__label">Note</p>
                         <p class="govuk-!-margin-bottom-0">{{ item.note }}</p>
