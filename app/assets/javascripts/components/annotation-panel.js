@@ -441,7 +441,7 @@ App.AnnotationPanel.prototype.onSaveClick = function(e) {
   this.submitAnnotationForm(this.annotationForm, $(e.currentTarget))
 }
 
-// Evidence and disclosure annotations link one or more elements, each with
+// Evidence and issue annotations link one or more elements, each with
 // its own reasoning (revealed under its checkbox), rather than a single
 // shared note.
 App.AnnotationPanel.prototype.onSaveEvidenceClick = function(e) {
@@ -531,25 +531,25 @@ App.AnnotationPanel.prototype.onChangeAnnotationClick = function(e) {
   var card = link.closest('.js-annotation-card')
   var editForm = card.find('.js-annotation-edit-form')
   var checkboxForm = editForm.find('.js-annotation-edit-checkboxes')
-  var disclosureCheckboxForm = editForm.find('.js-annotation-edit-checkboxes-disclosure')
+  var issueCheckboxForm = editForm.find('.js-annotation-edit-checkboxes-issue')
   var noteForm = editForm.find('.js-annotation-edit-note')
   var tagCheckboxes = editForm.find('.js-annotation-edit-tag-checkboxes')
-  var tagDisclosureCheckboxes = editForm.find('.js-annotation-edit-tag-checkboxes-disclosure')
+  var tagIssueCheckboxes = editForm.find('.js-annotation-edit-tag-checkboxes-issue')
   var tagNote = editForm.find('.js-annotation-edit-tag-note')
   var target = link.data('edit-target')
-  var showDisclosureCheckboxes = target === 'checkboxes-disclosure'
-  var showCheckboxes = showDisclosureCheckboxes ? false : (target ? target === 'checkboxes' : checkboxForm.length > 0)
+  var showIssueCheckboxes = target === 'checkboxes-issue'
+  var showCheckboxes = showIssueCheckboxes ? false : (target ? target === 'checkboxes' : checkboxForm.length > 0)
 
   card.find('.js-annotation-view').prop('hidden', true)
   editForm.prop('hidden', false)
   checkboxForm.prop('hidden', !showCheckboxes)
-  disclosureCheckboxForm.prop('hidden', !showDisclosureCheckboxes)
-  noteForm.prop('hidden', showCheckboxes || showDisclosureCheckboxes)
+  issueCheckboxForm.prop('hidden', !showIssueCheckboxes)
+  noteForm.prop('hidden', showCheckboxes || showIssueCheckboxes)
   tagCheckboxes.prop('hidden', !showCheckboxes)
-  tagDisclosureCheckboxes.prop('hidden', !showDisclosureCheckboxes)
-  tagNote.prop('hidden', showCheckboxes || showDisclosureCheckboxes)
+  tagIssueCheckboxes.prop('hidden', !showIssueCheckboxes)
+  tagNote.prop('hidden', showCheckboxes || showIssueCheckboxes)
 
-  var activeForm = showDisclosureCheckboxes ? disclosureCheckboxForm : (showCheckboxes ? checkboxForm : noteForm)
+  var activeForm = showIssueCheckboxes ? issueCheckboxForm : (showCheckboxes ? checkboxForm : noteForm)
   if (activeForm.find('input[name="elementsCheckbox"]').length) {
     activeForm.find('input[name="elementsCheckbox"]').first().focus()
   } else {

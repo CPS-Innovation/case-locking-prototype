@@ -38,14 +38,14 @@
         {% endif %}
 
         {% set evidenceItems = [] %}
-        {% set disclosureItems = [] %}
+        {% set issueItems = [] %}
         {% set missingItems = [] %}
         {% for docReview in submittedReview.documents %}
           {% for a in docReview.annotations %}
             {% if a.type == 'evidence' %}
               {% set evidenceItems = (evidenceItems.push({ annotation: a, documentName: docReview.document.name, documentId: docReview.document.id }), evidenceItems) %}
-            {% elif a.type == 'disclosure' %}
-              {% set disclosureItems = (disclosureItems.push({ annotation: a, documentName: docReview.document.name, documentId: docReview.document.id }), disclosureItems) %}
+            {% elif a.type == 'issue' %}
+              {% set issueItems = (issueItems.push({ annotation: a, documentName: docReview.document.name, documentId: docReview.document.id }), issueItems) %}
             {% else %}
               {% set missingItems = (missingItems.push({ annotation: a, documentName: docReview.document.name, documentId: docReview.document.id }), missingItems) %}
             {% endif %}
@@ -80,7 +80,7 @@
           </table>
         {% endif %}
 
-        {% if disclosureItems.length and false %}
+        {% if issueItems.length and false %}
           <h3 class="govuk-heading-s govuk-!-margin-bottom-0">Issue anticipated</h3>
           <table class="govuk-table">
             <thead class="govuk-table__head govuk-visually-hidden">
@@ -90,7 +90,7 @@
               </tr>
             </thead>
             <tbody class="govuk-table__body">
-              {% for item in disclosureItems %}
+              {% for item in issueItems %}
                 <tr class="govuk-table__row">
                   <td class="govuk-table__cell" width="50%">
                     <a

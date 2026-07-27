@@ -57,7 +57,7 @@
 </div>
 
 <div
-  class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--disclosure"
+  class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--issue"
   hidden
 >
   <div class="app-annotation-form app-annotation-card--red">
@@ -65,11 +65,11 @@
     <div class="app-annotation-form__body">
       {% if hasElements %}
         {% for offence in offences %}
-          {% if offence.disclosureElementCheckboxItems.length %}
+          {% if offence.issueElementCheckboxItems.length %}
             {{
               govukCheckboxes({
                 name: "elementsCheckbox",
-                idPrefix: "disclosure-element-charge-" + offence.charge.id,
+                idPrefix: "issue-element-charge-" + offence.charge.id,
                 fieldset: {
                   legend: {
                     text: offence.charge.description,
@@ -78,7 +78,7 @@
                   }
                 },
                 classes: "govuk-checkboxes--small js-annotation-element-checkboxes",
-                items: offence.disclosureElementCheckboxItems
+                items: offence.issueElementCheckboxItems
               })
             }}
           {% endif %}
@@ -173,9 +173,9 @@
 </div>
 
 {% for annotation in annotations %}
-  {% set typeLabel = 'Evidence' if annotation.type == 'evidence' else ('Issue anticipated' if annotation.type == 'disclosure' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
-  {% set tagColour = 'blue' if annotation.type == 'evidence' else ('red' if annotation.type == 'disclosure' else ('yellow' if annotation.type == 'note' else 'orange')) %}
-  {% set noteLabel = 'Evidence note' if annotation.type == 'evidence' else ('Issue anticipated note' if annotation.type == 'disclosure' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
+  {% set typeLabel = 'Evidence' if annotation.type == 'evidence' else ('Issue anticipated' if annotation.type == 'issue' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
+  {% set tagColour = 'blue' if annotation.type == 'evidence' else ('red' if annotation.type == 'issue' else ('yellow' if annotation.type == 'note' else 'orange')) %}
+  {% set noteLabel = 'Evidence note' if annotation.type == 'evidence' else ('Issue anticipated note' if annotation.type == 'issue' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
   <div
     class="app-annotation-card js-annotation-card app-annotation-card--{{ tagColour }}"
     data-annotation-id="{{ annotation.id }}"
@@ -220,7 +220,7 @@
           <p class="app-annotation-card__note js-annotation-note">{{ annotation.note }}</p>
         {% endif %}
 
-        {% set isLinkable = (annotation.type == 'evidence' or annotation.type == 'disclosure' or annotation.type == 'note') and not annotation.elements.length and hasElements %}
+        {% set isLinkable = (annotation.type == 'evidence' or annotation.type == 'issue' or annotation.type == 'note') and not annotation.elements.length and hasElements %}
         {% set editUrl = '/cases/' + caseId + '/review/documents/' + documentId + '/annotations/' + annotation.id + '/edit' %}
 
         <div class="app-annotation-card__actions govuk-button-group govuk-!-margin-bottom-0">
@@ -238,12 +238,12 @@
               <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes">
                 Convert to evidence
               </a>
-              <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes-disclosure">
+              <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes-issue">
                 Convert to issue anticipated
               </a>
             {% else %}
               <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes">
-                Link to {{ 'issue anticipated' if annotation.type == 'disclosure' else 'evidence' }}
+                Link to {{ 'issue anticipated' if annotation.type == 'issue' else 'evidence' }}
               </a>
             {% endif %}
           {% endif %}
@@ -253,11 +253,11 @@
 
     <div class="app-annotation-form js-annotation-edit-form" hidden>
       {% if isLinkable %}
-        <div class="app-annotation-card--{{ 'red' if annotation.type == 'disclosure' else 'blue' }} js-annotation-edit-tag-checkboxes" hidden>
-          <p class="app-annotation-card__tag app-annotation-card__tag--{{ 'red' if annotation.type == 'disclosure' else 'blue' }} govuk-!-margin-bottom-0">{{ 'Issue anticipated' if annotation.type == 'disclosure' else 'Evidence' }}</p>
+        <div class="app-annotation-card--{{ 'red' if annotation.type == 'issue' else 'blue' }} js-annotation-edit-tag-checkboxes" hidden>
+          <p class="app-annotation-card__tag app-annotation-card__tag--{{ 'red' if annotation.type == 'issue' else 'blue' }} govuk-!-margin-bottom-0">{{ 'Issue anticipated' if annotation.type == 'issue' else 'Evidence' }}</p>
         </div>
         {% if annotation.type == 'note' %}
-          <div class="app-annotation-card--red js-annotation-edit-tag-checkboxes-disclosure" hidden>
+          <div class="app-annotation-card--red js-annotation-edit-tag-checkboxes-issue" hidden>
             <p class="app-annotation-card__tag app-annotation-card__tag--red govuk-!-margin-bottom-0">Issue anticipated</p>
           </div>
         {% endif %}
@@ -267,7 +267,7 @@
 
         <div class="app-annotation-form__body">
           <form method="post" action="{{ editUrl }}" class="js-annotation-edit-checkboxes" hidden>
-            <input type="hidden" name="linkAsType" value="{{ 'disclosure' if annotation.type == 'disclosure' else 'evidence' }}" />
+            <input type="hidden" name="linkAsType" value="{{ 'issue' if annotation.type == 'issue' else 'evidence' }}" />
             {% for offence in annotation.editOffences %}
               {% if offence.elementCheckboxItems.length %}
                 {{
@@ -301,14 +301,14 @@
           </form>
 
           {% if annotation.type == 'note' %}
-            <form method="post" action="{{ editUrl }}" class="js-annotation-edit-checkboxes-disclosure" hidden>
-              <input type="hidden" name="linkAsType" value="disclosure" />
-              {% for offence in annotation.editDisclosureOffences %}
+            <form method="post" action="{{ editUrl }}" class="js-annotation-edit-checkboxes-issue" hidden>
+              <input type="hidden" name="linkAsType" value="issue" />
+              {% for offence in annotation.editIssueOffences %}
                 {% if offence.elementCheckboxItems.length %}
                   {{
                     govukCheckboxes({
                       name: "elementsCheckbox",
-                      idPrefix: "disclosure-element-" + annotation.id + "-charge-" + offence.charge.id,
+                      idPrefix: "issue-element-" + annotation.id + "-charge-" + offence.charge.id,
                       fieldset: {
                         legend: {
                           text: offence.charge.description,
@@ -362,7 +362,7 @@
             </div>
           </form>
         </div>
-      {% elif (annotation.type == 'evidence' or annotation.type == 'disclosure') and hasElements %}
+      {% elif (annotation.type == 'evidence' or annotation.type == 'issue') and hasElements %}
         <div class="app-annotation-card--{{ tagColour }}">
           <p class="app-annotation-card__tag app-annotation-card__tag--{{ tagColour }} govuk-!-margin-bottom-0">{{ typeLabel }}</p>
         </div>

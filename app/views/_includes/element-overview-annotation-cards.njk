@@ -1,9 +1,9 @@
-{% set annotationGroups = { evidence: [], disclosure: [] } %}
+{% set annotationGroups = { evidence: [], issue: [] } %}
 {% for annotation in annotations %}
   {% if annotation.type == 'evidence' %}
     {% set noop = annotationGroups.evidence.push(annotation) %}
   {% else %}
-    {% set noop = annotationGroups.disclosure.push(annotation) %}
+    {% set noop = annotationGroups.issue.push(annotation) %}
   {% endif %}
 {% endfor %}
 
@@ -72,10 +72,10 @@
       </div>
     {% endif %}
 
-    {% if annotationGroups.disclosure.length %}
+    {% if annotationGroups.issue.length %}
       <div class="govuk-inset-text govuk-!-margin-top-0 app-inset-text--red">
         <h4 class="govuk-heading-s govuk-!-margin-bottom-3">Issues anticipated</h4>
-        {% for annotation in annotationGroups.disclosure %}
+        {% for annotation in annotationGroups.issue %}
           {{ overviewAnnotationCard(annotation, 'red') }}
         {% endfor %}
       </div>

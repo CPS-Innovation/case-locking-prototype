@@ -111,12 +111,12 @@ async function getEligibleCharges(prisma, caseId) {
   return { _case, eligibleDefendants, charges }
 }
 
-// Evidence and disclosure annotations linked to an element, with enough
+// Evidence and issue annotations linked to an element, with enough
 // included context to render annotation cards (source document, and every
 // element each annotation is linked to).
 async function getElementAnnotations(prisma, elementId) {
   const annotationLinks = await prisma.caseReviewAnnotationElement.findMany({
-    where: { elementId, annotation: { type: { in: ['evidence', 'disclosure'] } } },
+    where: { elementId, annotation: { type: { in: ['evidence', 'issue'] } } },
     orderBy: { createdAt: 'asc' },
     include: {
       annotation: {

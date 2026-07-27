@@ -35,7 +35,7 @@ function applyRedactions(sections, redactions) {
   )
 }
 
-// Evidence and disclosure annotations can link elements from more than one
+// Evidence and issue annotations can link elements from more than one
 // offence, so elements are grouped by charge before rendering — each group's
 // elements render as a bullet list followed by a single offence line, rather
 // than repeating the offence once per element.
@@ -98,7 +98,7 @@ function buildElementRows(elements, caseId, documentId) {
 
 // Evidence annotations can link elements from any offence, so each offence
 // gets its own checkbox group in the sidebar rather than one flat list
-// assuming a single offence. Each evidence, disclosure or note annotation
+// assuming a single offence. Each evidence, issue or note annotation
 // gets its own copy of the checkbox groups, pre-checked and pre-filled with
 // whatever elements it's already linked to, so "Change" can re-open the same
 // form used when it was first added.
@@ -109,8 +109,8 @@ function buildOffencesWithAnnotations(defendantCharges, annotations, caseId, doc
     elementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
       idPrefix: `reasoning-charge-${charge.id}`
     }),
-    disclosureElementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
-      idPrefix: `disclosure-reasoning-charge-${charge.id}`
+    issueElementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
+      idPrefix: `issue-reasoning-charge-${charge.id}`
     })
   }))
 
@@ -119,7 +119,7 @@ function buildOffencesWithAnnotations(defendantCharges, annotations, caseId, doc
   annotations.forEach(annotation => {
     annotation.elementGroups = groupElementsByCharge(annotation.elements)
 
-    if (!['evidence', 'disclosure', 'note'].includes(annotation.type)) return
+    if (!['evidence', 'issue', 'note'].includes(annotation.type)) return
     const linkedByElementId = {}
     annotation.elements.forEach(item => { linkedByElementId[item.elementId] = item.reasoning })
     annotation.editOffences = offences.map(offence => ({
@@ -130,13 +130,13 @@ function buildOffencesWithAnnotations(defendantCharges, annotations, caseId, doc
       })
     }))
 
-    // A note isn't evidence or disclosure yet, so it needs both checkbox
+    // A note isn't evidence or issue yet, so it needs both checkbox
     // groups on offer — whichever one gets linked turns the note into that type.
     if (annotation.type === 'note') {
-      annotation.editDisclosureOffences = offences.map(offence => ({
+      annotation.editIssueOffences = offences.map(offence => ({
         charge: offence.charge,
         elementCheckboxItems: buildElementCheckboxItems(offence.charge.elements || [], {
-          idPrefix: `disclosure-reasoning-${annotation.id}-charge-${offence.charge.id}`,
+          idPrefix: `issue-reasoning-${annotation.id}-charge-${offence.charge.id}`,
           linkedByElementId
         })
       }))

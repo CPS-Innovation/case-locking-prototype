@@ -86,7 +86,7 @@ App.VideoAnnotationPanel.prototype.onSaveClick = function(e) {
   this.submitAnnotationForm(this.annotationForm, $(e.currentTarget))
 }
 
-// Evidence and disclosure annotations link one or more elements, each with
+// Evidence and issue annotations link one or more elements, each with
 // its own reasoning (revealed under its checkbox), rather than a single
 // shared note.
 App.VideoAnnotationPanel.prototype.onSaveEvidenceClick = function(e) {

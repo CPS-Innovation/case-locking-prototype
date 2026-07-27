@@ -152,14 +152,14 @@ const PALMER_ANNOTATIONS = [
   },
   {
     documentName: 'Callum REES statement 4 18-12-2024',
-    type: 'disclosure',
+    type: 'issue',
     elementIndex: 0,
     selectedText: 'him accusing her of cheating on him prior to the incident taking place',
     note: 'Messages sent after the incident may assist the defence and should be disclosed.'
   },
   {
     documentName: 'MG15 - Record of interview',
-    type: 'disclosure',
+    type: 'issue',
     elementIndex: 1,
     selectedText: 'Off of a little fridge and it was very hard to pick her up',
     note: 'Palmer’s account that the victim fell from the fridge may support his defence and should be disclosed.'

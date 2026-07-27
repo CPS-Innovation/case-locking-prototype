@@ -11,7 +11,7 @@ module.exports = {
     },
     {
       selectedText: 'the defendant made no comment to all questions put',
-      type: 'disclosure',
+      type: 'issue',
       note: 'No comment interview - full transcript must be disclosed to the defence.'
     },
     {
@@ -34,7 +34,7 @@ module.exports = {
     },
     {
       selectedText: 'I have no connection with either party beyond what I have described above.',
-      type: 'disclosure',
+      type: 'issue',
       note: 'Confirms witness has no conflict of interest - relevant to credibility.'
     }
   ],
@@ -83,7 +83,7 @@ module.exports = {
     },
     {
       selectedText: 'The defendant was advised of his right to legal advice, which he had exercised.',
-      type: 'disclosure',
+      type: 'issue',
       note: 'Confirms interview was conducted with legal representation present.'
     },
     {
@@ -106,7 +106,7 @@ module.exports = {
     },
     {
       selectedText: 'This report has been prepared at the request of West Midlands Police and may be used for evidential purposes.',
-      type: 'disclosure',
+      type: 'issue',
       note: 'Confirms the report is disclosable and admissible as evidence.'
     }
   ],
@@ -119,7 +119,7 @@ module.exports = {
       note: 'Shows the defendant at the scene, matching the description given by witnesses.'
     },
     {
-      type: 'disclosure',
+      type: 'issue',
       note: 'Confirms the presence of a third party visible in the background of the image.'
     },
     {
@@ -134,7 +134,7 @@ module.exports = {
       note: 'Shows a male matching the description given for the defendant at the relevant time.'
     },
     {
-      type: 'disclosure',
+      type: 'issue',
       note: 'Confirms the timing is consistent with the account given by the witness.'
     },
     {
@@ -149,7 +149,7 @@ module.exports = {
       note: 'Caller describes the assault in progress, consistent with the witness account of the push.'
     },
     {
-      type: 'disclosure',
+      type: 'issue',
       note: 'Timing of the call corroborates when the incident took place.'
     },
     {

@@ -47,7 +47,7 @@ module.exports = router => {
       defendant.charges.flatMap(charge => charge.elements.map(element => element.id))
     )
     const annotationLinks = await prisma.caseReviewAnnotationElement.findMany({
-      where: { elementId: { in: elementIds }, annotation: { type: { in: ['evidence', 'disclosure'] } } },
+      where: { elementId: { in: elementIds }, annotation: { type: { in: ['evidence', 'issue'] } } },
       orderBy: { createdAt: 'asc' },
       include: {
         annotation: {

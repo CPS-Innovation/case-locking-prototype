@@ -500,10 +500,10 @@ module.exports = (router) => {
 
     let annotation = null
 
-    // Evidence and disclosure are only linked to elements when some are selected —
+    // Evidence and issue are only linked to elements when some are selected —
     // if none exist yet (no offence added) they fall back to a plain note, same
     // as information-request, and can be linked later.
-    if ((type === 'evidence' || type === 'disclosure') && selectedText && elementIds.length) {
+    if ((type === 'evidence' || type === 'issue') && selectedText && elementIds.length) {
       const elements = await prisma.element.findMany({
         where: { id: { in: elementIds } }
       })
@@ -572,7 +572,7 @@ module.exports = (router) => {
         }))
       })
 
-      // Linking a note to evidence or disclosure elements turns it into that
+      // Linking a note to evidence or issue elements turns it into that
       // type - it stops being a plain note once it's carrying that structure.
       await prisma.caseReviewAnnotation.update({
         where: { id: annotationId },
