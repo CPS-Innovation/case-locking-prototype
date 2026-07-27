@@ -37,7 +37,7 @@ const PALMER_WITNESSES = [
     mobileNumber: '07981 888888',
     acroConvictions: false,
     statements: [
-      { number: 1, receivedDate: new Date('2024-11-02') }
+      { number: 1, receivedDate: new Date('2024-11-02'), documentName: 'Chloe BARRETT statement 1 02-11-2024' }
     ]
   },
   {
@@ -49,7 +49,7 @@ const PALMER_WITNESSES = [
     mobileNumber: '07981 555555',
     emailAddress: 'imran.shah@merseyside-police.example.com',
     statements: [
-      { number: 3, receivedDate: new Date('2024-11-08') }
+      { number: 3, receivedDate: new Date('2024-11-08'), documentName: 'Imran SHAH statement 3 08-11-2024' }
     ]
   },
   {
@@ -61,7 +61,7 @@ const PALMER_WITNESSES = [
     mobileNumber: '07981 666666',
     emailAddress: 'nicola.burke@merseyside-police.example.com',
     statements: [
-      { number: 2, receivedDate: new Date('2024-11-02') }
+      { number: 2, receivedDate: new Date('2024-11-02'), documentName: 'Nicola BURKE statement 2 02-11-2024' }
     ]
   },
   {
@@ -73,9 +73,9 @@ const PALMER_WITNESSES = [
     mobileNumber: '07981 777777',
     emailAddress: 'callum.rees@merseyside-police.example.com',
     statements: [
-      { number: 1, receivedDate: new Date('2025-03-16') },
-      { number: 4, receivedDate: new Date('2024-12-18') },
-      { number: 5, receivedDate: new Date('2025-01-29') }
+      { number: 1, receivedDate: new Date('2025-03-16'), documentName: 'Callum REES statement 1 16-03-2025' },
+      { number: 4, receivedDate: new Date('2024-12-18'), documentName: 'Callum REES statement 4 18-12-2024' },
+      { number: 5, receivedDate: new Date('2025-01-29'), documentName: 'Callum REES statement 5 29-01-2025' }
     ]
   }
 ]
@@ -309,13 +309,18 @@ async function createPalmerWitnesses(prisma, caseId) {
     })
 
     for (const statement of statements) {
+      const document = await prisma.document.findFirst({
+        where: { caseId, name: statement.documentName }
+      })
+
       await prisma.witnessStatement.create({
         data: {
           witnessId: witness.id,
           number: statement.number,
           receivedDate: statement.receivedDate,
           isUsedAsEvidence: true,
-          isMarkedAsSection9: null
+          isMarkedAsSection9: null,
+          ...(document ? { documents: { connect: { id: document.id } } } : {})
         }
       })
     }

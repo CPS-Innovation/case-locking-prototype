@@ -148,6 +148,9 @@
 
               {% set annotations = element.reviewAnnotations %}
               {% include "_includes/element-overview-annotation-cards.njk" %}
+
+              {% set witnesses = element.witnesses %}
+              {% include "_includes/element-overview-witnesses.njk" %}
             {% endfor %}
           </div>
         {% endfor %}

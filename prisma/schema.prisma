@@ -110,13 +110,14 @@ model Witness {
 }
 
 model WitnessStatement {
-  id                    Int      @id @default(autoincrement())
+  id                    Int        @id @default(autoincrement())
   witnessId             Int
-  witness               Witness  @relation(fields: [witnessId], references: [id])
+  witness               Witness    @relation(fields: [witnessId], references: [id])
   number                Int
   isMarkedAsSection9    Boolean?
   isUsedAsEvidence      Boolean?
   receivedDate          DateTime
+  documents             Document[]
   @@unique([witnessId, number]) // enforce uniqueness per witness
 }
 
@@ -414,15 +415,17 @@ model DirectionNote {
 }
 
 model Document {
-  id              Int                  @id @default(autoincrement())
-  name            String
-  description     String?
-  type            String
-  size            Int
-  category        String?
-  case            Case                 @relation(fields: [caseId], references: [id])
-  caseId          Int
-  reviewDocuments CaseReviewDocument[]
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  description        String?
+  type               String
+  size               Int
+  category           String?
+  case               Case                 @relation(fields: [caseId], references: [id])
+  caseId             Int
+  witnessStatementId Int?
+  witnessStatement   WitnessStatement?    @relation(fields: [witnessStatementId], references: [id])
+  reviewDocuments    CaseReviewDocument[]
 }
 
 model CaseReview {

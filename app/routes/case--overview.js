@@ -52,7 +52,11 @@ module.exports = router => {
       include: {
         annotation: {
           include: {
-            caseReviewDocument: { include: { document: true } },
+            caseReviewDocument: {
+              include: {
+                document: { include: { witnessStatement: { include: { witness: true } } } }
+              }
+            },
             elements: { include: { element: { include: { charge: true } } } }
           }
         }
@@ -74,6 +78,14 @@ module.exports = router => {
           strengthReasoning: submittedReview ? element.strengthReasoning : null,
           reviewAnnotations: submittedReview
             ? (annotationsByElementId[element.id] || []).map(link => link.annotation)
+            : [],
+          witnesses: submittedReview
+            ? _.uniqBy(
+                (annotationsByElementId[element.id] || [])
+                  .map(link => link.annotation.caseReviewDocument.document.witnessStatement?.witness)
+                  .filter(Boolean),
+                'id'
+              )
             : []
         }))
       }))
