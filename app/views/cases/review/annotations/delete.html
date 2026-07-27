@@ -1,30 +1,30 @@
 {% extends "_layouts/main.html" %}
 
-{% set pageName = "Confirm that you want to delete this annotation" %}
-
 {% block beforeContent %}
   {{ govukBackLink({ text: 'Back', href: 'javascript:history.back()' }) }}
 {% endblock %}
 
 {% block content %}
+  {% if annotation.type == 'evidence' %}
+    {% set typeLabel = 'Evidence' %}
+    {% set typeColour = 'blue' %}
+  {% elif annotation.type == 'disclosure' %}
+    {% set typeLabel = 'Issue' %}
+    {% set typeColour = 'purple' %}
+  {% elif annotation.type == 'note' %}
+    {% set typeLabel = 'Note' %}
+    {% set typeColour = 'yellow' %}
+  {% else %}
+    {% set typeLabel = 'Information request note' %}
+    {% set typeColour = 'orange' %}
+  {% endif %}
+  {% set pageName = "Confirm that you want to delete this " + (typeLabel | lower) %}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <span class="govuk-caption-l">{{ document.name }}</span>
       <h1 class="govuk-heading-l">{{ pageName }}</h1>
 
-      {% if annotation.type == 'evidence' %}
-        {% set typeLabel = 'Evidence' %}
-        {% set typeColour = 'blue' %}
-      {% elif annotation.type == 'disclosure' %}
-        {% set typeLabel = 'Issue' %}
-        {% set typeColour = 'purple' %}
-      {% elif annotation.type == 'note' %}
-        {% set typeLabel = 'Note' %}
-        {% set typeColour = 'yellow' %}
-      {% else %}
-        {% set typeLabel = 'Information request note' %}
-        {% set typeColour = 'orange' %}
-      {% endif %}
       <div class="app-review-annotation-card app-review-annotation-card--{{ typeColour }} govuk-!-margin-bottom-6">
         <div
           class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
@@ -83,7 +83,7 @@
 
       <form method="post">
         <input type="hidden" name="from" value="{{ from }}">
-        {{ govukButton({ text: "Delete annotation" }) }}
+        {{ govukButton({ text: "Delete " + (typeLabel | lower) }) }}
       </form>
       <p class="govuk-body">
         <a

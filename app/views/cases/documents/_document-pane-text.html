@@ -6,14 +6,7 @@
       data-case-id="{{ caseId }}"
       data-document-id="{{ documentId }}"
     >
-      {% for section in sections %}
-        {% if section.heading %}
-          <h2 class="app-document__section-heading">{{ section.heading }}</h2>
-        {% endif %}
-        {% for paragraph in section.paragraphs %}
-          <p class="app-document__paragraph">{{ paragraph | safe }}</p>
-        {% endfor %}
-      {% endfor %}
+      {% include "cases/documents/_document-pane-text-inner.njk" %}
     </div>
   </div>
 </div>

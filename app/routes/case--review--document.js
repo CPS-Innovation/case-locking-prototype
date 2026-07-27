@@ -14,6 +14,58 @@ function formatTimestamp(totalSeconds) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
+async function loadAnnotationSidebarData(prisma, caseId, documentId, docReviewId) {
+  const [_case, annotations] = await Promise.all([
+    prisma.case.findUnique({
+      where: { id: caseId },
+      include: { defendants: { include: { charges: { include: { elements: { orderBy: { order: 'asc' } } } } } } }
+    }),
+    prisma.caseReviewAnnotation.findMany({
+      where: { caseReviewDocumentId: docReviewId },
+      orderBy: { createdAt: 'asc' },
+      include: { elements: { include: { element: true } } }
+    })
+  ])
+  const defendantCharges = _case.defendants[0]?.charges || []
+  const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, annotations, caseId, documentId)
+  return { annotations, offences, hasElements }
+}
+
+async function loadDocumentBodySections(prisma, document, docReviewId, annotations) {
+  const redactions = await prisma.caseReviewRedaction.findMany({
+    where: { caseReviewDocumentId: docReviewId },
+    orderBy: { createdAt: 'asc' }
+  })
+  return applyRedactions(applyHighlights(generateDocumentContent(document), annotations), redactions)
+}
+
+function renderView(res, view, locals) {
+  return new Promise((resolve, reject) => {
+    res.render(view, locals, (err, html) => (err ? reject(err) : resolve(html)))
+  })
+}
+
+async function respondWithAnnotationUpdate(req, res, prisma, { caseId, documentId, docReview, annotationId }) {
+  const document = await prisma.document.findUnique({ where: { id: documentId } })
+  const { annotations, offences, hasElements } = await loadAnnotationSidebarData(prisma, caseId, documentId, docReview.id)
+  // Render just the inner content of the sidebar/document panes, not the
+  // wrapper elements around them — the client swaps this into those wrappers'
+  // existing `.html()`, so rendering the wrappers too would nest a duplicate
+  // copy of them inside themselves.
+  const sidebarHtml = await renderView(res, '_includes/review/annotation-sidebar-inner.njk', {
+    annotations, offences, hasElements, caseId, documentId, user: req.session.data.user
+  })
+
+  const isTextDocument = !['MP4', 'MP3', 'JPG', 'PNG'].includes(document.type)
+  const documentHtml = isTextDocument
+    ? await renderView(res, 'cases/documents/_document-pane-text-inner.njk', {
+        sections: await loadDocumentBodySections(prisma, document, docReview.id, annotations)
+      })
+    : null
+
+  res.json({ sidebarHtml, documentHtml, annotationId })
+}
+
 module.exports = (router) => {
   // Document viewer
   router.get('/cases/:caseId/review/documents/:documentId', async (req, res) => {
@@ -150,7 +202,7 @@ module.exports = (router) => {
         text: c.description
       }))
 
-    res.render('cases/review/add-offence/index', { _case, caseId, documentId, offenceItems })
+    res.render('cases/review/add-offence/index', { _case, caseId, documentId, offenceItems, addOffence: req.session.data.addOffence })
   })
 
   router.post('/cases/:caseId/review/documents/:documentId/add-offence', (req, res) => {
@@ -254,7 +306,7 @@ module.exports = (router) => {
       text: c.description
     }))
 
-    res.render('cases/review/change-offence/index', { _case, caseId, documentId, offenceItems })
+    res.render('cases/review/change-offence/index', { _case, caseId, documentId, offenceItems, changeOffence: req.session.data.changeOffence })
   })
 
   router.post('/cases/:caseId/review/documents/:documentId/change-offence', (req, res) => {
@@ -431,6 +483,8 @@ module.exports = (router) => {
       // .filter(id => reasoningByElementId[id])
       .map(id => parseInt(id))
 
+    let annotation = null
+
     // Evidence and disclosure are only linked to elements when some are selected —
     // if none exist yet (no offence added) they fall back to a plain note, same
     // as information-request, and can be linked later.
@@ -443,7 +497,7 @@ module.exports = (router) => {
         .map(element => `${element.description}: ${reasoningByElementId[element.id]}`)
         .join('; ')
 
-      const annotation = await prisma.caseReviewAnnotation.create({
+      annotation = await prisma.caseReviewAnnotation.create({
         data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds }
       })
 
@@ -457,13 +511,15 @@ module.exports = (router) => {
     } else {
       const { note } = req.body
       if (selectedText && type && note) {
-        await prisma.caseReviewAnnotation.create({
+        annotation = await prisma.caseReviewAnnotation.create({
           data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds }
         })
       }
     }
 
-    res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
+    await respondWithAnnotationUpdate(req, res, prisma, {
+      caseId, documentId, docReview, annotationId: annotation?.id ?? null
+    })
   })
 
   // Edit annotation — POST
@@ -471,6 +527,10 @@ module.exports = (router) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
     const annotationId = parseInt(req.params.annotationId)
+    const userId = req.session.data.user.id
+
+    const review = await findOrCreateReview(prisma, caseId, userId)
+    const docReview = await findOrCreateDocumentReview(prisma, review.id, documentId)
 
     const { linkAsType } = req.body
     const reasoningByElementId = req.body.elements || {}
@@ -511,7 +571,9 @@ module.exports = (router) => {
       })
     }
 
-    res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
+    await respondWithAnnotationUpdate(req, res, prisma, {
+      caseId, documentId, docReview, annotationId
+    })
   })
 
   // Delete annotation — confirm GET

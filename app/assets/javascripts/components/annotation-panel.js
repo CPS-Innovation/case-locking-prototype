@@ -14,8 +14,6 @@ App.AnnotationPanel = function(params) {
   this.noteHiddenInput               = $('#annotation-note-hidden')
   this.annotationParagraphIndexInput  = $('#annotation-paragraph-index')
   this.annotationOccurrenceIndexInput = $('#annotation-occurrence-index')
-  this.saveBtn                       = $('.js-save-annotation')
-  this.cancelBtn                     = $('.js-cancel-annotation')
   this.redactionForm                  = $('#redaction-form')
   this.redactionSelectedTextInput     = $('#redaction-selected-text')
   this.redactionParagraphIndexInput   = $('#redaction-paragraph-index')
@@ -54,12 +52,13 @@ App.AnnotationPanel.prototype.setupEvents = function() {
   this.redactBtn.on('click', $.proxy(this, 'onRedactClick'))
   this.deleteRedactionBtn.on('click', $.proxy(this, 'onDeleteRedactionClick'))
   this.toggleRedactionsBtn.on('click', $.proxy(this, 'onToggleRedactionsClick'))
-  this.saveBtn.on('click', $.proxy(this, 'onSaveClick'))
-  this.cancelBtn.on('click', $.proxy(this, 'onCancelClick'))
+  this.sidebarInner.on('click', '.js-save-annotation', $.proxy(this, 'onSaveClick'))
+  this.sidebarInner.on('click', '.js-cancel-annotation', $.proxy(this, 'onCancelClick'))
   this.sidebarInner.on('click', '.js-annotation-card', $.proxy(this, 'onCardClick'))
   this.sidebarInner.on('click', '.js-change-annotation', $.proxy(this, 'onChangeAnnotationClick'))
   this.sidebarInner.on('click', '.js-cancel-change-annotation', $.proxy(this, 'onCancelChangeAnnotationClick'))
   this.sidebarInner.on('click', '.js-save-change-annotation', $.proxy(this, 'onSaveChangeAnnotationClick'))
+  this.sidebarInner.on('submit', '.js-annotation-edit-note', $.proxy(this, 'onSubmitEditNoteForm'))
   $(document).on('mousedown', $.proxy(this, 'onDocumentMousedown'))
   $(document).on('keydown', $.proxy(this, 'onDocumentKeydown'))
   $(window).on('resize', $.proxy(this, 'positionAllCards'))
@@ -185,20 +184,23 @@ App.AnnotationPanel.prototype.repositionCards = function() {
   requestAnimationFrame($.proxy(this, 'positionAllCards'))
 }
 
-App.AnnotationPanel.prototype.activateMark = function(annotationId) {
+// scrollIntoView defaults to true (used when landing on an annotation linked
+// in from elsewhere, e.g. #annotation-id); pass false when the user is
+// already looking at what they just saved and shouldn't be scrolled at all.
+App.AnnotationPanel.prototype.activateMark = function(annotationId, scrollIntoView) {
   $('.app-annotation').removeClass('app-annotation--active')
   if (!annotationId) return
   var mark = $('.app-annotation[data-annotation-id="' + annotationId + '"]')
   mark.addClass('app-annotation--active')
-  if (mark[0]) mark[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  if (scrollIntoView !== false && mark[0]) mark[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
-App.AnnotationPanel.prototype.activateCard = function(annotationId) {
+App.AnnotationPanel.prototype.activateCard = function(annotationId, scrollIntoView) {
   $('.js-annotation-card').removeClass('is-selected app-annotation-card--active')
   if (annotationId) {
     var card = $('.js-annotation-card[data-annotation-id="' + annotationId + '"]')
     card.addClass('is-selected app-annotation-card--active')
-    if (card[0]) card[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    if (scrollIntoView !== false && card[0]) card[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
   this.repositionCards()
 }
@@ -208,6 +210,70 @@ App.AnnotationPanel.prototype.handleUrlHash = function() {
   if (!match) return
   this.activateCard(match[1])
   this.activateMark(match[1])
+}
+
+// The "new annotation" cards and empty-state message live inside the sidebar
+// HTML that gets replaced wholesale after every save, so cached references to
+// them go stale unless re-queried after each swap.
+App.AnnotationPanel.prototype.refreshSidebarCache = function() {
+  this.newAnnotationCards = $('.js-new-annotation-card')
+  this.sidebarEmpty = $('.js-sidebar-empty')
+}
+
+App.AnnotationPanel.prototype.setButtonLoading = function(button, isLoading) {
+  if (!button || !button.length) return
+  if (isLoading) {
+    button.data('original-text', button.text())
+    button.text('Please wait...').prop('disabled', true).attr('aria-disabled', 'true')
+  } else {
+    button.text(button.data('original-text')).prop('disabled', false).removeAttr('aria-disabled')
+  }
+}
+
+// Saving/editing an annotation never navigates — the server re-renders the
+// sidebar (and, for text documents, the document body) and we swap the HTML
+// in place, so scroll position is never touched. `button` is the specific
+// Save button that triggered this, shown a loading state while the request
+// is in flight (it only needs resetting on failure — on success it's part of
+// the sidebar HTML that just got replaced).
+App.AnnotationPanel.prototype.submitAnnotationForm = function(form, button) {
+  var self = this
+  this.setButtonLoading(button, true)
+  $.ajax({
+    url: form.attr('action'),
+    method: 'POST',
+    data: form.serialize(),
+    dataType: 'json'
+  }).done(function(data) {
+    self.applyAnnotationUpdate(data)
+  }).fail(function() {
+    // eslint-disable-next-line no-console
+    console.error('Failed to save annotation')
+    self.setButtonLoading(button, false)
+  })
+}
+
+App.AnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
+  // Reset any in-progress new-card state (and its selection highlight in the
+  // document) before the DOM it refers to is replaced.
+  this.hideNewCard()
+
+  this.sidebarInner.html(data.sidebarHtml)
+  if (data.documentHtml) this.container.html(data.documentHtml)
+  this.refreshSidebarCache()
+  this.repositionCards()
+
+  // The user is already looking at what they just saved, so highlight it
+  // without scrolling anywhere — scrollIntoView is only for landing on an
+  // annotation linked in from elsewhere (see handleUrlHash).
+  this.activateCard(data.annotationId, false)
+  this.activateMark(data.annotationId, false)
+
+  // Focus moves to the saved card so it never falls back to <body>, which is
+  // what happened when this used to be a full page reload — preventScroll
+  // stops the browser's default focus-triggered scroll from moving the page.
+  var target = $('.js-annotation-card[data-annotation-id="' + data.annotationId + '"] .js-change-annotation').first()
+  if (target.length) target.attr('tabindex', '-1').focus({ preventScroll: true })
 }
 
 // ── Event handlers ────────────────────────────────────────────────────────────
@@ -340,9 +406,9 @@ App.AnnotationPanel.prototype.onToggleRedactionsClick = function() {
   this.toggleRedactionsBtn.text(this.redactionsHidden ? 'Show redactions' : 'Hide redactions')
 }
 
-App.AnnotationPanel.prototype.onSaveClick = function() {
+App.AnnotationPanel.prototype.onSaveClick = function(e) {
   if (this.activeAnnotationCard.find('input[name="elementsCheckbox"]').length) {
-    this.onSaveEvidenceClick()
+    this.onSaveEvidenceClick(e)
     return
   }
   var noteInput = this.activeAnnotationCard.find('.js-annotation-note-input')
@@ -350,13 +416,13 @@ App.AnnotationPanel.prototype.onSaveClick = function() {
   if (!note) { noteInput.focus(); return }
   this.typeHiddenInput.val(this.pendingAnnotationType)
   this.noteHiddenInput.val(note)
-  this.annotationForm[0].submit()
+  this.submitAnnotationForm(this.annotationForm, $(e.currentTarget))
 }
 
 // Evidence and disclosure annotations link one or more elements, each with
 // its own reasoning (revealed under its checkbox), rather than a single
 // shared note.
-App.AnnotationPanel.prototype.onSaveEvidenceClick = function() {
+App.AnnotationPanel.prototype.onSaveEvidenceClick = function(e) {
   var self = this
   var checked = this.activeAnnotationCard.find('input[name="elementsCheckbox"]:checked')
 
@@ -394,7 +460,7 @@ App.AnnotationPanel.prototype.onSaveEvidenceClick = function() {
 
   this.typeHiddenInput.val(this.pendingAnnotationType)
   this.noteHiddenInput.val('')
-  this.annotationForm[0].submit()
+  this.submitAnnotationForm(this.annotationForm, $(e.currentTarget))
 }
 
 App.AnnotationPanel.prototype.onCancelClick = function(e) {
@@ -515,7 +581,13 @@ App.AnnotationPanel.prototype.onSaveChangeAnnotationClick = function(e) {
     }).appendTo(form)
   })
 
-  form[0].submit()
+  this.submitAnnotationForm(form, $(e.currentTarget))
+}
+
+App.AnnotationPanel.prototype.onSubmitEditNoteForm = function(e) {
+  e.preventDefault()
+  var form = $(e.currentTarget)
+  this.submitAnnotationForm(form, form.find('.govuk-button').first())
 }
 
 App.AnnotationPanel.prototype.onDocumentMousedown = function(e) {
