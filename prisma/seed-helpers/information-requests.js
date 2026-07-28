@@ -1,4 +1,5 @@
 const { faker } = require('@faker-js/faker');
+const statuses = require('../../app/data/case-statuses');
 
 const ITEM_DESCRIPTIONS = [
   'Missing MG3',
@@ -58,9 +59,10 @@ function daysFromNow(n) {
 
 async function seedInformationRequests(prisma) {
   const allCases = await prisma.case.findMany({
+    where: {
+      defendants: { none: { status: statuses.NOT_CHARGED } }
+    },
     select: { id: true, defendants: { select: { id: true } } },
-    skip: 50,
-    take: 200,
   });
 
   const shuffled = faker.helpers.shuffle(allCases);

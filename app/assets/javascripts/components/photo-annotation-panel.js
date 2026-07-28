@@ -157,7 +157,7 @@ App.PhotoAnnotationPanel.prototype.setButtonLoading = function(button, isLoading
   if (!button || !button.length) return
   if (isLoading) {
     button.data('original-text', button.text())
-    button.text('Please wait...').prop('disabled', true).attr('aria-disabled', 'true')
+    button.text('Saving...').prop('disabled', true).attr('aria-disabled', 'true')
   } else {
     button.text(button.data('original-text')).prop('disabled', false).removeAttr('aria-disabled')
   }
