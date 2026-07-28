@@ -31,9 +31,11 @@ module.exports = (router) => {
     const caseId = parseInt(req.params.caseId)
     const _case = await fetchCase(caseId)
     const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
+    const notes = await getInformationRequestNotes(review.id)
     res.render('cases/review/information-request/index', {
       _case,
       informationRequest: { wantsInformationRequest: review.wantsInformationRequest },
+      notes,
     })
   })
 
@@ -50,44 +52,6 @@ module.exports = (router) => {
       return res.redirect(`/cases/${caseId}/review/information-request/description`)
     }
 
-    const notes = await getInformationRequestNotes(review.id)
-    if (notes.length) {
-      res.redirect(`/cases/${caseId}/review/information-request/notes`)
-    } else {
-      res.redirect(`/cases/${caseId}/review/information-request/check`)
-    }
-  })
-
-  // ─── Existing information request notes — answered no but notes exist ───────
-
-  router.get('/cases/:caseId/review/information-request/notes', async (req, res) => {
-    const caseId = parseInt(req.params.caseId)
-    const _case = await fetchCase(caseId)
-    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
-    const notes = await getInformationRequestNotes(review.id)
-
-    if (!notes.length) {
-      return res.redirect(`/cases/${caseId}/review/information-request/check`)
-    }
-
-    res.render('cases/review/information-request/notes', { _case, notes })
-  })
-
-  router.post('/cases/:caseId/review/information-request/notes', async (req, res) => {
-    const caseId = parseInt(req.params.caseId)
-    const review = await findOrCreateReview(prisma, caseId, req.session.data.user.id)
-
-    if (req.body.notesDecision === 'add') {
-      await prisma.caseReview.update({
-        where: { id: review.id },
-        data: { wantsInformationRequest: 'yes' },
-      })
-      return res.redirect(`/cases/${caseId}/review/information-request/description`)
-    }
-
-    await prisma.caseReviewAnnotation.deleteMany({
-      where: { type: 'information-request', caseReviewDocument: { caseReviewId: review.id } },
-    })
     res.redirect(`/cases/${caseId}/review/information-request/check`)
   })
 

@@ -621,6 +621,8 @@ module.exports = (router) => {
       res.redirect(`/cases/${caseId}/review/documents/${documentId}`)
     } else if (from === 'check') {
       res.redirect(`/cases/${caseId}/review/check`)
+    } else if (from === 'overview') {
+      res.redirect(`/cases/${caseId}`)
     } else {
       res.redirect(`/cases/${caseId}/review`)
     }

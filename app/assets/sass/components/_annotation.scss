@@ -97,6 +97,11 @@
   p {
     color: inherit;
   }
+
+  p:last-child {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
 }
 
 %annotation-playback-card__body {

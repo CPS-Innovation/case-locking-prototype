@@ -14,14 +14,35 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <span class="govuk-caption-l">{{ _case.reference }}</span>
+
+      {% if notes.length %}
+        <h1 class="govuk-heading-l">Check if you want to add an information request</h1>
+
+        <div class="govuk-!-margin-bottom-6">
+          {% for note in notes %}
+            <div class="app-review-annotation-card app-review-annotation-card--orange">
+              <div class="app-review-annotation-card__header app-annotation-card__tag--orange">
+                <p class="govuk-!-margin-bottom-0">Information request note</p>
+                <p class="govuk-!-margin-bottom-0">{{ note.caseReviewDocument.document.name }}</p>
+              </div>
+              <div class="app-review-annotation-card__body">
+                <p>‘{{ note.selectedText | truncate(80) }}’</p>
+                <p class="app-review-annotation-card__label">Note</p>
+                <p class="govuk-!-margin-bottom-0">{{ note.note }}</p>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
       <form method="post">
         {{ govukRadios({
           name: "wantsInformationRequest",
           fieldset: {
             legend: {
               text: "Do you want to request information?",
-              isPageHeading: true,
-              classes: "govuk-fieldset__legend--l"
+              isPageHeading: not notes.length,
+              classes: "govuk-fieldset__legend--l" if not notes.length else "govuk-fieldset__legend--m"
             }
           },
           value: informationRequest.wantsInformationRequest,
