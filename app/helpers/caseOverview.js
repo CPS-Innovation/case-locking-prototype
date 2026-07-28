@@ -40,7 +40,7 @@ function getElementWitnesses(links) {
   return _.uniqBy(witnesses, 'id').map(toWitnessItem)
 }
 
-function toAnnotationItem(annotation) {
+function toAnnotationItem(annotation, reasoning) {
   const { document, documentId } = annotation.caseReviewDocument
   return {
     id: annotation.id,
@@ -51,7 +51,8 @@ function toAnnotationItem(annotation) {
     timestampSeconds: annotation.timestampSeconds,
     photoUrl: getDocumentPhotoUrls(document)[0],
     addedByName: annotation.user ? `${annotation.user.firstName} ${annotation.user.lastName}` : null,
-    createdAt: annotation.createdAt
+    createdAt: annotation.createdAt,
+    reasoning: reasoning || null
   }
 }
 
@@ -73,8 +74,8 @@ function buildOverviewElement(element, links, submittedReview) {
     description: element.description,
     strength: element.strength,
     strengthReasoning: element.strengthReasoning,
-    evidence: links.filter(link => link.annotation.type === 'evidence').map(link => toAnnotationItem(link.annotation)),
-    issues: links.filter(link => link.annotation.type === 'issue').map(link => toAnnotationItem(link.annotation)),
+    evidence: links.filter(link => link.annotation.type === 'evidence').map(link => toAnnotationItem(link.annotation, link.reasoning)),
+    issues: links.filter(link => link.annotation.type === 'issue').map(link => toAnnotationItem(link.annotation, link.reasoning)),
     witnesses: getElementWitnesses(links)
   }
 }

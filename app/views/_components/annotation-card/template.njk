@@ -24,6 +24,10 @@
       })
     }}
 
+    {% if params.item.reasoning %}
+      <p class="govuk-hint govuk-!-margin-bottom-1">{{ params.item.reasoning }}</p>
+    {% endif %}
+
     {% if params.item.addedByName %}
       <p class="govuk-!-font-size-16">
         {{ params.item.addedByName }},

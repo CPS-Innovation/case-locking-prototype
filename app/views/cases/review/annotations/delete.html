@@ -11,7 +11,7 @@
     {% set typeLabel = 'Evidence' %}
     {% set typeColour = 'blue' %}
   {% elif annotation.type == 'issue' %}
-    {% set typeLabel = 'Issue anticipated' %}
+    {% set typeLabel = 'Anticipated issue' %}
     {% set typeColour = 'red' %}
   {% elif annotation.type == 'note' %}
     {% set typeLabel = 'Note' %}
@@ -27,10 +27,10 @@
       <span class="govuk-caption-l">{{ document.name }}</span>
       <h1 class="govuk-heading-l">{{ pageName }}</h1>
 
-      <div class="app-review-annotation-card app-review-annotation-card--{{ typeColour }} govuk-!-margin-bottom-6">
-        <div
-          class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
-        >
+      <div
+        class="app-review-annotation-card app-review-annotation-card--{{ typeColour }} govuk-!-margin-bottom-6"
+      >
+        <div class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}">
           <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
         </div>
         <div class="app-review-annotation-card__body">
@@ -54,7 +54,7 @@
       </div>
 
       <form method="post">
-        <input type="hidden" name="from" value="{{ from }}">
+        <input type="hidden" name="from" value="{{ from }}" />
         {{ govukButton({ text: "Delete " + (typeLabel | lower) }) }}
       </form>
       <p class="govuk-body">

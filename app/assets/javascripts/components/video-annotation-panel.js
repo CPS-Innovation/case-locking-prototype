@@ -99,21 +99,13 @@ App.VideoAnnotationPanel.prototype.onSaveEvidenceClick = function(e) {
   }
 
   var fields = []
-  var firstInvalid = null
 
   checked.each(function() {
     var elementId = $(this).val()
-    // Reason capture disabled — restore to re-enable:
-    // var textarea = self.activeAnnotationCard.find('.js-annotation-element-reasoning[data-element-id="' + elementId + '"]')
-    // var reasoning = textarea.val().trim()
-    // if (!reasoning) {
-    //   if (!firstInvalid) firstInvalid = textarea
-    //   return
-    // }
-    fields.push({ elementId: elementId, reasoning: '' })
+    var textarea = self.activeAnnotationCard.find('.js-annotation-element-reasoning[data-element-id="' + elementId + '"]')
+    var reasoning = textarea.val().trim()
+    fields.push({ elementId: elementId, reasoning: reasoning })
   })
-
-  if (firstInvalid) { firstInvalid.focus(); return }
 
   this.annotationForm.find('.js-annotation-element-hidden').remove()
   fields.forEach(function(field) {
@@ -302,21 +294,13 @@ App.VideoAnnotationPanel.prototype.onSaveChangeAnnotationClick = function(e) {
   }
 
   var fields = []
-  var firstInvalid = null
 
   checked.each(function() {
     var elementId = $(this).val()
-    // Reason capture disabled — restore to re-enable:
-    // var textarea = form.find('.js-annotation-element-reasoning[data-element-id="' + elementId + '"]')
-    // var reasoning = textarea.val().trim()
-    // if (!reasoning) {
-    //   if (!firstInvalid) firstInvalid = textarea
-    //   return
-    // }
-    fields.push({ elementId: elementId, reasoning: '' })
+    var textarea = form.find('.js-annotation-element-reasoning[data-element-id="' + elementId + '"]')
+    var reasoning = textarea.val().trim()
+    fields.push({ elementId: elementId, reasoning: reasoning })
   })
-
-  if (firstInvalid) { firstInvalid.focus(); return }
 
   form.find('.js-annotation-element-hidden').remove()
   fields.forEach(function(field) {

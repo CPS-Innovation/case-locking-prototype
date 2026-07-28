@@ -493,10 +493,7 @@ module.exports = (router) => {
     const occurrenceIndex = parseInt(req.body.occurrenceIndex) || 0
 
     const reasoningByElementId = req.body.elements || {}
-    const elementIds = Object.keys(reasoningByElementId)
-      // Reason capture disabled — restore to re-enable:
-      // .filter(id => reasoningByElementId[id])
-      .map(id => parseInt(id))
+    const elementIds = Object.keys(reasoningByElementId).map(id => parseInt(id))
 
     let annotation = null
 
@@ -509,7 +506,7 @@ module.exports = (router) => {
       })
 
       const note = elements
-        .map(element => `${element.description}: ${reasoningByElementId[element.id]}`)
+        .map(element => element.description + (reasoningByElementId[element.id] ? `: ${reasoningByElementId[element.id]}` : ''))
         .join('; ')
 
       annotation = await prisma.caseReviewAnnotation.create({
@@ -549,10 +546,7 @@ module.exports = (router) => {
 
     const { linkAsType } = req.body
     const reasoningByElementId = req.body.elements || {}
-    const elementIds = Object.keys(reasoningByElementId)
-      // Reason capture disabled — restore to re-enable:
-      // .filter(id => reasoningByElementId[id])
-      .map(id => parseInt(id))
+    const elementIds = Object.keys(reasoningByElementId).map(id => parseInt(id))
 
     if (elementIds.length) {
       const elements = await prisma.element.findMany({
@@ -560,7 +554,7 @@ module.exports = (router) => {
       })
 
       const note = elements
-        .map(element => `${element.description}: ${reasoningByElementId[element.id]}`)
+        .map(element => element.description + (reasoningByElementId[element.id] ? `: ${reasoningByElementId[element.id]}` : ''))
         .join('; ')
 
       await prisma.caseReviewAnnotationElement.deleteMany({ where: { annotationId } })

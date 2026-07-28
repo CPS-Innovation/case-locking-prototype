@@ -50,7 +50,7 @@ function groupElementsByCharge(elements) {
       groupByChargeId[charge.id] = group
       groups.push(group)
     }
-    group.elements.push(link.element)
+    group.elements.push({ ...link.element, reasoning: link.reasoning })
   })
   return groups
 }
@@ -63,14 +63,13 @@ function buildElementCheckboxItems(elements, options) {
     return {
       value: String(element.id),
       text: element.description,
-      checked: linkedReasoning !== undefined
-      // Reason capture disabled — restore to re-enable:
-      // conditional: {
-      //   html: `<div class="govuk-form-group govuk-!-margin-bottom-0">
-      // <label class="govuk-label govuk-label--s" for="${idPrefix}-${element.id}">Reason</label>
-      // <textarea class="govuk-textarea govuk-!-margin-bottom-0 js-annotation-element-reasoning" id="${idPrefix}-${element.id}" name="${idPrefix}-${element.id}" rows="2" data-element-id="${element.id}">${_.escape(linkedReasoning || '')}</textarea>
-      // </div>`
-      // }
+      checked: linkedReasoning !== undefined,
+      conditional: {
+        html: `<div class="govuk-form-group govuk-!-margin-bottom-0">
+      <label class="govuk-label govuk-label--s" for="${idPrefix}-${element.id}">Reason (optional)</label>
+      <textarea class="govuk-textarea govuk-!-margin-bottom-0 js-annotation-element-reasoning" id="${idPrefix}-${element.id}" name="${idPrefix}-${element.id}" rows="2" data-element-id="${element.id}">${_.escape(linkedReasoning || '')}</textarea>
+      </div>`
+      }
     }
   })
 }

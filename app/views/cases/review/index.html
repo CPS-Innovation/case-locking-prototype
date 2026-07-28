@@ -16,7 +16,7 @@
 
       {% for group in documentGroups %}
         {% if group.heading %}
-          <h2 class="govuk-heading-m{% if not loop.first %}govuk-!-margin-top-6{% endif %}">
+          <h2 class="govuk-heading-m {% if not loop.first %}govuk-!-margin-top-6{% endif %}">
             {{ group.heading }}
           </h2>
         {% endif %}

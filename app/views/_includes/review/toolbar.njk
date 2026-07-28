@@ -5,13 +5,13 @@
         method="post"
         action="/cases/{{ caseId }}/review/documents/{{ documentId }}/mark-reviewed"
       >
-        {{ govukButton({ text: "Mark as reviewed" }) }}
+        {{ govukButton({ text: "Mark as completed" }) }}
       </form>
       <form
         method="post"
         action="/cases/{{ caseId }}/review/documents/{{ documentId }}/save-progress"
       >
-        {{ govukButton({ text: "Mark as in progress", classes: "govuk-button--secondary" }) }}
+        {{ govukButton({ text: "Finish later", classes: "govuk-button--secondary" }) }}
       </form>
       {# {{ govukButton({ text: "Mark as unused", classes: "govuk-button--secondary", href: "#" }) }} #}
       {# {{ govukButton({ text: "Add case summary note", classes: "govuk-button--secondary", href: "#" }) }} #}

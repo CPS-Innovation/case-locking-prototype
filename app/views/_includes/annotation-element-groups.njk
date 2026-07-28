@@ -5,7 +5,12 @@
     </p>
     <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-{{ '0' if loop.last else '4' }}">
       {% for element in group.elements %}
-        <li>{{ element.description }}</li>
+        <li>
+          {{ element.description }}
+          {% if element.reasoning %}
+            <br><span class="govuk-hint govuk-!-margin-bottom-0">{{ element.reasoning }}</span>
+          {% endif %}
+        </li>
       {% endfor %}
     </ul>
   {% endfor %}
