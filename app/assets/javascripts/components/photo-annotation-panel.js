@@ -190,6 +190,11 @@ App.PhotoAnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
   this.hideNewCard()
 
   this.sidebarInner.html(data.sidebarHtml)
+
+  // GOV.UK Frontend only wires up components (eg checkbox conditional
+  // reveals) once, at page load — freshly injected HTML needs it re-run.
+  window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
+
   this.refreshSidebarCache()
 
   // The user is already looking at what they just saved, so highlight it

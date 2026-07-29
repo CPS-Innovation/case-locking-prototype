@@ -260,6 +260,11 @@ App.AnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
 
   this.sidebarInner.html(data.sidebarHtml)
   if (data.documentHtml) this.container.html(data.documentHtml)
+
+  // GOV.UK Frontend only wires up components (eg checkbox conditional
+  // reveals) once, at page load — freshly injected HTML needs it re-run.
+  window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
+
   this.refreshSidebarCache()
   this.repositionCards()
 
