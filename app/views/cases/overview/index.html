@@ -228,3 +228,12 @@
     </div>
   </div>
 {% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $('.js-annotation-excerpt').each(function () {
+      new App.TextExpander({ container: $(this), maxLength: 80 })
+    })
+  </script>
+{% endblock %}

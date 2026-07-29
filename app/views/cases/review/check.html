@@ -113,8 +113,8 @@
                   </div>
                   <div class="app-review-annotation-card__body">
                     {% if item.kind != 'annotation' %}
-                      <p class="govuk-!-margin-bottom-0">
-                        ‘{{ item.selectedText | truncate(80) }}’
+                      <p class="js-annotation-excerpt govuk-!-margin-bottom-0">
+                        ‘{{ item.selectedText }}’
                       </p>
                     {% else %}
                       {{
@@ -368,4 +368,13 @@
       </form>
     </div>
   </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $('.js-annotation-excerpt').each(function () {
+      new App.TextExpander({ container: $(this), maxLength: 80 })
+    })
+  </script>
 {% endblock %}
