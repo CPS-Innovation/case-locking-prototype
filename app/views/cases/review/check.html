@@ -45,6 +45,15 @@
             {% endif %}
           </h3>
 
+          <p class="govuk-!-margin-bottom-4">
+            <a
+              href="/cases/{{ _case.id }}/review/documents/{{ document.id }}"
+              class="govuk-link govuk-link--no-visited-state"
+            >
+              Add evidence, anticipated issue or note
+            </a>
+          </p>
+
           {% if items.length %}
             <div class="govuk-!-margin-bottom-6">
               {% for item in items %}
@@ -129,15 +138,6 @@
                 </div>
               {% endfor %}
             </div>
-          {% else %}
-            <p class="govuk-!-margin-bottom-7">
-              <a
-                href="/cases/{{ _case.id }}/review/documents/{{ document.id }}"
-                class="govuk-link govuk-link--no-visited-state"
-              >
-                Add annotation
-              </a>
-            </p>
           {% endif %}
         {% endfor %}
       {% endfor %}
