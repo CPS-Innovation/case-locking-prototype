@@ -33,14 +33,14 @@
                 govukTag({
                   text: "Will be shared",
                   classes: 'govuk-!-margin-top-1'
-                })
+                }) if false
               }}
             {% else %}
               {{
                 govukTag({
                   text: "Will not be shared",
                   classes: 'govuk-tag--grey govuk-!-margin-top-1'
-                })
+                }) if false
               }}
             {% endif %}
           </h3>
@@ -97,9 +97,7 @@
                           class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
                         >
                           Delete
-                          <span class="govuk-visually-hidden">
-                            redaction
-                          </span>
+                          <span class="govuk-visually-hidden">redaction</span>
                         </a>
                       {% endif %}
                     </p>
@@ -334,26 +332,26 @@
           <p>We’ll send your charging decision to the police.</p>
 
           {% if informationRequest and informationRequest.wantsInformationRequest == "yes" %}
-            <p>We’ll also send your requests for more information.</p>
+            {# <p>We’ll also send your requests for more information.</p> #}
           {% endif %}
 
-          <p>
-            If the police charges match your charging decision, we’ll share all material which has
-            evidence connected to the charges.
-          </p>
-
-          <p>We’ll always share the police report and previous convictions.</p>
-
-          <p>We’ll share the material with:</p>
+          <p>If the police charges match your charging decision, we’ll send the IPDC to:</p>
 
           <ul class="govuk-list govuk-list--bullet">
             <li>the defendant and their lawyer, if they have one</li>
             <li>the court</li>
           </ul>
 
+          <p>The IPDC will include:</p>
+
+          <ul class="govuk-list govuk-list--bullet">
+            <li>the police report and previous convictions</li>
+            <li>any other material which has evidence connected to the charges</li>
+          </ul>
+
           <p>
-            If the police charges do not match your suggestions, the case will instead be marked for
-            a further review.
+            If the police charges do not match your charging decision, the case will instead be
+            marked for a further review.
           </p>
         {% endif %}
       {% else %}

@@ -58,7 +58,7 @@ module.exports = [
     "description": "Officer in the case’s statement exhibiting the 101 recording (SH/04)."
   },
   {
-    "name": "SH-01 - MESSAGE TO CHLOE MUM FROM PALMER",
+    "name": "SH-01 - Message to Chloe Mum from PALMER",
     "category": "Exhibits",
     "type": "PNG",
     "size": 93,
@@ -68,7 +68,7 @@ module.exports = [
     ]
   },
   {
-    "name": "SH-02 - COMMUNICATION BETWEEN VICTIM AND PALMER",
+    "name": "SH-02 - Communication between victim and PALMER",
     "category": "Exhibits",
     "type": "PNG",
     "size": 509,
@@ -98,21 +98,21 @@ module.exports = [
     "description": "Redacted 101 call recording exhibited by PC 9774 REES. Duration 5 minutes."
   },
   {
-    "name": "WK-01 - PHOTO INJURIES TO ARMS - BURKE, Nicola",
+    "name": "WK-01 - Photo injuries to arms - BURKE, Nicola",
     "category": "Exhibits",
     "type": "JPG",
     "size": 30,
     "description": "Photograph of bruising to both of the victim’s forearms, taken by PC BURKE at 08:26 on 2 November 2024."
   },
   {
-    "name": "WK-02 - PHOTO INJURY TO FACE SHOWING BLACK EYES",
+    "name": "WK-02 - Photo injury to face showing black eyes",
     "category": "Exhibits",
     "type": "JPG",
     "size": 26,
     "description": "Photograph of the victim’s face showing two black eyes, taken by PC BURKE at 08:26 on 2 November 2024."
   },
   {
-    "name": "WK-03 - PHOTO INJURY TO RIGHT SIDE OF FACE",
+    "name": "WK-03 - Photo injury to right side of face",
     "category": "Exhibits",
     "type": "JPG",
     "size": 26,

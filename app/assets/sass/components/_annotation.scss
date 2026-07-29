@@ -140,6 +140,15 @@
   @extend %annotation-playback-card__body;
 }
 
+.app-overview-annotation-card__footer {
+  background: govuk-colour("light-grey");
+  padding: govuk-spacing(2) govuk-spacing(3);
+
+  @include govuk-media-query($from: desktop) {
+    padding: govuk-spacing(2) govuk-spacing(4);
+  }
+}
+
 // Media rendered inside a playback card's body (photo/audio/video/timestamp),
 // shared via the annotationCardBody macro regardless of which card it's in.
 .app-annotation-media__photo,

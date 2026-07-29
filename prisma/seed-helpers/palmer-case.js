@@ -193,14 +193,14 @@ const PALMER_ANNOTATIONS = [
     note: 'Previous conviction for common assault — consider a bad character application.'
   },
   {
-    documentName: 'WK-01 - PHOTO INJURIES TO ARMS - BURKE, Nicola',
+    documentName: 'WK-01 - Photo injuries to arms - BURKE, Nicola',
     type: 'evidence',
     elementIndex: 2,
     selectedText: 'Whole photo',
     note: 'Photograph of bruising to both forearms.'
   },
   {
-    documentName: 'WK-02 - PHOTO INJURY TO FACE SHOWING BLACK EYES',
+    documentName: 'WK-02 - Photo injury to face showing black eyes',
     type: 'evidence',
     elementIndex: 2,
     selectedText: 'Whole photo',
@@ -214,14 +214,14 @@ const PALMER_ANNOTATIONS = [
     note: 'Photograph of the black eye and mark to the left side of the face.'
   },
   {
-    documentName: 'SH-01 - MESSAGE TO CHLOE MUM FROM PALMER',
+    documentName: 'SH-01 - Message to Chloe Mum from PALMER',
     type: 'note',
     elementIndex: null,
     selectedText: 'Whole photo',
     note: 'Message sent to the victim’s mother minutes after the incident — consider threats to kill.'
   },
   {
-    documentName: 'SH-02 - COMMUNICATION BETWEEN VICTIM AND PALMER',
+    documentName: 'SH-02 - Communication between victim and PALMER',
     type: 'evidence',
     elementIndex: 0,
     selectedText: 'Whole photo',
