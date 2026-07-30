@@ -114,7 +114,8 @@
   class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--information-request"
   hidden
 >
-  <div class="app-annotation-form">
+  <div class="app-annotation-form app-annotation-card--orange">
+    <p class="app-annotation-card__tag app-annotation-card__tag--orange govuk-!-margin-bottom-0">Information request</p>
     <div class="app-annotation-form__body">
       {{
         govukTextarea({
@@ -145,7 +146,8 @@
   class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--note"
   hidden
 >
-  <div class="app-annotation-form">
+  <div class="app-annotation-form app-annotation-card--yellow">
+    <p class="app-annotation-card__tag app-annotation-card__tag--yellow govuk-!-margin-bottom-0">Note</p>
     <div class="app-annotation-form__body">
       {{
         govukTextarea({
@@ -215,7 +217,7 @@
                 <li>
                   {{ element.description }}
                   {% if element.reasoning %}
-                    <br><span class="govuk-hint govuk-!-margin-bottom-0">Reason: {{ element.reasoning }}</span>
+                    <br><span class="govuk-hint govuk-!-margin-bottom-0">Comment: {{ element.reasoning }}</span>
                   {% endif %}
                 </li>
               {% endfor %}

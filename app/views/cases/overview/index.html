@@ -17,11 +17,15 @@
       <h1 class="govuk-heading-l">Overview</h1>
 
       {% set offencesValue %}
-        <ul class="govuk-list govuk-list--bullet">
-          {% for charge in charges %}
-            <li>{{ charge.description }}</li>
-          {% endfor %}
-        </ul>
+        {% if charges.length == 1 %}
+          <p class="govuk-body govuk-!-margin-bottom-0">{{ charges[0].description }}</p>
+        {% else %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for charge in charges %}
+              <li>{{ charge.description }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
       {% endset %}
 
       <div class="app-section">

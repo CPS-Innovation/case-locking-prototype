@@ -41,8 +41,26 @@ App.AnnotationPanel = function(params) {
   this.resizeObserver = new ResizeObserver($.proxy(this, 'repositionCards'))
 
   this.setupEvents()
+  this.initGovukComponents()
   this.positionAllCards()
   this.handleUrlHash()
+}
+
+// The sidebar's GOV.UK components (eg checkbox conditional reveals) need
+// initialising here as well as after every AJAX swap in applyAnnotationUpdate
+// — relying solely on the page-wide initAll() at load time would only cover
+// the sidebar's first render, not any HTML swapped in afterwards. Calling it
+// here too means the page-wide initAll() then finds the sidebar's components
+// already initialised and reports an "already initialised" InitError for
+// each of them, which is expected and safe to ignore; anything else is a
+// real problem and still gets logged.
+App.AnnotationPanel.prototype.initGovukComponents = function() {
+  window.GOVUKFrontend.initAll({
+    scope: this.sidebarInner[0],
+    onError: function(error) {
+      if (error.name !== 'InitError') console.log(error)
+    }
+  })
 }
 
 App.AnnotationPanel.prototype.setupEvents = function() {
@@ -260,11 +278,7 @@ App.AnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
 
   this.sidebarInner.html(data.sidebarHtml)
   if (data.documentHtml) this.container.html(data.documentHtml)
-
-  // GOV.UK Frontend only wires up components (eg checkbox conditional
-  // reveals) once, at page load — freshly injected HTML needs it re-run.
-  window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
-
+  this.initGovukComponents()
   this.refreshSidebarCache()
   this.repositionCards()
 
@@ -305,6 +319,10 @@ App.AnnotationPanel.prototype.applyRedactionUpdate = function(data) {
 // ── Event handlers ────────────────────────────────────────────────────────────
 
 App.AnnotationPanel.prototype.onDocumentMouseup = function(e) {
+  // In the materials view the popup's own buttons are neutralised by
+  // ActionsDisabledGuard, but that still let the menu appear and be
+  // reached — better to not show it at all when selecting is a dead end.
+  if (this.popup.hasClass('app-actions-disabled')) return
   var self = this
   setTimeout(function() {
     if ($(e.target).closest('.app-redaction').length) return

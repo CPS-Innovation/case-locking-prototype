@@ -36,6 +36,9 @@
 
   <div class="app-annotation-popup js-annotation-popup {{ 'app-actions-disabled' if isMaterialsView }}" hidden aria-hidden="true">
     <div class="app-annotation-popup__actions js-selection-actions">
+      <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="note">
+        Note
+      </button>
       {% if offences.length %}
         <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="evidence">
           Evidence
@@ -50,6 +53,7 @@
           Anticipated issue
         </button>
       {% endif %}
+      <button type="button" class="app-annotation-popup__btn js-redact-btn">Redact</button>
       <button
         type="button"
         class="app-annotation-popup__btn js-annotate-btn"
@@ -57,10 +61,6 @@
       >
         Information request note
       </button>
-      <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="note">
-        Note
-      </button>
-      <button type="button" class="app-annotation-popup__btn js-redact-btn">Redact</button>
     </div>
     <div class="app-annotation-popup__actions js-redaction-actions" hidden>
       <button type="button" class="app-annotation-popup__btn js-delete-redaction-btn">

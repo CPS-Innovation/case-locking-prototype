@@ -199,7 +199,7 @@ async function createVictimWitness(prisma, caseId, config) {
 }
 
 async function createSTLCase(prisma, user, taskConfig, config) {
-  const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, policeUnits, ukCities, availableOperationNames, documentNames, documentTypes } = config;
+  const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, policeUnits, ukCities, documentNames, documentTypes } = config;
   const { name, stlGenerator } = taskConfig;
 
   const unitId = faker.helpers.arrayElement(SIMON_UNITS_ARRAY);
@@ -229,9 +229,7 @@ async function createSTLCase(prisma, user, taskConfig, config) {
 
   const victimIds = faker.helpers.arrayElements(victims, faker.number.int({ min: 1, max: 2 })).map(v => ({ id: v.id }));
 
-  const operationName = (faker.datatype.boolean({ probability: 0.3 }) && availableOperationNames.length > 0)
-    ? availableOperationNames.pop()
-    : null;
+  const operationName = null;
 
   const numDocuments = faker.number.int({ min: 5, max: 15 });
   const documentsData = generateDocumentsData(documentNames, documentTypes, numDocuments);
@@ -300,7 +298,7 @@ async function createSTLCase(prisma, user, taskConfig, config) {
 }
 
 async function createCTLCase(prisma, user, taskConfig, config, forcedStatus) {
-  const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, policeUnits, ukCities, availableOperationNames, documentNames, documentTypes } = config;
+  const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, policeUnits, ukCities, documentNames, documentTypes } = config;
   const { name, isReminder } = taskConfig;
 
   const unitId = faker.helpers.arrayElement(SIMON_UNITS_ARRAY);
@@ -331,9 +329,7 @@ async function createCTLCase(prisma, user, taskConfig, config, forcedStatus) {
 
   const victimIds = faker.helpers.arrayElements(victims, faker.number.int({ min: 1, max: 2 })).map(v => ({ id: v.id }));
 
-  const operationName = (faker.datatype.boolean({ probability: 0.3 }) && availableOperationNames.length > 0)
-    ? availableOperationNames.pop()
-    : null;
+  const operationName = null;
 
   const numDocuments = faker.number.int({ min: 5, max: 15 });
   const documentsData = generateDocumentsData(documentNames, documentTypes, numDocuments);
@@ -420,7 +416,7 @@ async function createCTLCase(prisma, user, taskConfig, config, forcedStatus) {
 }
 
 async function createManyStatementsCase(prisma, user, config, forcedStatus) {
-  const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, taskNames, policeUnits, ukCities, availableOperationNames, documentNames, documentTypes } = config;
+  const { defenceLawyers, charges, firstNames, lastNames, pleas, victims, types, complexities, taskNames, policeUnits, ukCities, documentNames, documentTypes } = config;
 
   const defendant = await prisma.defendant.create({
     data: {
@@ -448,9 +444,7 @@ async function createManyStatementsCase(prisma, user, config, forcedStatus) {
 
   const victimIds = faker.helpers.arrayElements(victims, faker.number.int({ min: 1, max: 2 })).map(v => ({ id: v.id }));
 
-  const operationName = (faker.datatype.boolean({ probability: 0.3 }) && availableOperationNames.length > 0)
-    ? availableOperationNames.pop()
-    : null;
+  const operationName = null;
 
   const numDocuments = faker.number.int({ min: 5, max: 15 });
   const documentsData = generateDocumentsData(documentNames, documentTypes, numDocuments);

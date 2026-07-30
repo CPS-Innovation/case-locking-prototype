@@ -21,7 +21,25 @@ App.VideoAnnotationPanel = function(params) {
   this.pendingTimestamp      = null
 
   this.setupEvents()
+  this.initGovukComponents()
   this.handleUrlHash()
+}
+
+// The sidebar's GOV.UK components (eg checkbox conditional reveals) need
+// initialising here as well as after every AJAX swap in applyAnnotationUpdate
+// — relying solely on the page-wide initAll() at load time would only cover
+// the sidebar's first render, not any HTML swapped in afterwards. Calling it
+// here too means the page-wide initAll() then finds the sidebar's components
+// already initialised and reports an "already initialised" InitError for
+// each of them, which is expected and safe to ignore; anything else is a
+// real problem and still gets logged.
+App.VideoAnnotationPanel.prototype.initGovukComponents = function() {
+  window.GOVUKFrontend.initAll({
+    scope: this.sidebarInner[0],
+    onError: function(error) {
+      if (error.name !== 'InitError') console.log(error)
+    }
+  })
 }
 
 App.VideoAnnotationPanel.prototype.setupEvents = function() {
@@ -206,11 +224,7 @@ App.VideoAnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
   this.hideNewCard()
 
   this.sidebarInner.html(data.sidebarHtml)
-
-  // GOV.UK Frontend only wires up components (eg checkbox conditional
-  // reveals) once, at page load — freshly injected HTML needs it re-run.
-  window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
-
+  this.initGovukComponents()
   this.refreshSidebarCache()
 
   // The user is already looking at what they just saved, so highlight it
@@ -265,19 +279,29 @@ App.VideoAnnotationPanel.prototype.onChangeAnnotationClick = function(e) {
   var card = link.closest('.js-annotation-card')
   var editForm = card.find('.js-annotation-edit-form')
   var checkboxForm = editForm.find('.js-annotation-edit-checkboxes')
+  var issueCheckboxForm = editForm.find('.js-annotation-edit-checkboxes-issue')
   var noteForm = editForm.find('.js-annotation-edit-note')
+  var tagCheckboxes = editForm.find('.js-annotation-edit-tag-checkboxes')
+  var tagIssueCheckboxes = editForm.find('.js-annotation-edit-tag-checkboxes-issue')
+  var tagNote = editForm.find('.js-annotation-edit-tag-note')
   var target = link.data('edit-target')
-  var showCheckboxes = target ? target === 'checkboxes' : checkboxForm.length > 0
+  var showIssueCheckboxes = target === 'checkboxes-issue'
+  var showCheckboxes = showIssueCheckboxes ? false : (target ? target === 'checkboxes' : checkboxForm.length > 0)
 
   card.find('.js-annotation-view').prop('hidden', true)
   editForm.prop('hidden', false)
   checkboxForm.prop('hidden', !showCheckboxes)
-  noteForm.prop('hidden', showCheckboxes)
+  issueCheckboxForm.prop('hidden', !showIssueCheckboxes)
+  noteForm.prop('hidden', showCheckboxes || showIssueCheckboxes)
+  tagCheckboxes.prop('hidden', !showCheckboxes)
+  tagIssueCheckboxes.prop('hidden', !showIssueCheckboxes)
+  tagNote.prop('hidden', showCheckboxes || showIssueCheckboxes)
 
-  if (showCheckboxes) {
-    checkboxForm.find('input[name="elementsCheckbox"]').first().focus()
+  var activeForm = showIssueCheckboxes ? issueCheckboxForm : (showCheckboxes ? checkboxForm : noteForm)
+  if (activeForm.find('input[name="elementsCheckbox"]').length) {
+    activeForm.find('input[name="elementsCheckbox"]').first().focus()
   } else {
-    noteForm.find('textarea').first().focus()
+    activeForm.find('textarea').first().focus()
   }
 }
 

@@ -25,7 +25,7 @@
     text: "Hearings",
     href: "/cases/:caseId/hearings" | replace(':caseId', _case.id),
     current: secondaryNavId == 'hearings'
-  },
+  } if not (_case.status == caseStatuses.NOT_CHARGED and _case.needsReview),
   {
     text: "Directions",
     href: "/cases/:caseId/directions" | replace(':caseId', _case.id),
@@ -49,7 +49,7 @@
     text: "Information requests",
     href: "/cases/:caseId/information-requests" | replace(':caseId', _case.id),
     current: secondaryNavId == 'information-requests'
-  }, {
+  } if _case.status != caseStatuses.NOT_CHARGED, {
     text: "Notes",
     href: "/cases/:caseId/notes" | replace(':caseId', _case.id),
     current: secondaryNavId == 'notes'

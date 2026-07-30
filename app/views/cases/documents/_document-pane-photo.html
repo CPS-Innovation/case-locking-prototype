@@ -12,6 +12,14 @@
 
       {% if isReviewMode %}
         <div class="app-photo-annotation-actions govuk-button-group govuk-!-margin-bottom-0">
+          {{
+            govukButton({
+              text: "Add note",
+              classes: "govuk-button--secondary js-photo-annotate-btn",
+              type: "button",
+              attributes: { "data-type": "note" }
+            })
+          }}
           {% if offences.length %}
             {{
               govukButton({
@@ -38,14 +46,6 @@
               classes: "govuk-button--secondary js-photo-annotate-btn",
               type: "button",
               attributes: { "data-type": "information-request" }
-            })
-          }}
-          {{
-            govukButton({
-              text: "Add note",
-              classes: "govuk-button--secondary js-photo-annotate-btn",
-              type: "button",
-              attributes: { "data-type": "note" }
             })
           }}
         </div>

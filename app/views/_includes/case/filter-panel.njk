@@ -59,7 +59,7 @@
     },
     items: firstHearingItems,
     values: selectedFirstHearingFilters
-  }) }}
+  }) if false }}
 
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[hearingStatuses]",
@@ -115,7 +115,7 @@
     },
     items: informationRequestsItems,
     values: data.caseListFilters.informationRequests
-  }) }}
+  }) if false}}
 
   {{ appCheckboxFilter({
     idPrefix: "caseListFilters[paralegalOfficers]",
@@ -176,7 +176,7 @@
     },
     items: custodyTimeLimitRangeItems,
     values: selectedCustodyTimeLimitRangeFilters
-  }) }}
+  }) if false }}
 
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[statutoryTimeLimitRange]",
@@ -190,7 +190,7 @@
     },
     items: statutoryTimeLimitRangeItems,
     values: selectedStatutoryTimeLimitRangeFilters
-  }) }}
+  }) if false }}
 
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[paceClockRange]",
@@ -204,7 +204,7 @@
     },
     items: paceClockRangeItems,
     values: selectedPaceClockRangeFilters
-  }) }}
+  }) if false }}
 
   {{ govukCheckboxes({
     idPrefix: "caseListFilters[hearingPrepDateRange]",
@@ -218,7 +218,7 @@
     },
     items: hearingPrepDateRangeItems,
     values: selectedHearingPrepDateRangeFilters
-  }) }}
+  }) if false }}
 
   {% if data.user.role == "Manager" %}
     {{ govukCheckboxes({

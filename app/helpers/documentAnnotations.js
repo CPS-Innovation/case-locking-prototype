@@ -66,7 +66,7 @@ function buildElementCheckboxItems(elements, options) {
       checked: linkedReasoning !== undefined,
       conditional: {
         html: `<div class="govuk-form-group govuk-!-margin-bottom-0">
-      <label class="govuk-label govuk-label--s" for="${idPrefix}-${element.id}">Reason (optional)</label>
+      <label class="govuk-label govuk-label--s" for="${idPrefix}-${element.id}">Comment (optional)</label>
       <textarea class="govuk-textarea govuk-!-margin-bottom-0 js-annotation-element-reasoning" id="${idPrefix}-${element.id}" name="${idPrefix}-${element.id}" rows="2" data-element-id="${element.id}">${_.escape(linkedReasoning || '')}</textarea>
       </div>`
       }
