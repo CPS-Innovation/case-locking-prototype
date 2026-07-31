@@ -4,7 +4,7 @@ const { addTimeLimitDates } = require('../helpers/timeLimit')
 const { addCaseStatus } = require('../helpers/caseStatus')
 const {
   ITEM_CATEGORIES,
-  ordinal,
+  itemNumber,
   buildDefendantItems,
   buildDate,
   formatSessionDate,
@@ -96,7 +96,7 @@ module.exports = (router) => {
     const items = req.session.data.newInformationRequest?.items || []
     res.render('cases/information-requests/new/item', {
       _case,
-      itemNumber: ordinal(items.length + 1),
+      itemNumber: itemNumber(items.length + 1),
       itemCategoryItems: ITEM_CATEGORY_RADIO_ITEMS,
       defendantItems: buildDefendantItems(_case.defendants),
     })
@@ -149,7 +149,7 @@ module.exports = (router) => {
       _case,
       item,
       index,
-      itemNumber: ordinal(index + 1),
+      itemNumber: itemNumber(index + 1),
       itemCategoryItems: ITEM_CATEGORY_RADIO_ITEMS,
       defendantItems: buildDefendantItems(_case.defendants),
       selectedDefendantIds: cleanDefendantIds(item.defendants),

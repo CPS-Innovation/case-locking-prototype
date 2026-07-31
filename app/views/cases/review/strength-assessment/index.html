@@ -23,8 +23,18 @@
       {% endif %}
 
       {% set annotationCardsShowChange = false %}
-      {% set annotationCardsShowElementMeta = false %}
-      {% include "_includes/element-annotation-cards.njk" %}
+      {% if materialGroups.length %}
+        {% for group in materialGroups %}
+          <h2 class="govuk-heading-m {% if not loop.first %}govuk-!-margin-top-6{% endif %}">
+            {{ group.material.name }}
+          </h2>
+
+          {% set annotations = group.annotations %}
+          {% include "_includes/element-annotation-cards.njk" %}
+        {% endfor %}
+      {% else %}
+        <p class="govuk-body">No evidence or anticipated issues have been linked to this element.</p>
+      {% endif %}
 
       <form method="post">
         {% if from %}
@@ -87,4 +97,13 @@
       </form>
     </div>
   </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $('.js-annotation-excerpt').each(function () {
+      new App.TextExpander({ container: $(this), maxLength: 80 })
+    })
+  </script>
 {% endblock %}

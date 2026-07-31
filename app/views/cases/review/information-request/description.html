@@ -13,18 +13,20 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <span class="govuk-caption-l">{{ _case.reference }} - information request</span>
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
       <form method="post">
-        {{ govukTextarea({
-          name: "reviewInformationRequest[description]",
-          id: "description",
-          label: {
-            text: "Title",
-            classes: "govuk-label--l",
-            isPageHeading: true
-          },
-          value: informationRequest.description
-        }) }}
+        {{
+          govukTextarea({
+            name: "reviewInformationRequest[description]",
+            id: "description",
+            label: {
+              text: "Information request description",
+              classes: "govuk-label--l",
+              isPageHeading: true
+            },
+            value: informationRequest.description
+          })
+        }}
 
         {{ govukButton({ text: "Continue" }) }}
       </form>

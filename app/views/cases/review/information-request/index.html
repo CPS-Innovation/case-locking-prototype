@@ -19,18 +19,23 @@
         <h1 class="govuk-heading-l">Check if you want to add an information request</h1>
 
         <div class="govuk-!-margin-bottom-6">
-          {% for note in notes %}
-            <div class="app-review-annotation-card app-review-annotation-card--orange">
-              <div class="app-review-annotation-card__header app-annotation-card__tag--orange">
-                <p class="govuk-!-margin-bottom-0">Information request note</p>
-                <p class="govuk-!-margin-bottom-0">{{ note.caseReviewDocument.document.name }}</p>
+          {% for group in materialGroups %}
+            <h2 class="govuk-heading-m {% if not loop.first %}govuk-!-margin-top-6{% endif %}">
+              {{ group.material.name }}
+            </h2>
+
+            {% for note in group.notes %}
+              <div class="app-review-annotation-card app-review-annotation-card--orange">
+                <div class="app-review-annotation-card__header app-annotation-card__tag--orange">
+                  <p class="govuk-!-margin-bottom-0">Information request note</p>
+                </div>
+                <div class="app-review-annotation-card__body">
+                  <p>‘{{ note.selectedText | truncate(80) }}’</p>
+                  <p class="app-review-annotation-card__label">Note</p>
+                  <p class="govuk-!-margin-bottom-0">{{ note.note }}</p>
+                </div>
               </div>
-              <div class="app-review-annotation-card__body">
-                <p>‘{{ note.selectedText | truncate(80) }}’</p>
-                <p class="app-review-annotation-card__label">Note</p>
-                <p class="govuk-!-margin-bottom-0">{{ note.note }}</p>
-              </div>
-            </div>
+            {% endfor %}
           {% endfor %}
         </div>
       {% endif %}

@@ -1,8 +1,9 @@
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
+const _ = require('lodash')
 const {
   ITEM_CATEGORIES,
-  ordinal,
+  itemNumber,
   buildDefendantItems,
   cleanDefendantIds,
 } = require('../helpers/informationRequest')
@@ -24,6 +25,13 @@ async function getInformationRequestNotes(reviewId) {
   })
 }
 
+function groupNotesByMaterial(notes) {
+  return _.chain(notes)
+    .groupBy((note) => note.caseReviewDocument.document.id)
+    .map((notes) => ({ material: notes[0].caseReviewDocument.document, notes }))
+    .value()
+}
+
 module.exports = (router) => {
   // ─── Step 0 — do you want to request information? ───────────────────────────
 
@@ -36,6 +44,7 @@ module.exports = (router) => {
       _case,
       informationRequest: { wantsInformationRequest: review.wantsInformationRequest },
       notes,
+      materialGroups: groupNotesByMaterial(notes),
     })
   })
 
@@ -91,7 +100,7 @@ module.exports = (router) => {
     })
     res.render('cases/review/information-request/item', {
       _case,
-      itemNumber: ordinal(itemCount + 1),
+      itemNumber: itemNumber(itemCount + 1),
       itemCategoryItems: ITEM_CATEGORY_RADIO_ITEMS,
       defendantItems: buildDefendantItems(_case.defendants),
     })
@@ -154,7 +163,7 @@ module.exports = (router) => {
       _case,
       item,
       itemId,
-      itemNumber: ordinal(itemIndex + 1),
+      itemNumber: itemNumber(itemIndex + 1),
       itemCategoryItems: ITEM_CATEGORY_RADIO_ITEMS,
       defendantItems: buildDefendantItems(_case.defendants),
       selectedDefendantIds: item.defendants,

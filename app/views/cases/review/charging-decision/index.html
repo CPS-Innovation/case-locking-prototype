@@ -1,7 +1,7 @@
 {% extends "_layouts/main.html" %}
 
 {% set navId = 'cases' %}
-{% set pageName = "Charge " + chargeNumber + " of " + totalCharges %}
+{% set pageName = charge.description %}
 
 {% block beforeContent %}
   {{
@@ -15,14 +15,14 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds-from-desktop">
-      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <span class="govuk-caption-l">{{ _case.reference }} - charging decision</span>
       <h1 class="govuk-heading-l">{{ pageName }}</h1>
 
       {% if showDefendantName %}
         <p class="govuk-body">{{ charge.defendant.firstName }} {{ charge.defendant.lastName }}</p>
       {% endif %}
 
-      <h2 class="govuk-heading-m">{{ charge.description }}</h2>
+      <h2 class="govuk-heading-m govuk-!-margin-bottom-1">Elements</h2>
       {{ govukSummaryList({ rows: elementRows }) }}
 
       <form method="post">
@@ -36,7 +36,7 @@
             value: selectedDecision,
             fieldset: {
               legend: {
-                text: "Decision",
+                text: "Charging decision",
                 isPageHeading: false,
                 classes: "govuk-fieldset__legend--m"
               }

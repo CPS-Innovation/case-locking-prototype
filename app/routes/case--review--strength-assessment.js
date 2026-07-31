@@ -99,11 +99,16 @@ module.exports = (router) => {
       return { ...annotation, elements, elementGroups: groupElementsByCharge(elements) }
     })
 
+    const materialGroups = _.chain(annotations)
+      .groupBy(annotation => annotation.caseReviewDocument.document.id)
+      .map(annotations => ({ material: annotations[0].caseReviewDocument.document, annotations }))
+      .value()
+
     res.render('cases/review/strength-assessment/index', {
       _case,
       element,
       charge: element.charge,
-      annotations,
+      materialGroups,
       showDefendantName: eligibleDefendants.length > 1,
       isFirstElement: elementIndex === 0,
       from: req.query.from,

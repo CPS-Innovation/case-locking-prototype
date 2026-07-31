@@ -1,4 +1,4 @@
-{% from "_includes/annotation-element-groups.njk" import annotationElementGroups %}
+{% from "_includes/annotation-element-groups.njk" import annotationElementList %}
 {% from "_includes/annotation-card-body.njk" import annotationCardBody %}
 
 {% if annotations.length %}
@@ -16,15 +16,17 @@
           class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
         >
           <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
-          <p class="govuk-!-margin-bottom-0">
-            <a
-              href="/cases/{{ _case.id }}/review/documents/{{ annotation.caseReviewDocument.documentId }}#annotation-{{ annotation.id }}"
-              class="govuk-link govuk-link--no-visited-state"
-            >
-              Change
-              <span class="govuk-visually-hidden">{{ typeLabel | lower }} annotation</span>
-            </a>
-          </p>
+          {% if annotationCardsShowChange != false %}
+            <p class="govuk-!-margin-bottom-0">
+              <a
+                href="/cases/{{ _case.id }}/review/documents/{{ annotation.caseReviewDocument.documentId }}#annotation-{{ annotation.id }}"
+                class="govuk-link govuk-link--no-visited-state"
+              >
+                Change
+                <span class="govuk-visually-hidden">{{ typeLabel | lower }} annotation</span>
+              </a>
+            </p>
+          {% endif %}
         </div>
         <div class="app-review-annotation-card__body">
           {{
@@ -37,7 +39,7 @@
             })
           }}
 
-          {{ annotationElementGroups(annotation.elementGroups) }}
+          {{ annotationElementList(annotation.elementGroups) }}
         </div>
       </div>
     {% endfor %}

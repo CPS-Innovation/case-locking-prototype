@@ -9,22 +9,24 @@
 {% block content %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <span class="govuk-caption-l">{{ _case.reference }} - information request</span>
-      <h1 class="govuk-heading-l">Items requested</h1>
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">Information request items</h1>
 
       {% for item in items %}
-        {{ appPageHeader({
-          classes: 'govuk-!-margin-bottom-1 govuk-!-margin-top-7',
-          heading: {
-            level: 2,
-            text: item.description,
-            classes: 'govuk-heading-m'
-          },
-          items: [{
-            text: 'Delete item',
-            href: '/cases/' + _case.id + '/review/information-request/items/' + item.id + '/delete'
-          }]
-        }) }}
+        {{
+          appPageHeader({
+            classes: 'govuk-!-margin-bottom-1 govuk-!-margin-top-7',
+            heading: {
+              level: 2,
+              text: item.description,
+              classes: 'govuk-heading-m'
+            },
+            items: [{
+              text: 'Delete item',
+              href: '/cases/' + _case.id + '/review/information-request/items/' + item.id + '/delete'
+            }]
+          })
+        }}
 
         {{
           govukSummaryList({
@@ -55,19 +57,21 @@
       {% endfor %}
 
       <form method="post">
-        {{ govukRadios({
-          name: "addAnother",
-          fieldset: {
-            legend: {
-              text: "Do you want to add another item?",
-              classes: "govuk-fieldset__legend--m"
-            }
-          },
-          items: [
-            { value: "yes", text: "Yes" },
-            { value: "no", text: "No" }
-          ]
-        }) }}
+        {{
+          govukRadios({
+            name: "addAnother",
+            fieldset: {
+              legend: {
+                text: "Do you want to add another item?",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: [
+              { value: "yes", text: "Yes" },
+              { value: "no", text: "No" }
+            ]
+          })
+        }}
 
         {{ govukButton({ text: "Continue" }) }}
       </form>

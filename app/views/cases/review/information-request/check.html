@@ -29,28 +29,21 @@
                   { href: "/cases/" + _case.id + "/review/information-request", text: "Change", visuallyHiddenText: "whether you want to request information" }
                 ]
               }
-            }
+            },
+            {
+              key: { text: "Title" },
+              value: { text: informationRequest.description or "—" },
+              actions: {
+                items: [
+                  { href: "/cases/" + _case.id + "/review/information-request/description", text: "Change", visuallyHiddenText: "title" }
+                ]
+              }
+            } if informationRequest.wantsInformationRequest == "yes"
           ]
         })
       }}
 
       {% if informationRequest.wantsInformationRequest == "yes" %}
-        {{
-          govukSummaryList({
-            rows: [
-              {
-                key: { text: "Title" },
-                value: { text: informationRequest.description or "—" },
-                actions: {
-                  items: [
-                    { href: "/cases/" + _case.id + "/review/information-request/description", text: "Change", visuallyHiddenText: "title" }
-                  ]
-                }
-              }
-            ]
-          })
-        }}
-
         {% for item in informationRequest.items %}
           <h2 class="govuk-heading-m">Item {{ loop.index }}</h2>
           {{

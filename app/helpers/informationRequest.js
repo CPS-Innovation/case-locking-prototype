@@ -9,9 +9,8 @@ const ITEM_CATEGORIES = [
   'Other',
 ]
 
-const ORDINALS = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten']
-function ordinal(n) {
-  return ORDINALS[n - 1] || String(n)
+function itemNumber(n) {
+  return String(n)
 }
 
 function buildDefendantItems(defendants) {
@@ -89,7 +88,7 @@ async function createInformationRequestFromSession(prisma, caseId, sessionData, 
 
 module.exports = {
   ITEM_CATEGORIES,
-  ordinal,
+  itemNumber,
   buildDefendantItems,
   buildDate,
   formatSessionDate,
