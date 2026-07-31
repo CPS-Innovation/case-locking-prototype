@@ -5,7 +5,7 @@
     <p class="govuk-!-margin-bottom-0">{{ params.item.documentName }}</p>
     <p class="govuk-!-margin-bottom-0">
       <a
-        href="/cases/{{ params.caseId }}/review/documents/{{ params.item.documentId }}#annotation-{{ params.item.id }}"
+        href="/cases/{{ params.caseId }}/documents/{{ params.item.documentId }}#annotation-{{ params.item.id }}"
         class="govuk-link govuk-link--no-visited-state"
       >
         Change
@@ -32,7 +32,7 @@
     }}
 
     {% if params.item.reasoning %}
-      <p class="app-annotation-media__label">Lawyers’ comment</p>
+      <p class="app-annotation-media__label">Lawyer’s comment</p>
       <p class="govuk-hint govuk-!-margin-bottom-1">{{ params.item.reasoning }}</p>
     {% endif %}
   </div>

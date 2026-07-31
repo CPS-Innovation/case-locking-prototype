@@ -6,8 +6,6 @@
       data-case-id="{{ caseId }}"
       data-document-id="{{ documentId }}"
     >
-      <audio id="document-audio" class="app-document__audio" src="{{ audioUrl }}" controls></audio>
-
       {% if isReviewMode %}
         <div class="app-audio-annotation-actions govuk-button-group govuk-!-margin-bottom-0">
           {{
@@ -48,6 +46,8 @@
           }}
         </div>
       {% endif %}
+
+      <audio id="document-audio" class="app-document__audio" src="{{ audioUrl }}" controls></audio>
     </div>
   </div>
 </div>

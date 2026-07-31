@@ -6,8 +6,6 @@
       data-case-id="{{ caseId }}"
       data-document-id="{{ documentId }}"
     >
-      <video id="document-video" class="app-document__video" src="{{ videoUrl }}" controls></video>
-
       {% if isReviewMode %}
         <div class="app-video-annotation-actions govuk-button-group govuk-!-margin-bottom-0">
           {{
@@ -48,6 +46,8 @@
           }}
         </div>
       {% endif %}
+
+      <video id="document-video" class="app-document__video" src="{{ videoUrl }}" controls></video>
     </div>
   </div>
 </div>

@@ -5,12 +5,30 @@
 {% set mainClasses = "govuk-!-padding-bottom-0" %}
 
 {% block beforeContent %}
-  {{
-    govukBackLink({
-      text: 'Back',
-      href: '/cases/' + caseId + '/documents' if isMaterialsView else '/cases/' + caseId + '/review'
-    })
-  }}
+  {% if isMaterialsView %}
+    {{ govukBreadcrumbs({
+      items: [
+        {
+          text: _case.reference,
+          href: '/cases/' + caseId
+        },
+        {
+          text: 'Material',
+          href: '/cases/' + caseId + '/documents'
+        },
+        {
+          text: document.name
+        }
+      ]
+    }) }}
+  {% else %}
+    {{
+      govukBackLink({
+        text: 'Back',
+        href: '/cases/' + caseId + '/review'
+      })
+    }}
+  {% endif %}
 {% endblock %}
 
 {% block content %}

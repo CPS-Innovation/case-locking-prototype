@@ -243,7 +243,7 @@ module.exports = router => {
       ? await prisma.caseReviewAnnotation.findMany({
           where: { caseReviewDocumentId: docReview.id },
           orderBy: { createdAt: 'asc' },
-          include: { elements: { include: { element: true } } }
+          include: { elements: { include: { element: { include: { charge: true } } } } }
         })
       : []
 

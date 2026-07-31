@@ -6,10 +6,6 @@
       data-case-id="{{ caseId }}"
       data-document-id="{{ documentId }}"
     >
-      {% for url in photoUrls %}
-        <img src="{{ url }}" alt="{{ document.name }}{% if photoUrls.length > 1 %} (image {{ loop.index }} of {{ photoUrls.length }}){% endif %}" class="app-document__photo" />
-      {% endfor %}
-
       {% if isReviewMode %}
         <div class="app-photo-annotation-actions govuk-button-group govuk-!-margin-bottom-0">
           {{
@@ -50,6 +46,10 @@
           }}
         </div>
       {% endif %}
+
+      {% for url in photoUrls %}
+        <img src="{{ url }}" alt="{{ document.name }}{% if photoUrls.length > 1 %} (image {{ loop.index }} of {{ photoUrls.length }}){% endif %}" class="app-document__photo" />
+      {% endfor %}
     </div>
   </div>
 </div>

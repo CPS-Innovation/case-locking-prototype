@@ -37,8 +37,7 @@
 
       <div class="govuk-button-group">
         {% if defendant.status == 'Not charged' and defendant.needsReview %}
-          {{ govukButton({ text: 'Make charging decision', href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/make-charging-decision' }) }}
-          {{ govukButton({ text: 'Request more information', classes: 'govuk-button--secondary', href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/request-more-information' }) }}
+          {{ govukButton({ text: 'Review case', href: '/cases/' + _case.id + '/review' }) }}
         {% endif %}
       </div>
 
