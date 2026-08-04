@@ -5,14 +5,23 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const checkSignedIn = require('./middleware/checkSignedIn')
 const setLocals = require('./middleware/setLocals')
+const blockDuringReset = require('./middleware/blockDuringReset')
 
+// Route handlers here don't consistently catch errors, so one bad request
+// (e.g. a stale case ID after a /clear-data reset) can otherwise crash the
+// whole process and take down every other user on a shared instance.
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled rejection:', err)
+})
+
+router.use(blockDuringReset)
 router.use(flash())
 router.use(setLocals)
 
 require('./routes/home')(router)
 require('./routes/static')(router)
 require('./routes/account')(router)
-require('./routes/clear-data')(router)
+require('./routes/clear-data')(router, prisma)
 require('./routes/case-links')(router)
 
 router.use(checkSignedIn)
@@ -42,11 +51,17 @@ router.get('/cases/:caseId*', async (req, res, next) => {
   const caseId = parseInt(req.params.caseId)
   const userId = req.session.data.user.id
   if (caseId && userId) {
-    await prisma.recentCase.upsert({
-      where: { userId_caseId: { userId, caseId } },
-      update: { openedAt: new Date() },
-      create: { userId, caseId },
-    })
+    try {
+      await prisma.recentCase.upsert({
+        where: { userId_caseId: { userId, caseId } },
+        update: { openedAt: new Date() },
+        create: { userId, caseId },
+      })
+    } catch (err) {
+      // Best-effort tracking - don't fail the request if the case briefly
+      // doesn't exist (e.g. mid /clear-data reset)
+      console.error('Error recording recent case view:', err.message)
+    }
   }
   next()
 })
@@ -57,20 +72,25 @@ const hearingStatusOrder = ['Hearing preparation needed', 'Hearing pending', 'He
 router.use('/cases/:caseId*', async (req, res, next) => {
   const caseId = parseInt(req.params.caseId)
   if (!isNaN(caseId)) {
-    const hearings = await prisma.hearing.findMany({
-      where: { caseId },
-      select: { id: true, type: true, status: true }
-    })
-    res.locals.firstHearings = hearings.filter(h => h.type === 'First hearing')
-    const uniqueActive = [...new Set(hearings.map(h => h.status).filter(s => s && s !== 'Hearing complete'))]
-    res.locals.hearingStatuses = hearingStatusOrder.filter(s => uniqueActive.includes(s))
-    res.locals.caseHearings = hearings
-    res.locals.activeHearings = hearings.filter(h => h.status !== 'Hearing complete')
+    try {
+      const hearings = await prisma.hearing.findMany({
+        where: { caseId },
+        select: { id: true, type: true, status: true }
+      })
+      res.locals.firstHearings = hearings.filter(h => h.type === 'First hearing')
+      const uniqueActive = [...new Set(hearings.map(h => h.status).filter(s => s && s !== 'Hearing complete'))]
+      res.locals.hearingStatuses = hearingStatusOrder.filter(s => uniqueActive.includes(s))
+      res.locals.caseHearings = hearings
+      res.locals.activeHearings = hearings.filter(h => h.status !== 'Hearing complete')
 
-    const pendingInformationRequestItemCount = await prisma.informationRequestItem.count({
-      where: { informationRequest: { caseId }, receivedDate: null, cancelledDate: null }
-    })
-    res.locals.hasPendingInformationRequest = pendingInformationRequestItemCount > 0
+      const pendingInformationRequestItemCount = await prisma.informationRequestItem.count({
+        where: { informationRequest: { caseId }, receivedDate: null, cancelledDate: null }
+      })
+      res.locals.hasPendingInformationRequest = pendingInformationRequestItemCount > 0
+    } catch (err) {
+      // Don't fail the request if the case briefly doesn't exist (e.g. mid /clear-data reset)
+      console.error('Error loading hearing data for identity bar:', err.message)
+    }
   }
   next()
 })
