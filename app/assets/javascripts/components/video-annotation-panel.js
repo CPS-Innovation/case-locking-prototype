@@ -1,5 +1,6 @@
 App.VideoAnnotationPanel = function(params) {
   this.container = params.container
+  this.redirectUrl = params.redirectUrl
 
   // Audio reviews share this panel - <audio> and <video> expose the same
   // pause/currentTime API, so timestamp annotation works identically.
@@ -48,6 +49,7 @@ App.VideoAnnotationPanel.prototype.setupEvents = function() {
 // Pausing captures the moment the user wants to annotate, and gives them a
 // still frame to refer to while writing the note.
 App.VideoAnnotationPanel.prototype.onTypeBtnClick = function(e) {
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   var video = this.video[0]
   video.pause()
 
@@ -266,6 +268,7 @@ App.VideoAnnotationPanel.prototype.hideAnnotationEditForm = function(card) {
 
 App.VideoAnnotationPanel.prototype.onChangeAnnotationClick = function(e) {
   e.preventDefault()
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   var link = $(e.currentTarget)
   var card = link.closest('.js-annotation-card')
   var editForm = card.find('.js-annotation-edit-form')

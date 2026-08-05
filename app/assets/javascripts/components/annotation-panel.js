@@ -1,5 +1,6 @@
 App.AnnotationPanel = function(params) {
   this.container = params.container
+  this.redirectUrl = params.redirectUrl
 
   this.popup                         = $('.js-annotation-popup')
   this.annotateBtns                  = $('.js-annotate-btn')
@@ -314,10 +315,6 @@ App.AnnotationPanel.prototype.applyRedactionUpdate = function(data) {
 // ── Event handlers ────────────────────────────────────────────────────────────
 
 App.AnnotationPanel.prototype.onDocumentMouseup = function(e) {
-  // In the materials view the popup's own buttons are neutralised by
-  // ActionsDisabledGuard, but that still let the menu appear and be
-  // reached — better to not show it at all when selecting is a dead end.
-  if (this.popup.hasClass('app-actions-disabled')) return
   var self = this
   setTimeout(function() {
     if ($(e.target).closest('.app-redaction').length) return
@@ -333,6 +330,7 @@ App.AnnotationPanel.prototype.onDocumentMouseup = function(e) {
 }
 
 App.AnnotationPanel.prototype.onAnnotateBtnClick = function(e) {
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   if (!this.currentRange) return
 
   this.pendingAnnotationType = $(e.currentTarget).data('type')
@@ -442,6 +440,7 @@ App.AnnotationPanel.prototype.getParagraphSelections = function(range) {
 }
 
 App.AnnotationPanel.prototype.onRedactClick = function() {
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   if (!this.currentRange) return
 
   var selections = this.getParagraphSelections(this.currentRange)
@@ -471,6 +470,7 @@ App.AnnotationPanel.prototype.onDocumentClick = function(e) {
 }
 
 App.AnnotationPanel.prototype.onDeleteRedactionClick = function() {
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   if (!this.pendingDeleteRedactionGroupId) return
   this.redactionDeleteForm.attr('action', '/cases/' + this.caseId + '/review/documents/' + this.documentId + '/redactions/' + this.pendingDeleteRedactionGroupId + '/delete')
   this.submitRedactionForm(this.redactionDeleteForm, this.deleteRedactionBtn)
@@ -573,6 +573,7 @@ App.AnnotationPanel.prototype.hideAnnotationEditForm = function(card) {
 
 App.AnnotationPanel.prototype.onChangeAnnotationClick = function(e) {
   e.preventDefault()
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   var link = $(e.currentTarget)
   var card = link.closest('.js-annotation-card')
   var editForm = card.find('.js-annotation-edit-form')

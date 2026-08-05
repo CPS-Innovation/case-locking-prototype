@@ -1,5 +1,6 @@
 App.PhotoAnnotationPanel = function(params) {
   this.container = params.container
+  this.redirectUrl = params.redirectUrl
 
   this.typeBtns           = $('.js-photo-annotate-btn')
   this.newAnnotationCards = $('.js-new-annotation-card')
@@ -42,6 +43,7 @@ App.PhotoAnnotationPanel.prototype.setupEvents = function() {
 }
 
 App.PhotoAnnotationPanel.prototype.onTypeBtnClick = function(e) {
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   this.pendingAnnotationType = $(e.currentTarget).data('type')
 
   this.newAnnotationCards.prop('hidden', true)
@@ -250,6 +252,7 @@ App.PhotoAnnotationPanel.prototype.hideAnnotationEditForm = function(card) {
 
 App.PhotoAnnotationPanel.prototype.onChangeAnnotationClick = function(e) {
   e.preventDefault()
+  if (this.redirectUrl) { window.location.href = this.redirectUrl; return }
   var link = $(e.currentTarget)
   var card = link.closest('.js-annotation-card')
   var editForm = card.find('.js-annotation-edit-form')

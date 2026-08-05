@@ -66,12 +66,15 @@
 {% block scripts %}
   {{ super() }}
   <script>
-    new App.PhotoAnnotationPanel({ container: $('#document-content') })
+    new App.PhotoAnnotationPanel({
+      container: $('#document-content'),
+      redirectUrl: {% if isMaterialsView %}'/cases/{{ caseId }}/documents/{{ documentId }}/review-required'{% else %}null{% endif %}
+    })
     $('.js-annotation-note').each(function () {
       new App.TextExpander({ container: $(this), maxLength: 50 })
     })
     {% if isMaterialsView %}
-      new App.ActionsDisabledGuard()
+      new App.ActionsDisabledGuard({ redirectUrl: '/cases/{{ caseId }}/documents/{{ documentId }}/review-required' })
     {% endif %}
   </script>
 {% endblock %}

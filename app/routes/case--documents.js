@@ -289,4 +289,16 @@ module.exports = router => {
     })
   })
 
+  router.get('/cases/:caseId/documents/:documentId/review-required', async (req, res) => {
+    const caseId = parseInt(req.params.caseId)
+    const documentId = parseInt(req.params.documentId)
+
+    const [_case, document] = await Promise.all([
+      prisma.case.findUnique({ where: { id: caseId } }),
+      prisma.document.findUnique({ where: { id: documentId } })
+    ])
+
+    res.render('cases/documents/review-required/index', { _case, document, caseId, documentId })
+  })
+
 }
