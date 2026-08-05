@@ -16,6 +16,7 @@
   {% set documentId = null %}
   {% set offences = pageOffences %}
   {% set documentBasePath = offenceBasePath %}
+  {% set accordionToggleAll = true %}
   {% include "_includes/review/offences.njk" %}
   {% include "_includes/review/toolbar.njk" %}
 
@@ -46,7 +47,7 @@
           {% endif %}
           <h3 class="govuk-heading-s app-document-section__heading app-accordion-heading">
             <a
-              class="app-accordion-heading__link js-accordion-toggle"
+              class="app-accordion-heading__link govuk-link--no-visited-state js-accordion-toggle"
               href="#document-{{ documentId }}"
               aria-expanded="false"
               aria-controls="accordion-content-{{ documentId }}"
@@ -129,7 +130,7 @@
 {% block scripts %}
   {{ super() }}
   <script>
-    new App.Accordion({ container: $('.js-accordion') })
+    new App.Accordion({ container: $('.js-accordion'), toggleAllButton: $('.js-accordion-toggle-all') })
 
     // Each document's panel is constructed independently — one throwing must
     // never stop the rest of the material from being set up.
