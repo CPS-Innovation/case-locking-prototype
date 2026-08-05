@@ -330,9 +330,35 @@ async function createPalmerWitnesses(prisma, caseId) {
   }
 }
 
+// Temporarily withheld from every Palmer-material case (Marcus Webb, Aisha
+// Coleman, Declan Murphy, Daniel Palmer, Ryan Doyle, Pamela Cage) while the
+// material is under review - delete this list and the filter in
+// createPalmerDocuments below to reintroduce it.
+const TEMP_EXCLUDED_DOCUMENT_NAMES = [
+  'Callum REES statement 4 18-12-2024',
+  'Callum REES statement 5 29-01-2025',
+  'Callum REES statement 1 16-03-2025',
+  'SH-03 999 Recording MG0 MME',
+  'WK-02 - Photo injury to face showing black eyes',
+  'WK-03 - Photo injury to right side of face',
+  'WK-04 Injury to Eye - BURKE, Nicola',
+  'MG6C - Item 02 Occurrence detail report 7215489036',
+  'MG6C - Item 03 Custody record - full print 410975628341',
+  'MG6C - Item 04 QK14 Mobile device quality control form - Exhibit MP02',
+  'MG6C - Item 05 XRY kiosk examiner’s notes - Exhibit MP02',
+  'MG6C - Unused material',
+  'MG6D - Sensitive material schedule',
+  'MG10 - Witness non-availability',
+  'MG12 - Exhibit list'
+]
+
 async function createPalmerDocuments(prisma, caseId) {
+  const documents = palmerMaterial.documents.filter(
+    document => !TEMP_EXCLUDED_DOCUMENT_NAMES.includes(document.name)
+  )
+
   await prisma.document.createMany({
-    data: palmerMaterial.documents.map(({ images, ...document }) => ({ ...document, caseId }))
+    data: documents.map(({ images, ...document }) => ({ ...document, caseId }))
   })
 }
 
@@ -425,6 +451,7 @@ module.exports = {
   PALMER_ELEMENT_REASONINGS,
   PALMER_REVIEW_SUMMARY,
   PALMER_ANNOTATIONS,
+  TEMP_EXCLUDED_DOCUMENT_NAMES,
   findOrCreatePalmerVictim,
   findPalmerPoliceUnit,
   createPalmerDefendant,
