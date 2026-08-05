@@ -3,7 +3,6 @@ const prisma = new PrismaClient()
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
 const {
   findOrCreateReview,
-  findOrCreateDocumentReview,
   resetReviewCompletionAfterOffenceChange,
   groupDocumentsByCategory,
 } = require('../helpers/caseReview')
@@ -37,30 +36,79 @@ module.exports = (router) => {
 
     const { offences: pageOffences } = buildOffencesWithAnnotations(defendantCharges, [], caseId, null)
 
-    const documentViews = await Promise.all(documents.map(async document => {
-      const docReview = await findOrCreateDocumentReview(prisma, review.id, document.id)
+    // Batched find-or-create: one query for what already exists, one createMany
+    // for what's missing, one re-fetch to get the created rows' real ids —
+    // instead of a findFirst-then-maybe-create per document (which serializes
+    // badly on SQLite once a case has more than a handful of documents).
+    const documentIds = documents.map(document => document.id)
 
-      if (docReview.status === 'not_started') {
-        await prisma.caseReviewDocument.update({
-          where: { id: docReview.id },
-          data: { status: 'in_progress' }
+    const existingDocReviews = await prisma.caseReviewDocument.findMany({
+      where: { caseReviewId: review.id, documentId: { in: documentIds } }
+    })
+    const existingDocumentIds = new Set(existingDocReviews.map(docReview => docReview.documentId))
+    const missingDocumentIds = documentIds.filter(documentId => !existingDocumentIds.has(documentId))
+
+    if (missingDocumentIds.length) {
+      await prisma.caseReviewDocument.createMany({
+        data: missingDocumentIds.map(documentId => ({ caseReviewId: review.id, documentId }))
+      })
+    }
+
+    const docReviews = missingDocumentIds.length
+      ? await prisma.caseReviewDocument.findMany({
+          where: { caseReviewId: review.id, documentId: { in: documentIds } }
         })
-      }
+      : existingDocReviews
+
+    const notStartedIds = docReviews.filter(docReview => docReview.status === 'not_started').map(docReview => docReview.id)
+    if (notStartedIds.length) {
+      await prisma.caseReviewDocument.updateMany({
+        where: { id: { in: notStartedIds } },
+        data: { status: 'in_progress' }
+      })
+    }
+
+    const docReviewByDocumentId = new Map(docReviews.map(docReview => [docReview.documentId, docReview]))
+    const docReviewIds = docReviews.map(docReview => docReview.id)
+
+    const isTextDocument = document => !['MP4', 'MP3', 'JPG', 'PNG'].includes(document.type)
+    const textDocReviewIds = documents.filter(isTextDocument).map(document => docReviewByDocumentId.get(document.id).id)
+
+    const [allAnnotations, allRedactions] = await Promise.all([
+      prisma.caseReviewAnnotation.findMany({
+        where: { caseReviewDocumentId: { in: docReviewIds } },
+        orderBy: { createdAt: 'asc' },
+        include: { elements: { include: { element: { include: { charge: true } } } } }
+      }),
+      prisma.caseReviewRedaction.findMany({
+        where: { caseReviewDocumentId: { in: textDocReviewIds } },
+        orderBy: { createdAt: 'asc' }
+      })
+    ])
+
+    const annotationsByDocReviewId = new Map()
+    allAnnotations.forEach(annotation => {
+      const list = annotationsByDocReviewId.get(annotation.caseReviewDocumentId) || []
+      list.push(annotation)
+      annotationsByDocReviewId.set(annotation.caseReviewDocumentId, list)
+    })
+
+    const redactionsByDocReviewId = new Map()
+    allRedactions.forEach(redaction => {
+      const list = redactionsByDocReviewId.get(redaction.caseReviewDocumentId) || []
+      list.push(redaction)
+      redactionsByDocReviewId.set(redaction.caseReviewDocumentId, list)
+    })
+
+    const documentViews = documents.map(document => {
+      const docReview = docReviewByDocumentId.get(document.id)
 
       const isVideo = document.type === 'MP4'
       const isAudio = document.type === 'MP3'
       const isPhoto = document.type === 'JPG' || document.type === 'PNG'
 
-      const annotations = await prisma.caseReviewAnnotation.findMany({
-        where: { caseReviewDocumentId: docReview.id },
-        orderBy: { createdAt: 'asc' },
-        include: { elements: { include: { element: { include: { charge: true } } } } }
-      })
-
-      const redactions = (isVideo || isAudio || isPhoto) ? [] : await prisma.caseReviewRedaction.findMany({
-        where: { caseReviewDocumentId: docReview.id },
-        orderBy: { createdAt: 'asc' }
-      })
+      const annotations = annotationsByDocReviewId.get(docReview.id) || []
+      const redactions = (isVideo || isAudio || isPhoto) ? [] : (redactionsByDocReviewId.get(docReview.id) || [])
 
       const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, annotations, caseId, document.id)
 
@@ -89,7 +137,7 @@ module.exports = (router) => {
         documentBasePath: `/cases/${caseId}/review-variant-2/material/documents/${document.id}`,
         isReviewMode: true,
       }
-    }))
+    })
 
     const documentViewsById = {}
     documentViews.forEach(view => { documentViewsById[view.documentId] = view })

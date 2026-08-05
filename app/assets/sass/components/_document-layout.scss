@@ -1,11 +1,21 @@
+// Padding here is deliberately just enough for the heading — each section is
+// now an accordion that's collapsed by default, so this padding applies to
+// every collapsed section. The extra room needed around an expanded
+// document lives on .js-accordion-content instead, so it only ever adds
+// height when there's actually content showing.
 .app-document-area {
   background-color: var(--govuk-template-background-colour, #f4f8fb);
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   padding-left: calc(50vw - 50%);
   padding-right: calc(50vw - 50%);
-  padding-top: govuk-spacing(6);
-  padding-bottom: govuk-spacing(8);
+  padding-top: govuk-spacing(2);
+  padding-bottom: govuk-spacing(2);
+}
+
+.js-accordion-content {
+  padding-top: govuk-spacing(2);
+  padding-bottom: govuk-spacing(6);
 }
 
 // Stacked document sections on the combined "Material" review page - each
@@ -13,6 +23,54 @@
 .app-document-section__heading {
   max-width: 680px;
   margin-bottom: govuk-spacing(4);
+}
+
+// Custom accordion for stacked document sections — deliberately not the
+// GOV.UK Design System accordion component/styles. The plus/minus icon is a
+// temporary placeholder built from CSS bars rather than an image asset.
+.app-accordion-heading__link {
+  display: flex;
+  align-items: center;
+  gap: govuk-spacing(2);
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.app-accordion-heading__icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    background-color: govuk-colour("black");
+    transform: translate(-50%, -50%);
+  }
+
+  // Horizontal bar of the plus/minus
+  &::before {
+    width: 16px;
+    height: 2px;
+  }
+
+  // Vertical bar of the plus, hidden to leave the minus when expanded
+  &::after {
+    width: 2px;
+    height: 16px;
+  }
+}
+
+.app-accordion-heading__link[aria-expanded="true"] .app-accordion-heading__icon::after {
+  display: none;
 }
 
 .app-document-layout {
