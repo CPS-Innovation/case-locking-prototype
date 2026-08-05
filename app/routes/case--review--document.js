@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const crypto = require('crypto')
 const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
@@ -637,15 +638,20 @@ module.exports = (router) => {
     const review = await findOrCreateReview(prisma, caseId, userId)
     const docReview = await findOrCreateDocumentReview(prisma, review.id, documentId)
 
-    const { selectedText, paragraphIndex, occurrenceIndex } = req.body
-    if (selectedText) {
-      await prisma.caseReviewRedaction.create({
-        data: {
+    // A selection spanning multiple paragraphs arrives as one entry per
+    // paragraph it touches (see getParagraphSelections in annotation-panel.js),
+    // since a redaction row can only reference a single paragraph.
+    const selections = JSON.parse(req.body.redactions || '[]')
+    if (selections.length) {
+      const groupId = crypto.randomUUID()
+      await prisma.caseReviewRedaction.createMany({
+        data: selections.map(selection => ({
           caseReviewDocumentId: docReview.id,
-          selectedText,
-          paragraphIndex: parseInt(paragraphIndex) || 0,
-          occurrenceIndex: parseInt(occurrenceIndex) || 0
-        }
+          groupId,
+          selectedText: selection.selectedText,
+          paragraphIndex: parseInt(selection.paragraphIndex) || 0,
+          occurrenceIndex: parseInt(selection.occurrenceIndex) || 0
+        }))
       })
     }
 
@@ -653,33 +659,40 @@ module.exports = (router) => {
   })
 
   // Delete redaction — confirm GET
-  router.get('/cases/:caseId/review/documents/:documentId/redactions/:redactionId/delete', async (req, res) => {
+  // A single user selection can span multiple paragraphs, which is stored as
+  // several CaseReviewRedaction rows sharing one groupId (see getParagraphSelections
+  // in annotation-panel.js) — the whole group is treated as one redaction here.
+  router.get('/cases/:caseId/review/documents/:documentId/redactions/:groupId/delete', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const redactionId = parseInt(req.params.redactionId)
+    const groupId = req.params.groupId
 
-    const [_case, document, redaction] = await Promise.all([
+    const [_case, document, redactionRows] = await Promise.all([
       prisma.case.findUnique({ where: { id: caseId } }),
       prisma.document.findUnique({ where: { id: documentId } }),
-      prisma.caseReviewRedaction.findUnique({ where: { id: redactionId } })
+      prisma.caseReviewRedaction.findMany({
+        where: { groupId },
+        orderBy: [{ paragraphIndex: 'asc' }, { occurrenceIndex: 'asc' }]
+      })
     ])
 
+    const redaction = { selectedText: redactionRows.map(row => row.selectedText).join(' ') }
     const from = req.query.from || 'document'
 
     res.render('cases/review/redactions/delete', { _case, document, redaction, caseId, documentId, from })
   })
 
   // Delete redaction
-  router.post('/cases/:caseId/review/documents/:documentId/redactions/:redactionId/delete', async (req, res) => {
+  router.post('/cases/:caseId/review/documents/:documentId/redactions/:groupId/delete', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const redactionId = parseInt(req.params.redactionId)
+    const groupId = req.params.groupId
     const userId = req.session.data.user.id
 
     const review = await findOrCreateReview(prisma, caseId, userId)
     const docReview = await findOrCreateDocumentReview(prisma, review.id, documentId)
 
-    await prisma.caseReviewRedaction.delete({ where: { id: redactionId } })
+    await prisma.caseReviewRedaction.deleteMany({ where: { groupId, caseReviewDocumentId: docReview.id } })
 
     // The document page deletes redactions inline via AJAX (jQuery sets
     // X-Requested-With, so req.xhr is true there); the check page instead

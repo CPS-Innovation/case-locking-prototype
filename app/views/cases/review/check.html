@@ -102,7 +102,7 @@
                         </a>
                       {% elif item.kind == 'redaction' %}
                         <a
-                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/redactions/{{ item.id }}/delete?from=check"
+                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/redactions/{{ item.groupId }}/delete?from=check"
                           class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
                         >
                           Delete

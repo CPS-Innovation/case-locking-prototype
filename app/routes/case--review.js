@@ -127,6 +127,19 @@ module.exports = (router) => {
     const docReviewMap = {}
     documentReviews.forEach(dr => {
       const photoUrl = getDocumentPhotoUrls(documentsById[dr.documentId])[0]
+
+      // A selection spanning multiple paragraphs is stored as several
+      // CaseReviewRedaction rows sharing one groupId (see getParagraphSelections
+      // in annotation-panel.js) — collapse each group back into a single card.
+      const redactionsByGroup = {}
+      dr.redactions.forEach(redaction => {
+        (redactionsByGroup[redaction.groupId] = redactionsByGroup[redaction.groupId] || []).push(redaction)
+      })
+      const redactionItems = Object.values(redactionsByGroup).map(rows => {
+        const sorted = [...rows].sort((a, b) => (a.paragraphIndex - b.paragraphIndex) || (a.occurrenceIndex - b.occurrenceIndex))
+        return { ...sorted[0], kind: 'redaction', selectedText: sorted.map(row => row.selectedText).join(' ') }
+      })
+
       const items = [
         ...dr.annotations.map(annotation => ({
           ...annotation,
@@ -134,7 +147,7 @@ module.exports = (router) => {
           elementGroups: groupElementsByCharge(annotation.elements),
           photoUrl
         })),
-        ...dr.redactions.map(redaction => ({ ...redaction, kind: 'redaction' }))
+        ...redactionItems
       ].sort(byDocumentPosition)
       docReviewMap[dr.documentId] = {
         ...dr,

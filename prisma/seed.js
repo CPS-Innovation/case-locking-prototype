@@ -182,33 +182,33 @@ async function main() {
     'Titan', 'Wakanda', 'Vibranium', 'Nexus', 'Kree'
   ]);
 
-  step("Rachael's colleagues");
-  const rachaelColleagues = await seedRachaelColleagues(prisma);
-  done(rachaelColleagues.prosecutors.length + rachaelColleagues.paralegalOfficers.length);
+  // step("Rachael's colleagues");
+  // const rachaelColleagues = await seedRachaelColleagues(prisma);
+  // done(rachaelColleagues.prosecutors.length + rachaelColleagues.paralegalOfficers.length);
 
   step("Simon's colleagues");
   const simonColleagues = await seedSimonColleagues(prisma);
   done(simonColleagues.prosecutors.length + simonColleagues.paralegalOfficers.length);
 
-  step("Kirsty's colleagues");
-  const kirstyColleagues = await seedKirstyColleagues(prisma);
-  done(kirstyColleagues.prosecutors.length + kirstyColleagues.paralegalOfficers.length);
+  // step("Kirsty's colleagues");
+  // const kirstyColleagues = await seedKirstyColleagues(prisma);
+  // done(kirstyColleagues.prosecutors.length + kirstyColleagues.paralegalOfficers.length);
 
-  step("Tony's colleagues");
-  const tonyColleagues = await seedTonyColleagues(prisma);
-  done(tonyColleagues.prosecutors.length + tonyColleagues.paralegalOfficers.length);
+  // step("Tony's colleagues");
+  // const tonyColleagues = await seedTonyColleagues(prisma);
+  // done(tonyColleagues.prosecutors.length + tonyColleagues.paralegalOfficers.length);
 
-  step("Bruce's colleagues");
-  const bruceColleagues = await seedBruceColleagues(prisma);
-  done(bruceColleagues.prosecutors.length + bruceColleagues.paralegalOfficers.length);
+  // step("Bruce's colleagues");
+  // const bruceColleagues = await seedBruceColleagues(prisma);
+  // done(bruceColleagues.prosecutors.length + bruceColleagues.paralegalOfficers.length);
 
-  step("Rachael Harvey's cases");
-  const rachaelCasesCount = await seedRachaelCases(
-    prisma,
-    { defenceLawyers, victims, policeUnits, availableOperationNames, colleagues: rachaelColleagues },
-    { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
-  );
-  done(rachaelCasesCount);
+  // step("Rachael Harvey's cases");
+  // const rachaelCasesCount = await seedRachaelCases(
+  //   prisma,
+  //   { defenceLawyers, victims, policeUnits, availableOperationNames, colleagues: rachaelColleagues },
+  //   { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
+  // );
+  // done(rachaelCasesCount);
 
   step("Simon Whatley's cases");
   const simonCasesCount = await seedSimonCases(
@@ -218,29 +218,29 @@ async function main() {
   );
   done(simonCasesCount);
 
-  step("Kirsty Priest's cases");
-  const kirstyCasesCount = await seedKirstyCases(
-    prisma,
-    { defenceLawyers, victims, policeUnits, availableOperationNames, colleagues: kirstyColleagues },
-    { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
-  );
-  done(kirstyCasesCount);
+  // step("Kirsty Priest's cases");
+  // const kirstyCasesCount = await seedKirstyCases(
+  //   prisma,
+  //   { defenceLawyers, victims, policeUnits, availableOperationNames, colleagues: kirstyColleagues },
+  //   { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
+  // );
+  // done(kirstyCasesCount);
 
-  step("Tony Stark's cases");
-  const tonyCasesCount = await seedTonyCases(
-    prisma,
-    { defenceLawyers, victims, policeUnits, availableOperationNames, users, colleagues: tonyColleagues },
-    { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
-  );
-  done(tonyCasesCount);
+  // step("Tony Stark's cases");
+  // const tonyCasesCount = await seedTonyCases(
+  //   prisma,
+  //   { defenceLawyers, victims, policeUnits, availableOperationNames, users, colleagues: tonyColleagues },
+  //   { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
+  // );
+  // done(tonyCasesCount);
 
-  step("Bruce Banner's cases");
-  const bruceCasesCount = await seedBruceCases(
-    prisma,
-    { defenceLawyers, victims, policeUnits, colleagues: bruceColleagues },
-    { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
-  );
-  done(bruceCasesCount);
+  // step("Bruce Banner's cases");
+  // const bruceCasesCount = await seedBruceCases(
+  //   prisma,
+  //   { defenceLawyers, victims, policeUnits, colleagues: bruceColleagues },
+  //   { charges, firstNames, lastNames, pleas, types, complexities, taskNames, ukCities, documentNames, documentTypes }
+  // );
+  // done(bruceCasesCount);
 
   // ─────────────────────────────────────────────────────────────────
   // Tasks

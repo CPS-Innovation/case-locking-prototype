@@ -31,7 +31,7 @@ function applyHighlights(sections, annotations) {
 
 function applyRedactions(sections, redactions) {
   return applyMarks(sections, redactions, redaction =>
-    `<mark class="app-redaction" data-redaction-id="${redaction.id}">${redaction.selectedText}</mark>`
+    `<mark class="app-redaction" data-redaction-group-id="${redaction.groupId}">${redaction.selectedText}</mark>`
   )
 }
 

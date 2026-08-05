@@ -15,9 +15,7 @@ App.AnnotationPanel = function(params) {
   this.annotationParagraphIndexInput  = $('#annotation-paragraph-index')
   this.annotationOccurrenceIndexInput = $('#annotation-occurrence-index')
   this.redactionForm                  = $('#redaction-form')
-  this.redactionSelectedTextInput     = $('#redaction-selected-text')
-  this.redactionParagraphIndexInput   = $('#redaction-paragraph-index')
-  this.redactionOccurrenceIndexInput  = $('#redaction-occurrence-index')
+  this.redactionSelectionsInput       = $('#redaction-selections')
   this.redactionDeleteForm           = $('#redaction-delete-form')
   this.toggleRedactionsBtn           = $('.js-toggle-redactions')
   this.selectionActions              = $('.js-selection-actions')
@@ -31,7 +29,7 @@ App.AnnotationPanel = function(params) {
   this.selectionMark               = null
   this.redactionsHidden            = false
   this.pendingAnnotationType       = null
-  this.pendingDeleteRedactionId    = null
+  this.pendingDeleteRedactionGroupId = null
   this.formSelectionDocumentY      = null
 
   // Cards can grow after opening (e.g. GOV.UK conditional checkbox reveals
@@ -77,7 +75,7 @@ App.AnnotationPanel.prototype.setupEvents = function() {
 
 App.AnnotationPanel.prototype.hidePopup = function() {
   this.popup.prop('hidden', true).attr('aria-hidden', 'true')
-  this.pendingDeleteRedactionId = null
+  this.pendingDeleteRedactionGroupId = null
   window.getSelection().removeAllRanges()
 }
 
@@ -102,8 +100,8 @@ App.AnnotationPanel.prototype.showSelectionPopup = function(rect) {
   this.showPopup(rect)
 }
 
-App.AnnotationPanel.prototype.showRedactionPopup = function(rect, redactionId) {
-  this.pendingDeleteRedactionId = redactionId
+App.AnnotationPanel.prototype.showRedactionPopup = function(rect, groupId) {
+  this.pendingDeleteRedactionGroupId = groupId
   this.selectionActions.prop('hidden', true)
   this.redactionActions.prop('hidden', false)
   this.showPopup(rect)
@@ -402,16 +400,54 @@ App.AnnotationPanel.prototype.getParagraphOccurrence = function(range, selectedT
   return { paragraphIndex: paragraphIndex, occurrenceIndex: occurrenceIndex }
 }
 
+// A redaction is stored per paragraph (selectedText + paragraphIndex +
+// occurrenceIndex), so a selection spanning multiple paragraphs is split
+// into one entry per paragraph it touches, each with the text and occurrence
+// count scoped to that paragraph alone.
+App.AnnotationPanel.prototype.getParagraphSelections = function(range) {
+  var allParas = this.container.find('.app-document__paragraph').toArray()
+  var touchedParas = allParas.filter(function(paraEl) {
+    return range.intersectsNode(paraEl)
+  })
+
+  return touchedParas.map(function(paraEl) {
+    var paraRange = document.createRange()
+    paraRange.selectNodeContents(paraEl)
+    if (paraEl.contains(range.startContainer)) paraRange.setStart(range.startContainer, range.startOffset)
+    if (paraEl.contains(range.endContainer)) paraRange.setEnd(range.endContainer, range.endOffset)
+
+    var selectedText = paraRange.toString().trim()
+    if (!selectedText) return null
+
+    var beforeRange = document.createRange()
+    beforeRange.setStart(paraEl, 0)
+    beforeRange.setEnd(paraRange.startContainer, paraRange.startOffset)
+    var selectionStart = beforeRange.toString().length
+    var paraText = paraEl.textContent
+    var occurrenceIndex = 0
+    var searchFrom = 0
+    while (true) {
+      var idx = paraText.indexOf(selectedText, searchFrom)
+      if (idx === -1 || idx >= selectionStart) break
+      occurrenceIndex++
+      searchFrom = idx + 1
+    }
+
+    return {
+      paragraphIndex: allParas.indexOf(paraEl),
+      occurrenceIndex: occurrenceIndex,
+      selectedText: selectedText
+    }
+  }).filter(function(selection) { return selection !== null })
+}
+
 App.AnnotationPanel.prototype.onRedactClick = function() {
   if (!this.currentRange) return
-  var selectedText = this.currentRange.toString().trim()
-  if (!selectedText) return
 
-  var position = this.getParagraphOccurrence(this.currentRange, selectedText)
+  var selections = this.getParagraphSelections(this.currentRange)
+  if (!selections.length) return
 
-  this.redactionSelectedTextInput.val(selectedText)
-  this.redactionParagraphIndexInput.val(position.paragraphIndex)
-  this.redactionOccurrenceIndexInput.val(position.occurrenceIndex)
+  this.redactionSelectionsInput.val(JSON.stringify(selections))
   window.getSelection().removeAllRanges()
   this.submitRedactionForm(this.redactionForm, this.redactBtn)
 }
@@ -428,15 +464,15 @@ App.AnnotationPanel.prototype.onDocumentClick = function(e) {
   if (this.redactionsHidden) return
   var redaction = $(e.target).closest('.app-redaction')
   if (!redaction.length) return
-  var redactionId = redaction.data('redaction-id')
-  if (!redactionId) return
+  var groupId = redaction.data('redaction-group-id')
+  if (!groupId) return
   window.getSelection().removeAllRanges()
-  this.showRedactionPopup(redaction[0].getBoundingClientRect(), redactionId)
+  this.showRedactionPopup(redaction[0].getBoundingClientRect(), groupId)
 }
 
 App.AnnotationPanel.prototype.onDeleteRedactionClick = function() {
-  if (!this.pendingDeleteRedactionId) return
-  this.redactionDeleteForm.attr('action', '/cases/' + this.caseId + '/review/documents/' + this.documentId + '/redactions/' + this.pendingDeleteRedactionId + '/delete')
+  if (!this.pendingDeleteRedactionGroupId) return
+  this.redactionDeleteForm.attr('action', '/cases/' + this.caseId + '/review/documents/' + this.documentId + '/redactions/' + this.pendingDeleteRedactionGroupId + '/delete')
   this.submitRedactionForm(this.redactionDeleteForm, this.deleteRedactionBtn)
 }
 
