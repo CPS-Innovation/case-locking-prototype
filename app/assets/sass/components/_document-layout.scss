@@ -8,6 +8,13 @@
   padding-bottom: govuk-spacing(8);
 }
 
+// Stacked document sections on the combined "Material" review page - each
+// one's heading sits in its own grey area, above its document.
+.app-document-section__heading {
+  max-width: 680px;
+  margin-bottom: govuk-spacing(4);
+}
+
 .app-document-layout {
   display: flex;
   align-items: flex-start;

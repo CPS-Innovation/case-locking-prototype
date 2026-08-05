@@ -59,7 +59,7 @@
       </form>
       <p class="govuk-body">
         <a
-          href="{{ '/cases/' + _case.id + '/review/documents/' + document.id if from == 'document' else ('/cases/' + _case.id + '/review/check' if from == 'check' else ('/cases/' + _case.id if from == 'overview' else '/cases/' + _case.id + '/review')) }}"
+          href="{{ cancelHref or ('/cases/' + _case.id + '/review/documents/' + document.id if from == 'document' else ('/cases/' + _case.id + '/review/check' if from == 'check' else ('/cases/' + _case.id if from == 'overview' else '/cases/' + _case.id + '/review'))) }}"
           class="govuk-link"
         >
           Cancel

@@ -1,13 +1,13 @@
 <form
   method="post"
   action="/cases/{{ caseId }}/review/documents/{{ documentId }}/annotations/add"
-  id="annotation-form"
+  class="js-annotation-form"
   hidden
 >
-  <input type="hidden" name="selectedText" id="annotation-selected-text" />
-  <input type="hidden" name="type" id="annotation-type-hidden" />
-  <input type="hidden" name="note" id="annotation-note-hidden" />
-  <input type="hidden" name="timestampSeconds" id="annotation-timestamp-hidden" />
-  <input type="hidden" name="paragraphIndex" id="annotation-paragraph-index" />
-  <input type="hidden" name="occurrenceIndex" id="annotation-occurrence-index" />
+  <input type="hidden" name="selectedText" class="js-annotation-selected-text" />
+  <input type="hidden" name="type" class="js-annotation-type-hidden" />
+  <input type="hidden" name="note" class="js-annotation-note-hidden" />
+  <input type="hidden" name="timestampSeconds" class="js-annotation-timestamp-hidden" />
+  <input type="hidden" name="paragraphIndex" class="js-annotation-paragraph-index" />
+  <input type="hidden" name="occurrenceIndex" class="js-annotation-occurrence-index" />
 </form>

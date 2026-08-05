@@ -1,0 +1,139 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Material" %}
+{% set mainClasses = "govuk-!-padding-bottom-0" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: '/cases/' + _case.id + '/review-variant-2' }) }}
+{% endblock %}
+
+{% block content %}
+  <span class="govuk-caption-l">{{ _case.reference }}</span>
+  <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+  {% set caseId = _case.id %}
+  {% set documentId = null %}
+  {% set offences = pageOffences %}
+  {% set documentBasePath = offenceBasePath %}
+  {% include "_includes/review/offences.njk" %}
+  {% include "_includes/review/toolbar.njk" %}
+
+  {% for group in documentGroups %}
+    {% for doc in group.documents %}
+      {% set caseId = doc.caseId %}
+      {% set documentId = doc.documentId %}
+      {% set document = doc.document %}
+      {% set offences = doc.offences %}
+      {% set hasElements = doc.hasElements %}
+      {% set sections = doc.sections %}
+      {% set annotations = doc.annotations %}
+      {% set redactions = doc.redactions %}
+      {% set isVideo = doc.isVideo %}
+      {% set isAudio = doc.isAudio %}
+      {% set isPhoto = doc.isPhoto %}
+      {% set videoUrl = doc.videoUrl %}
+      {% set audioUrl = doc.audioUrl %}
+      {% set photoUrls = doc.photoUrls %}
+      {% set isReviewMode = doc.isReviewMode %}
+      {% set documentBasePath = doc.documentBasePath %}
+
+      <div class="app-document-section" id="document-{{ documentId }}" data-document-id="{{ documentId }}">
+        <div class="app-document-area">
+          {% if loop.first and group.heading %}
+            <h2 class="govuk-heading-m app-document-section__heading">{{ group.heading }}</h2>
+          {% endif %}
+          <h3 class="govuk-heading-s app-document-section__heading">{{ document.name }}</h3>
+          <div class="app-document-layout">
+            {% if isVideo %}
+              {% include "cases/documents/_document-pane-video.html" %}
+            {% elif isAudio %}
+              {% include "cases/documents/_document-pane-audio.html" %}
+            {% elif isPhoto %}
+              {% include "cases/documents/_document-pane-photo.html" %}
+            {% else %}
+              {% include "cases/documents/_document-pane-text.html" %}
+            {% endif %}
+            {% include "_includes/review/annotation-sidebar.njk" %}
+          </div>
+        </div>
+
+        {% if not isVideo and not isAudio and not isPhoto %}
+          <div class="app-annotation-popup js-annotation-popup" hidden aria-hidden="true">
+            <div class="app-annotation-popup__actions js-selection-actions">
+              <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="note">
+                Note
+              </button>
+              {% if offences.length %}
+                <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="evidence">
+                  Evidence
+                </button>
+                <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="issue">
+                  Anticipated issue
+                </button>
+              {% endif %}
+              <button type="button" class="app-annotation-popup__btn js-redact-btn">Redact</button>
+              <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="information-request">
+                Information request note
+              </button>
+            </div>
+            <div class="app-annotation-popup__actions js-redaction-actions" hidden>
+              <button type="button" class="app-annotation-popup__btn js-delete-redaction-btn">
+                Unredact
+              </button>
+            </div>
+          </div>
+        {% endif %}
+
+        {% include "_includes/review/annotation-form.njk" %}
+
+        {% if not isVideo and not isAudio and not isPhoto %}
+          <form
+            method="post"
+            action="/cases/{{ caseId }}/review/documents/{{ documentId }}/redactions/add"
+            class="js-redaction-form"
+            hidden
+          >
+            <input type="hidden" name="redactions" class="js-redaction-selections" />
+          </form>
+
+          <form method="post" class="js-redaction-delete-form" hidden></form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endfor %}
+{% endblock %}
+
+{% block pageScripts %}
+  {{ super() }}
+  <script src="/public/javascripts/components/annotation-panel.js"></script>
+  <script src="/public/javascripts/components/video-annotation-panel.js"></script>
+  <script src="/public/javascripts/components/photo-annotation-panel.js"></script>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    // Each document's panel is constructed independently — one throwing must
+    // never stop the rest of the material from being set up.
+    {% for group in documentGroups %}
+      {% for doc in group.documents %}
+        try {
+          {% if doc.isVideo or doc.isAudio %}
+            new App.VideoAnnotationPanel({ container: $('#document-content-{{ doc.documentId }}') })
+          {% elif doc.isPhoto %}
+            new App.PhotoAnnotationPanel({ container: $('#document-content-{{ doc.documentId }}') })
+          {% else %}
+            new App.AnnotationPanel({ container: $('#document-content-{{ doc.documentId }}') })
+          {% endif %}
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('Failed to set up annotation panel for document {{ doc.documentId }}', err)
+        }
+      {% endfor %}
+    {% endfor %}
+    $('.js-annotation-note').each(function () {
+      new App.TextExpander({ container: $(this), maxLength: 50 })
+    })
+  </script>
+{% endblock %}

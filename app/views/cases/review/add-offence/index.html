@@ -2,12 +2,13 @@
 
 {% set navId = 'cases' %}
 {% set pageName = "Offence" %}
+{% set documentBasePath = documentBasePath or ('/cases/' + caseId + '/review/documents/' + documentId) %}
 
 {% block beforeContent %}
   {{
     govukBackLink({
       text: 'Back',
-      href: '/cases/' + caseId + '/review/documents/' + documentId
+      href: documentBasePath
     })
   }}
 {% endblock %}

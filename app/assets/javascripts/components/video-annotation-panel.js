@@ -1,18 +1,22 @@
+// Scoped to this document's own `.app-document-section` wrapper (see
+// annotation-panel.js) rather than looked up page-wide, so several documents
+// can each carry an independent instance of this panel on the same page.
 App.VideoAnnotationPanel = function(params) {
   this.container = params.container
+  this.section = this.container.closest('.app-document-section')
 
   // Audio reviews share this panel - <audio> and <video> expose the same
   // pause/currentTime API, so timestamp annotation works identically.
-  this.video              = $('#document-video, #document-audio')
-  this.typeBtns           = $('.js-video-annotate-btn, .js-audio-annotate-btn')
-  this.newAnnotationCards = $('.js-new-annotation-card')
+  this.video              = this.container.find('video, audio')
+  this.typeBtns           = this.section.find('.js-video-annotate-btn, .js-audio-annotate-btn')
+  this.newAnnotationCards = this.section.find('.js-new-annotation-card')
   this.activeAnnotationCard = null
-  this.sidebarInner         = $('.js-sidebar-inner')
-  this.sidebarEmpty         = $('.js-sidebar-empty')
-  this.annotationForm       = $('#annotation-form')
-  this.typeHiddenInput      = $('#annotation-type-hidden')
-  this.noteHiddenInput      = $('#annotation-note-hidden')
-  this.timestampHiddenInput = $('#annotation-timestamp-hidden')
+  this.sidebarInner         = this.section.find('.js-sidebar-inner')
+  this.sidebarEmpty         = this.section.find('.js-sidebar-empty')
+  this.annotationForm       = this.section.find('.js-annotation-form')
+  this.typeHiddenInput      = this.section.find('.js-annotation-type-hidden')
+  this.noteHiddenInput      = this.section.find('.js-annotation-note-hidden')
+  this.timestampHiddenInput = this.section.find('.js-annotation-timestamp-hidden')
 
   this.caseId     = this.container.data('case-id')
   this.documentId = this.container.data('document-id')
@@ -29,8 +33,12 @@ App.VideoAnnotationPanel = function(params) {
 // initialising here as well as after every AJAX swap in applyAnnotationUpdate
 // — relying solely on the page-wide initAll() at load time would only cover
 // the sidebar's first render, not any HTML swapped in afterwards.
+// See the identical comment in annotation-panel.js — guarded because
+// GOVUKFrontend (an ES module) may not have loaded yet when this runs on
+// first page load, and on the combined "Material" page an uncaught throw
+// here would abort construction of every panel after this one.
 App.VideoAnnotationPanel.prototype.initGovukComponents = function() {
-  window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
+  if (window.GOVUKFrontend) window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
 }
 
 App.VideoAnnotationPanel.prototype.setupEvents = function() {
@@ -135,7 +143,7 @@ App.VideoAnnotationPanel.prototype.onSaveEvidenceClick = function(e) {
 App.VideoAnnotationPanel.prototype.onCancelClick = function(e) {
   e.preventDefault()
   this.hideNewCard()
-  if (!$('.js-annotation-card').length) {
+  if (!this.section.find('.js-annotation-card').length) {
     this.sidebarEmpty.prop('hidden', false)
   }
 }
@@ -157,9 +165,9 @@ App.VideoAnnotationPanel.prototype.onCardClick = function(e) {
 // in from elsewhere, e.g. #annotation-id); pass false when the user is
 // already looking at what they just saved and shouldn't be scrolled at all.
 App.VideoAnnotationPanel.prototype.activateCard = function(annotationId, scrollIntoView) {
-  $('.js-annotation-card').removeClass('is-selected app-annotation-card--active')
+  this.section.find('.js-annotation-card').removeClass('is-selected app-annotation-card--active')
   if (!annotationId) return
-  var card = $('.js-annotation-card[data-annotation-id="' + annotationId + '"]')
+  var card = this.section.find('.js-annotation-card[data-annotation-id="' + annotationId + '"]')
   card.addClass('is-selected app-annotation-card--active')
   if (scrollIntoView !== false && card[0]) card[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
@@ -174,8 +182,8 @@ App.VideoAnnotationPanel.prototype.handleUrlHash = function() {
 // HTML that gets replaced wholesale after every save, so cached references to
 // them go stale unless re-queried after each swap.
 App.VideoAnnotationPanel.prototype.refreshSidebarCache = function() {
-  this.newAnnotationCards = $('.js-new-annotation-card')
-  this.sidebarEmpty = $('.js-sidebar-empty')
+  this.newAnnotationCards = this.section.find('.js-new-annotation-card')
+  this.sidebarEmpty = this.section.find('.js-sidebar-empty')
 }
 
 App.VideoAnnotationPanel.prototype.setButtonLoading = function(button, isLoading) {
@@ -226,7 +234,7 @@ App.VideoAnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
   // Focus moves to the saved card so it never falls back to <body>, which is
   // what happened when this used to be a full page reload — preventScroll
   // stops the browser's default focus-triggered scroll from moving the page.
-  var target = $('.js-annotation-card[data-annotation-id="' + data.annotationId + '"] .js-change-annotation').first()
+  var target = this.section.find('.js-annotation-card[data-annotation-id="' + data.annotationId + '"] .js-change-annotation').first()
   if (target.length) target.attr('tabindex', '-1').focus({ preventScroll: true })
 }
 
@@ -245,7 +253,7 @@ App.VideoAnnotationPanel.prototype.onDocumentMousedown = function(e) {
 // form open with no way to see it's still unsaved.
 App.VideoAnnotationPanel.prototype.deselectAllCards = function() {
   var self = this
-  $('.js-annotation-card').removeClass('is-selected app-annotation-card--active').each(function() {
+  this.section.find('.js-annotation-card').removeClass('is-selected app-annotation-card--active').each(function() {
     self.hideAnnotationEditForm($(this))
   })
 }

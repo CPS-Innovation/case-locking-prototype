@@ -106,10 +106,10 @@ function buildOffencesWithAnnotations(defendantCharges, annotations, caseId, doc
     charge,
     elementRows: buildElementRows(charge.elements || [], caseId, documentId),
     elementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
-      idPrefix: `reasoning-charge-${charge.id}`
+      idPrefix: `reasoning-doc-${documentId}-charge-${charge.id}`
     }),
     issueElementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
-      idPrefix: `issue-reasoning-charge-${charge.id}`
+      idPrefix: `issue-reasoning-doc-${documentId}-charge-${charge.id}`
     })
   }))
 

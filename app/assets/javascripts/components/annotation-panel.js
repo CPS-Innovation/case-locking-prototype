@@ -1,26 +1,32 @@
+// A document's controls (popup, sidebar, forms) are scoped to its own
+// `.app-document-section` wrapper rather than looked up page-wide, so
+// several documents can each carry a fully working, independent instance of
+// this panel on the same page (the review "Material" task shows every
+// document at once instead of one per page).
 App.AnnotationPanel = function(params) {
   this.container = params.container
+  this.section = this.container.closest('.app-document-section')
 
-  this.popup                         = $('.js-annotation-popup')
-  this.annotateBtns                  = $('.js-annotate-btn')
-  this.redactBtn                     = $('.js-redact-btn')
-  this.newAnnotationCards            = $('.js-new-annotation-card')
+  this.popup                         = this.section.find('.js-annotation-popup')
+  this.annotateBtns                  = this.section.find('.js-annotate-btn')
+  this.redactBtn                     = this.section.find('.js-redact-btn')
+  this.newAnnotationCards            = this.section.find('.js-new-annotation-card')
   this.activeAnnotationCard          = null
-  this.sidebarInner                  = $('.js-sidebar-inner')
-  this.sidebarEmpty                  = $('.js-sidebar-empty')
-  this.annotationForm                = $('#annotation-form')
-  this.selectedTextInput             = $('#annotation-selected-text')
-  this.typeHiddenInput               = $('#annotation-type-hidden')
-  this.noteHiddenInput               = $('#annotation-note-hidden')
-  this.annotationParagraphIndexInput  = $('#annotation-paragraph-index')
-  this.annotationOccurrenceIndexInput = $('#annotation-occurrence-index')
-  this.redactionForm                  = $('#redaction-form')
-  this.redactionSelectionsInput       = $('#redaction-selections')
-  this.redactionDeleteForm           = $('#redaction-delete-form')
-  this.toggleRedactionsBtn           = $('.js-toggle-redactions')
-  this.selectionActions              = $('.js-selection-actions')
-  this.redactionActions              = $('.js-redaction-actions')
-  this.deleteRedactionBtn            = $('.js-delete-redaction-btn')
+  this.sidebarInner                  = this.section.find('.js-sidebar-inner')
+  this.sidebarEmpty                  = this.section.find('.js-sidebar-empty')
+  this.annotationForm                = this.section.find('.js-annotation-form')
+  this.selectedTextInput             = this.section.find('.js-annotation-selected-text')
+  this.typeHiddenInput               = this.section.find('.js-annotation-type-hidden')
+  this.noteHiddenInput               = this.section.find('.js-annotation-note-hidden')
+  this.annotationParagraphIndexInput  = this.section.find('.js-annotation-paragraph-index')
+  this.annotationOccurrenceIndexInput = this.section.find('.js-annotation-occurrence-index')
+  this.redactionForm                  = this.section.find('.js-redaction-form')
+  this.redactionSelectionsInput       = this.section.find('.js-redaction-selections')
+  this.redactionDeleteForm           = this.section.find('.js-redaction-delete-form')
+  this.toggleRedactionsBtn           = this.section.find('.js-toggle-redactions')
+  this.selectionActions              = this.section.find('.js-selection-actions')
+  this.redactionActions              = this.section.find('.js-redaction-actions')
+  this.deleteRedactionBtn            = this.section.find('.js-delete-redaction-btn')
 
   this.caseId     = this.container.data('case-id')
   this.documentId = this.container.data('document-id')
@@ -48,8 +54,17 @@ App.AnnotationPanel = function(params) {
 // initialising here as well as after every AJAX swap in applyAnnotationUpdate
 // — relying solely on the page-wide initAll() at load time would only cover
 // the sidebar's first render, not any HTML swapped in afterwards.
+// GOVUKFrontend is loaded as an ES module, which always runs after classic
+// inline scripts — so on first page load it may not exist yet here. That's
+// fine: the page-wide initAll() GOV.UK Frontend itself runs once the module
+// loads covers the initial render regardless; this call only matters for
+// re-initialising components in HTML swapped in later via AJAX, by which
+// point GOVUKFrontend is guaranteed to be loaded. Guarding it here (rather
+// than letting it throw) matters more now than it used to: with several
+// panels constructed in one script block on the combined "Material" page, an
+// uncaught throw here would abort every panel construction after this one.
 App.AnnotationPanel.prototype.initGovukComponents = function() {
-  window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
+  if (window.GOVUKFrontend) window.GOVUKFrontend.initAll({ scope: this.sidebarInner[0] })
 }
 
 App.AnnotationPanel.prototype.setupEvents = function() {
@@ -146,10 +161,10 @@ App.AnnotationPanel.prototype.positionAllCards = function() {
   var items = []
   var self = this
 
-  $('.js-annotation-card[data-annotation-id]').each(function() {
+  this.section.find('.js-annotation-card[data-annotation-id]').each(function() {
     var card = this
     var id = $(card).data('annotation-id')
-    var mark = document.querySelector('.app-annotation[data-annotation-id="' + id + '"]')
+    var mark = self.section[0].querySelector('.app-annotation[data-annotation-id="' + id + '"]')
     var markCentreY = 0
     if (mark) {
       var markRect = mark.getBoundingClientRect()
@@ -195,17 +210,17 @@ App.AnnotationPanel.prototype.repositionCards = function() {
 // in from elsewhere, e.g. #annotation-id); pass false when the user is
 // already looking at what they just saved and shouldn't be scrolled at all.
 App.AnnotationPanel.prototype.activateMark = function(annotationId, scrollIntoView) {
-  $('.app-annotation').removeClass('app-annotation--active')
+  this.section.find('.app-annotation').removeClass('app-annotation--active')
   if (!annotationId) return
-  var mark = $('.app-annotation[data-annotation-id="' + annotationId + '"]')
+  var mark = this.section.find('.app-annotation[data-annotation-id="' + annotationId + '"]')
   mark.addClass('app-annotation--active')
   if (scrollIntoView !== false && mark[0]) mark[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
 }
 
 App.AnnotationPanel.prototype.activateCard = function(annotationId, scrollIntoView) {
-  $('.js-annotation-card').removeClass('is-selected app-annotation-card--active')
+  this.section.find('.js-annotation-card').removeClass('is-selected app-annotation-card--active')
   if (annotationId) {
-    var card = $('.js-annotation-card[data-annotation-id="' + annotationId + '"]')
+    var card = this.section.find('.js-annotation-card[data-annotation-id="' + annotationId + '"]')
     card.addClass('is-selected app-annotation-card--active')
     if (scrollIntoView !== false && card[0]) card[0].scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }
@@ -223,8 +238,8 @@ App.AnnotationPanel.prototype.handleUrlHash = function() {
 // HTML that gets replaced wholesale after every save, so cached references to
 // them go stale unless re-queried after each swap.
 App.AnnotationPanel.prototype.refreshSidebarCache = function() {
-  this.newAnnotationCards = $('.js-new-annotation-card')
-  this.sidebarEmpty = $('.js-sidebar-empty')
+  this.newAnnotationCards = this.section.find('.js-new-annotation-card')
+  this.sidebarEmpty = this.section.find('.js-sidebar-empty')
 }
 
 App.AnnotationPanel.prototype.setButtonLoading = function(button, isLoading) {
@@ -280,13 +295,13 @@ App.AnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
   // Focus moves to the saved card so it never falls back to <body>, which is
   // what happened when this used to be a full page reload — preventScroll
   // stops the browser's default focus-triggered scroll from moving the page.
-  var target = $('.js-annotation-card[data-annotation-id="' + data.annotationId + '"] .js-change-annotation').first()
+  var target = this.section.find('.js-annotation-card[data-annotation-id="' + data.annotationId + '"] .js-change-annotation').first()
   if (target.length) target.attr('tabindex', '-1').focus({ preventScroll: true })
 }
 
 // Redacting/unredacting never navigates either — only the document body
 // changes (redactions aren't listed in the sidebar), swapped in place. The
-// popup lives outside #document-content, so it survives that swap and is
+// popup lives outside the document content container, so it survives that swap and is
 // closed explicitly once the update has been applied.
 App.AnnotationPanel.prototype.submitRedactionForm = function(form, button) {
   var self = this
@@ -534,7 +549,7 @@ App.AnnotationPanel.prototype.onSaveEvidenceClick = function(e) {
 App.AnnotationPanel.prototype.onCancelClick = function(e) {
   e.preventDefault()
   this.hideNewCard()
-  if (!$('.js-annotation-card').length) {
+  if (!this.section.find('.js-annotation-card').length) {
     this.sidebarEmpty.prop('hidden', false)
   }
 }
@@ -552,7 +567,7 @@ App.AnnotationPanel.prototype.onCardClick = function(e) {
 // form open with no way to see it's still unsaved.
 App.AnnotationPanel.prototype.deselectAllCards = function() {
   var self = this
-  $('.js-annotation-card').removeClass('is-selected app-annotation-card--active').each(function() {
+  this.section.find('.js-annotation-card').removeClass('is-selected app-annotation-card--active').each(function() {
     self.hideAnnotationEditForm($(this))
   })
 }

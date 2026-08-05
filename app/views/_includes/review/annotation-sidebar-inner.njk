@@ -15,7 +15,7 @@
             {{
               govukCheckboxes({
                 name: "elementsCheckbox",
-                idPrefix: "element-charge-" + offence.charge.id,
+                idPrefix: "element-doc-" + documentId + "-charge-" + offence.charge.id,
                 fieldset: {
                   legend: {
                     text: offence.charge.description,
@@ -69,7 +69,7 @@
             {{
               govukCheckboxes({
                 name: "elementsCheckbox",
-                idPrefix: "issue-element-charge-" + offence.charge.id,
+                idPrefix: "issue-element-doc-" + documentId + "-charge-" + offence.charge.id,
                 fieldset: {
                   legend: {
                     text: offence.charge.description,
@@ -229,13 +229,14 @@
 
         {% set isLinkable = (annotation.type == 'evidence' or annotation.type == 'issue' or annotation.type == 'note') and not annotation.elements.length and hasElements %}
         {% set editUrl = '/cases/' + caseId + '/review/documents/' + documentId + '/annotations/' + annotation.id + '/edit' %}
+        {% set documentBasePath = documentBasePath or ('/cases/' + caseId + '/review/documents/' + documentId) %}
 
         <div class="app-annotation-card__actions govuk-button-group govuk-!-margin-bottom-0">
           <a href="#" class="govuk-link js-change-annotation"{% if isLinkable %} data-edit-target="note"{% endif %}>
             Change
           </a>
           <a
-            href="/cases/{{ caseId }}/review/documents/{{ documentId }}/annotations/{{ annotation.id }}/delete?from=document"
+            href="{{ documentBasePath }}/annotations/{{ annotation.id }}/delete?from=document"
             class="govuk-link"
           >
             Delete

@@ -2,7 +2,7 @@
   <div class="app-document app-document--video">
     <div
       class="app-document__content"
-      id="document-content"
+      id="document-content-{{ documentId }}"
       data-case-id="{{ caseId }}"
       data-document-id="{{ documentId }}"
     >
@@ -47,7 +47,7 @@
         </div>
       {% endif %}
 
-      <video id="document-video" class="app-document__video" src="{{ videoUrl }}" controls></video>
+      <video id="document-video-{{ documentId }}" class="app-document__video" src="{{ videoUrl }}" controls></video>
     </div>
   </div>
 </div>

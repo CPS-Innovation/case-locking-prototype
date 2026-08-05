@@ -1,6 +1,8 @@
+{% set documentBasePath = documentBasePath or ('/cases/' + caseId + '/review/documents/' + documentId) %}
+
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full">
-    <p><a href="/cases/{{ caseId }}/review/documents/{{ documentId }}/add-offence?reset=1">Add offence</a></p>
+    <p><a href="{{ documentBasePath }}/add-offence?reset=1">Add offence</a></p>
 
     {% if offences.length %}
       <div class="app-list">
@@ -9,13 +11,13 @@
             <p class="govuk-body govuk-!-margin-bottom-0">{{ offence.charge.description }}</p>
             <div class="app-list__actions">
               <a
-                href="/cases/{{ caseId }}/review/documents/{{ documentId }}/change-offence?reset=1"
+                href="{{ documentBasePath }}/change-offence?reset=1"
                 class="govuk-link govuk-link--no-visited-state govuk-!-margin-right-3"
               >
                 Change
               </a>
               <a
-                href="/cases/{{ caseId }}/review/documents/{{ documentId }}/offences/{{ offence.charge.id }}/remove"
+                href="{{ documentBasePath }}/offences/{{ offence.charge.id }}/remove"
                 class="govuk-link govuk-link--no-visited-state"
               >
                 Remove

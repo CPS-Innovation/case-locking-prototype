@@ -8,29 +8,11 @@ const {
   buildDecisionsMap,
   shapeInformationRequest,
   shapeFirstHearing,
+  groupDocumentsByCategory,
 } = require('../helpers/caseReview')
 const { createInformationRequestFromSession } = require('../helpers/informationRequest')
 const { groupElementsByCharge } = require('../helpers/documentAnnotations')
 const { getDocumentPhotoUrls } = require('../helpers/documentContent')
-const categoryOrder = require('../data/document-categories')
-
-// Material with categories is grouped under category headings, in the order
-// a prosecutor would work through it. Uncategorised material renders as a
-// single flat list.
-function groupDocumentsByCategory(documents) {
-  const categorised = documents.filter(document => document.category)
-  const uncategorised = documents.filter(document => !document.category)
-
-  const groups = categoryOrder
-    .map(category => ({ heading: category, documents: categorised.filter(document => document.category === category) }))
-    .filter(group => group.documents.length)
-
-  if (uncategorised.length) {
-    groups.push({ heading: groups.length ? 'Other material' : 'Material', documents: uncategorised })
-  }
-
-  return groups
-}
 
 function parseHearingTime(time) {
   const match = String(time || '').trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i)

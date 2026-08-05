@@ -2,7 +2,7 @@
   <div class="app-document app-document--audio">
     <div
       class="app-document__content"
-      id="document-content"
+      id="document-content-{{ documentId }}"
       data-case-id="{{ caseId }}"
       data-document-id="{{ documentId }}"
     >
@@ -47,7 +47,7 @@
         </div>
       {% endif %}
 
-      <audio id="document-audio" class="app-document__audio" src="{{ audioUrl }}" controls></audio>
+      <audio id="document-audio-{{ documentId }}" class="app-document__audio" src="{{ audioUrl }}" controls></audio>
     </div>
   </div>
 </div>

@@ -1,9 +1,10 @@
 {% extends "_layouts/main.html" %}
 
 {% set pageName = "Confirm that you want to remove this offence" %}
+{% set documentBasePath = documentBasePath or ('/cases/' + caseId + '/review/documents/' + documentId) %}
 
 {% block beforeContent %}
-  {{ govukBackLink({ text: 'Back', href: '/cases/' + caseId + '/review/documents/' + documentId }) }}
+  {{ govukBackLink({ text: 'Back', href: documentBasePath }) }}
 {% endblock %}
 
 {% block content %}
@@ -27,7 +28,7 @@
 
       <form method="post">{{ govukButton({ text: "Remove offence" }) }}</form>
       <p class="govuk-body">
-        <a href="/cases/{{ caseId }}/review/documents/{{ documentId }}" class="govuk-link">
+        <a href="{{ documentBasePath }}" class="govuk-link">
           Cancel
         </a>
       </p>

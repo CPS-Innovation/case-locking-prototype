@@ -2,6 +2,25 @@ const statuses = require('../data/case-statuses')
 const { formatDefendantNames } = require('./informationRequest')
 const { groupElementsByCharge } = require('./documentAnnotations')
 const { getDocumentPhotoUrls } = require('./documentContent')
+const categoryOrder = require('../data/document-categories')
+
+// Material with categories is grouped under category headings, in the order
+// a prosecutor would work through it. Uncategorised material renders as a
+// single flat list.
+function groupDocumentsByCategory(documents) {
+  const categorised = documents.filter(document => document.category)
+  const uncategorised = documents.filter(document => !document.category)
+
+  const groups = categoryOrder
+    .map(category => ({ heading: category, documents: categorised.filter(document => document.category === category) }))
+    .filter(group => group.documents.length)
+
+  if (uncategorised.length) {
+    groups.push({ heading: groups.length ? 'Other material' : 'Material', documents: uncategorised })
+  }
+
+  return groups
+}
 
 // A case's review is shared - whoever opens it continues the same review
 // rather than getting their own private copy, so document status and
@@ -169,4 +188,5 @@ module.exports = {
   getEligibleCharges,
   getElementAnnotations,
   resetReviewCompletionAfterOffenceChange,
+  groupDocumentsByCategory,
 }

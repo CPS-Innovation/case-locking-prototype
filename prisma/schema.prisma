@@ -434,6 +434,7 @@ model CaseReview {
   caseId    Int
   userId    Int
   status    String               @default("in_progress")
+  materialStatus String          @default("not_started")
   summary   String?
   summaryComplete Boolean?
   chargingDecisionComplete Boolean?

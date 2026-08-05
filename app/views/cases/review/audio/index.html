@@ -45,14 +45,16 @@
     {% include "_includes/review/toolbar.njk" %}
   {% endif %}
 
-  <div class="app-document-area {{ 'app-actions-disabled' if isMaterialsView }}">
-    <div class="app-document-layout">
-      {% include "cases/documents/_document-pane-audio.html" %}
-      {% include "_includes/review/annotation-sidebar.njk" %}
+  <div class="app-document-section" data-document-id="{{ documentId }}">
+    <div class="app-document-area {{ 'app-actions-disabled' if isMaterialsView }}">
+      <div class="app-document-layout">
+        {% include "cases/documents/_document-pane-audio.html" %}
+        {% include "_includes/review/annotation-sidebar.njk" %}
+      </div>
     </div>
-  </div>
 
-  {% include "_includes/review/annotation-form.njk" %}
+    {% include "_includes/review/annotation-form.njk" %}
+  </div>
 {% endblock %}
 
 {% block pageScripts %}
@@ -66,7 +68,7 @@
 {% block scripts %}
   {{ super() }}
   <script>
-    new App.VideoAnnotationPanel({ container: $('#document-content') })
+    new App.VideoAnnotationPanel({ container: $('#document-content-{{ documentId }}') })
     $('.js-annotation-note').each(function () {
       new App.TextExpander({ container: $(this), maxLength: 50 })
     })
