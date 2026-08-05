@@ -287,19 +287,25 @@ App.AnnotationPanel.prototype.applyAnnotationUpdate = function(data) {
 }
 
 // Redacting/unredacting never navigates either — only the document body
-// changes (redactions aren't listed in the sidebar), swapped in place.
-App.AnnotationPanel.prototype.submitRedactionForm = function(form) {
+// changes (redactions aren't listed in the sidebar), swapped in place. The
+// popup lives outside #document-content, so it survives that swap and is
+// closed explicitly once the update has been applied.
+App.AnnotationPanel.prototype.submitRedactionForm = function(form, button) {
   var self = this
+  this.setButtonLoading(button, true)
   $.ajax({
     url: form.attr('action'),
     method: 'POST',
     data: form.serialize(),
     dataType: 'json'
   }).done(function(data) {
+    self.setButtonLoading(button, false)
     self.applyRedactionUpdate(data)
+    self.hidePopup()
   }).fail(function() {
     // eslint-disable-next-line no-console
     console.error('Failed to save redaction')
+    self.setButtonLoading(button, false)
   })
 }
 
@@ -407,8 +413,7 @@ App.AnnotationPanel.prototype.onRedactClick = function() {
   this.redactionParagraphIndexInput.val(position.paragraphIndex)
   this.redactionOccurrenceIndexInput.val(position.occurrenceIndex)
   window.getSelection().removeAllRanges()
-  this.hidePopup()
-  this.submitRedactionForm(this.redactionForm)
+  this.submitRedactionForm(this.redactionForm, this.redactBtn)
 }
 
 App.AnnotationPanel.prototype.onDocumentClick = function(e) {
@@ -432,8 +437,7 @@ App.AnnotationPanel.prototype.onDocumentClick = function(e) {
 App.AnnotationPanel.prototype.onDeleteRedactionClick = function() {
   if (!this.pendingDeleteRedactionId) return
   this.redactionDeleteForm.attr('action', '/cases/' + this.caseId + '/review/documents/' + this.documentId + '/redactions/' + this.pendingDeleteRedactionId + '/delete')
-  this.hidePopup()
-  this.submitRedactionForm(this.redactionDeleteForm)
+  this.submitRedactionForm(this.redactionDeleteForm, this.deleteRedactionBtn)
 }
 
 App.AnnotationPanel.prototype.onToggleRedactionsClick = function() {

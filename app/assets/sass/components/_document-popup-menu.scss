@@ -61,4 +61,13 @@
   &:hover {
     background-color: govuk-colour("light-grey");
   }
+
+  &[disabled] {
+    color: govuk-colour("mid-grey");
+    cursor: default;
+
+    &:hover {
+      background-color: transparent;
+    }
+  }
 }
