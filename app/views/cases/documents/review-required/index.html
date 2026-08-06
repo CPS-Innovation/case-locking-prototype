@@ -1,7 +1,7 @@
 {% extends "_layouts/main.html" %}
 
 {% set navId = 'cases' %}
-{% set pageName = "You must start a review to add evidence, anticipated issues or notes" %}
+{% set pageName = "You must start a review to add  notes, evidence or issues" %}
 
 {% block beforeContent %}
   {{
@@ -20,7 +20,7 @@
 
       {{
         govukButton({
-          text: "Review case",
+          text: "Start review",
           href: "/cases/" + caseId + "/review"
         })
       }}
