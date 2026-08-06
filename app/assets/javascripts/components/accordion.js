@@ -70,7 +70,9 @@ App.Accordion.prototype.updateToggleAllButton = function () {
   if (!this.toggleAllButton.length) return
   var allExpanded = this.allSectionsExpanded()
   this.toggleAllButton.attr('aria-expanded', allExpanded ? 'true' : 'false')
-  this.toggleAllButton.find('.js-accordion-toggle-all-label').text(allExpanded ? 'Hide all material' : 'Show all material')
+  this.toggleAllButton
+    .find('.js-accordion-toggle-all-label')
+    .text(allExpanded ? 'Close all' : 'Open all')
 }
 
 App.Accordion.prototype.openSectionForHash = function () {
