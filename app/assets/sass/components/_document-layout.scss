@@ -14,7 +14,7 @@
 }
 
 .js-accordion-content {
-  padding-top: govuk-spacing(2);
+  padding-top: govuk-spacing(6);
   padding-bottom: govuk-spacing(6);
 }
 
@@ -23,6 +23,13 @@
 .app-document-section__heading {
   max-width: 680px;
   margin-bottom: govuk-spacing(4);
+}
+
+// Collapsed accordion headings stack with no gap of their own — spacing
+// between them only appears once a section opens, via .js-accordion-content
+// padding-top above.
+.app-accordion-heading {
+  margin-bottom: 0;
 }
 
 // Custom accordion for stacked document sections — deliberately not the
@@ -52,7 +59,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    background-color: govuk-colour("black");
+    background-color: govuk-colour("blue");
     transform: translate(-50%, -50%);
   }
 

@@ -16,11 +16,18 @@
   {% set documentId = null %}
   {% set offences = pageOffences %}
   {% set documentBasePath = offenceBasePath %}
-  {% set accordionToggleAll = true %}
   {% include "_includes/review/offences.njk" %}
   {% include "_includes/review/toolbar.njk" %}
 
   <div class="js-accordion">
+    <div class="app-document-area govuk-!-padding-top-4">
+      <p class="govuk-body app-document-section__heading govuk-!-margin-bottom-0">
+        <a href="#" class="app-accordion-heading__link govuk-link--no-visited-state js-accordion-toggle-all" aria-expanded="false">
+          <span class="app-accordion-heading__icon" aria-hidden="true"></span>
+          <span class="js-accordion-toggle-all-label">Show all material</span>
+        </a>
+      </p>
+    </div>
   {% for group in documentGroups %}
     {% for doc in group.documents %}
       {% set caseId = doc.caseId %}
@@ -43,7 +50,7 @@
       <div class="app-document-section js-accordion-section" id="document-{{ documentId }}" data-document-id="{{ documentId }}">
         <div class="app-document-area">
           {% if loop.first and group.heading %}
-            <h2 class="govuk-heading-m app-document-section__heading">{{ group.heading }}</h2>
+            <h2 class="govuk-heading-m app-document-section__heading govuk-!-margin-top-5">{{ group.heading }}</h2>
           {% endif %}
           <h3 class="govuk-heading-s app-document-section__heading app-accordion-heading">
             <a
