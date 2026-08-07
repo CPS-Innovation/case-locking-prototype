@@ -1,1 +1,1 @@
-# allocate-cases
+# Manage cases prototype

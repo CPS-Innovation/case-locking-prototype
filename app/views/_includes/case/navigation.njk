@@ -20,7 +20,7 @@
     href: "/cases/:caseId/documents" | replace(':caseId', _case.id),
     text: "Material",
     current: secondaryNavId == 'documents'
-  },
+  } if not _case.needsReview,
   {
     text: "Hearings",
     href: "/cases/:caseId/hearings" | replace(':caseId', _case.id),
