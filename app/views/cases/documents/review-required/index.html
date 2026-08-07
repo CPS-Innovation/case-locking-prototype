@@ -21,7 +21,7 @@
       {{
         govukButton({
           text: "Start review",
-          href: "/cases/" + caseId + "/review"
+          href: "/cases/" + caseId + "/review-variant-2" if data.reviewVariant2 else "/cases/" + caseId + "/review"
         })
       }}
       <p><a class="govuk-link" href="/cases/{{ caseId }}/documents/{{ documentId }}">Cancel</a></p>

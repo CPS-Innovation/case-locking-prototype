@@ -83,7 +83,7 @@
                 actions: {
                   items: [
                     {
-                      href: "/cases/" + _case.id + "/review/summary",
+                      href: "/cases/" + _case.id + "/review-variant-2/summary" if data.reviewVariant2 else "/cases/" + _case.id + "/review/summary",
                       text: "Change",
                       visuallyHiddenText: "case summary"
                     }
@@ -100,7 +100,7 @@
                 actions: {
                   items: [
                     {
-                      href: "/cases/" + _case.id + "/review/strength-assessment/check",
+                      href: "/cases/" + _case.id + "/review-variant-2/strength-assessment/check" if data.reviewVariant2 else "/cases/" + _case.id + "/review/strength-assessment/check",
                       text: "Change",
                       visuallyHiddenText: "offences"
                     }

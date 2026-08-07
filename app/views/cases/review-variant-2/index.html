@@ -79,7 +79,7 @@
         set additionalInformationItems = [
           {
             title: { text: "Case summary" },
-            href: "/cases/" + _case.id + "/review/summary/check" if (review.summaryComplete == true or review.summary) else "/cases/" + _case.id + "/review/summary",
+            href: "/cases/" + _case.id + "/review-variant-2/summary/check" if (review.summaryComplete == true or review.summary) else "/cases/" + _case.id + "/review-variant-2/summary",
             status: summaryStatus
           }
         ]
@@ -88,7 +88,7 @@
       {%
         set additionalInformationItems = additionalInformationItems.concat([{
           title: { text: "Information request" },
-          href: "/cases/" + _case.id + "/review/information-request/check" if informationRequest else "/cases/" + _case.id + "/review/information-request",
+          href: "/cases/" + _case.id + "/review-variant-2/information-request/check" if informationRequest else "/cases/" + _case.id + "/review-variant-2/information-request",
           status: informationRequestStatus
         }])
       %}
@@ -97,14 +97,14 @@
         {%
           set additionalInformationItems = additionalInformationItems.concat([{
             title: { text: "Offences and element strength assessment" },
-            href: "/cases/" + _case.id + "/review/strength-assessment/check" if ((review.strengthAssessmentComplete == true) or strengthAssessmentAllAssessed) else "/cases/" + _case.id + "/review/strength-assessment",
+            href: "/cases/" + _case.id + "/review-variant-2/strength-assessment/check" if ((review.strengthAssessmentComplete == true) or strengthAssessmentAllAssessed) else "/cases/" + _case.id + "/review-variant-2/strength-assessment",
             status: strengthAssessmentStatus
           }])
         %}
         {%
           set additionalInformationItems = additionalInformationItems.concat([{
             title: { text: "Charging decision" },
-            href: "/cases/" + _case.id + "/review/charging-decision/check" if ((review.chargingDecisionComplete == true) or chargingDecisionAllAnswered) else "/cases/" + _case.id + "/review/charging-decision",
+            href: "/cases/" + _case.id + "/review-variant-2/charging-decision/check" if ((review.chargingDecisionComplete == true) or chargingDecisionAllAnswered) else "/cases/" + _case.id + "/review-variant-2/charging-decision",
             status: chargingStatus
           }])
         %}
@@ -115,7 +115,7 @@
         {%
           set additionalInformationItems = additionalInformationItems.concat([{
             title: { text: "First hearing details" },
-            href: "/cases/" + _case.id + "/review/first-hearing/check" if ((reviewFirstHearing and reviewFirstHearing.confirmed == true) or firstHearingAllAnswered) else "/cases/" + _case.id + "/review/first-hearing",
+            href: "/cases/" + _case.id + "/review-variant-2/first-hearing/check" if ((reviewFirstHearing and reviewFirstHearing.confirmed == true) or firstHearingAllAnswered) else "/cases/" + _case.id + "/review-variant-2/first-hearing",
             status: firstHearingStatus
           }])
         %}
@@ -133,7 +133,7 @@
       {{
         govukButton({
           text: "Check and submit review",
-          href: "/cases/" + _case.id + "/review/check"
+          href: "/cases/" + _case.id + "/review-variant-2/check"
         })
       }}
     </div>

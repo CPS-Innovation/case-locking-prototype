@@ -37,7 +37,7 @@
 
       <div class="govuk-button-group">
         {% if defendant.status == 'Not charged' and defendant.needsReview %}
-          {{ govukButton({ text: 'Review case', href: '/cases/' + _case.id + '/review' }) }}
+          {{ govukButton({ text: 'Review case', href: '/cases/' + _case.id + '/review-variant-2' if data.reviewVariant2 else '/cases/' + _case.id + '/review' }) }}
         {% endif %}
       </div>
 

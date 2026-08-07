@@ -76,6 +76,10 @@
       </li>
     </ul>
 
+    <form method="post" action="/settings/review-variant/toggle?referrer={{ path }}">
+      {{ govukButton({ text: 'Turn off variant 2' if data.reviewVariant2 else 'Turn on variant 2', classes: 'app-button--blue' }) }}
+    </form>
+
     {% if simulateAction %}
       {% if simulateAction.action %}
         <form method="post" action="{{ simulateAction.action }}">

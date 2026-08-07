@@ -1,0 +1,70 @@
+{% extends "_layouts/main.html" %}
+{% from "_includes/annotation-element-groups.njk" import annotationElementGroups %}
+{% from "_includes/annotation-card-body.njk" import annotationCardBody %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: 'javascript:history.back()' }) }}
+{% endblock %}
+
+{% block content %}
+  {% if annotation.type == 'evidence' %}
+    {% set typeLabel = 'Evidence' %}
+    {% set typeColour = 'blue' %}
+  {% elif annotation.type == 'issue' %}
+    {% set typeLabel = 'Anticipated issue' %}
+    {% set typeColour = 'red' %}
+  {% elif annotation.type == 'note' %}
+    {% set typeLabel = 'Note' %}
+    {% set typeColour = 'yellow' %}
+  {% else %}
+    {% set typeLabel = 'Information request note' %}
+    {% set typeColour = 'orange' %}
+  {% endif %}
+  {% set pageName = "Confirm that you want to delete this " + (typeLabel | lower) %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ document.name }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      <div
+        class="app-review-annotation-card app-review-annotation-card--{{ typeColour }} govuk-!-margin-bottom-6"
+      >
+        <div class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}">
+          <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
+        </div>
+        <div class="app-review-annotation-card__body">
+          {{
+            annotationCardBody({
+              selectedText: annotation.selectedText,
+              timestampSeconds: annotation.timestampSeconds,
+              documentType: document.type,
+              documentName: document.name,
+              photoUrl: annotation.photoUrl
+            })
+          }}
+
+          {% if annotation.elementGroups.length %}
+            {{ annotationElementGroups(annotation.elementGroups) }}
+          {% else %}
+            <p class="app-review-annotation-card__label">Note</p>
+            <p class="govuk-!-margin-bottom-0">{{ annotation.note }}</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <form method="post">
+        <input type="hidden" name="from" value="{{ from }}" />
+        {{ govukButton({ text: "Delete " + (typeLabel | lower) }) }}
+      </form>
+      <p class="govuk-body">
+        <a
+          href="{{ cancelHref or ('/cases/' + _case.id + '/review-variant-2/check' if from == 'check' else ('/cases/' + _case.id if from == 'overview' else '/cases/' + _case.id + '/review-variant-2/material#document-' + document.id)) }}"
+          class="govuk-link"
+        >
+          Cancel
+        </a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

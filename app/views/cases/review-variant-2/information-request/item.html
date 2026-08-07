@@ -1,0 +1,66 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: 'javascript:history.back()' }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }} - information request</span>
+      <h1 class="govuk-heading-l">Information request item {{ itemNumber }}</h1>
+
+      <form method="post">
+        {{ govukRadios({
+          name: "reviewInformationRequestItem[category]",
+          fieldset: {
+            legend: {
+              text: "Category",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: itemCategoryItems
+        }) }}
+
+        {{ govukTextarea({
+          name: "reviewInformationRequestItem[description]",
+          id: "description",
+          label: { text: "Description", classes: "govuk-label--m" }
+        }) }}
+
+        {{ govukDateInput({
+          id: "dueDate",
+          fieldset: {
+            legend: {
+              text: "Due date",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: { text: "For example, 31 3 2025" },
+          items: [
+            { name: "reviewInformationRequestItem[dueDate][day]", label: "Day", classes: "govuk-input--width-2" },
+            { name: "reviewInformationRequestItem[dueDate][month]", label: "Month", classes: "govuk-input--width-2" },
+            { name: "reviewInformationRequestItem[dueDate][year]", label: "Year", classes: "govuk-input--width-4" }
+          ]
+        }) }}
+
+        {% if defendantItems.length > 1 %}
+          {{ govukCheckboxes({
+            name: "reviewInformationRequestItem[defendants]",
+            idPrefix: "defendants",
+            fieldset: {
+              legend: {
+                text: "Defendants",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: defendantItems
+          }) }}
+        {% endif %}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

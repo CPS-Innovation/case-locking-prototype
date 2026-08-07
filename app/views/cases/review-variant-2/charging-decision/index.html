@@ -1,0 +1,65 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = charge.description %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: '/cases/' + _case.id + '/review-variant-2' if isFirstCharge else 'javascript:history.back()'
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} - charging decision</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% if showDefendantName %}
+        <p class="govuk-body">{{ charge.defendant.firstName }} {{ charge.defendant.lastName }}</p>
+      {% endif %}
+
+      <h2 class="govuk-heading-m govuk-!-margin-bottom-1">Elements</h2>
+      {{ govukSummaryList({ rows: elementRows }) }}
+
+      <form method="post">
+        {% if from == 'check' %}
+          <input type="hidden" name="from" value="check" />
+        {% endif %}
+
+        {{
+          govukRadios({
+            name: "decision",
+            value: selectedDecision,
+            fieldset: {
+              legend: {
+                text: "Charging decision",
+                isPageHeading: false,
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: [
+              {
+                value: "Charge",
+                text: "Charge"
+              },
+              {
+                value: "Hold until further evidence",
+                text: "Hold until further evidence"
+              },
+              {
+                value: "Do not charge",
+                text: "Do not charge"
+              }
+            ]
+          })
+        }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% set documentBasePath = '/cases/' + caseId + '/review-variant-2/material' %}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    {% set reviewRequiredHref = '/cases/' + caseId + '/documents/' + documentId + '/review-required' %}
+    <p><a href="{{ reviewRequiredHref if isMaterialsView else documentBasePath + '/add-offence?reset=1' }}">Add offence</a></p>
+
+    {% if offences.length %}
+      <div class="app-list">
+        {% for offence in offences %}
+          <div class="app-list__item">
+            <p class="govuk-body govuk-!-margin-bottom-0">{{ offence.charge.description }}</p>
+            <div class="app-list__actions">
+              <a
+                href="{{ reviewRequiredHref if isMaterialsView else documentBasePath + '/change-offence?reset=1' }}"
+                class="govuk-link govuk-link--no-visited-state govuk-!-margin-right-3"
+              >
+                Change
+              </a>
+              <a
+                href="{{ reviewRequiredHref if isMaterialsView else documentBasePath + '/offences/' + offence.charge.id + '/remove' }}"
+                class="govuk-link govuk-link--no-visited-state"
+              >
+                Remove
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+</div>

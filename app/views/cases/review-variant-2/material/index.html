@@ -16,8 +16,8 @@
   {% set documentId = null %}
   {% set offences = pageOffences %}
   {% set documentBasePath = offenceBasePath %}
-  {% include "_includes/review/offences.njk" %}
-  {% include "_includes/review/toolbar.njk" %}
+  {% include "_includes/review-variant-2/offences.njk" %}
+  {% include "_includes/review-variant-2/toolbar.njk" %}
 
   <div class="js-accordion">
     <div class="app-document-area govuk-!-padding-top-4">
@@ -74,7 +74,7 @@
               {% else %}
                 {% include "cases/documents/_document-pane-text.html" %}
               {% endif %}
-              {% include "_includes/review/annotation-sidebar.njk" %}
+              {% include "_includes/review-variant-2/annotation-sidebar.njk" %}
             </div>
           </div>
         </div>
@@ -106,12 +106,12 @@
           </div>
         {% endif %}
 
-        {% include "_includes/review/annotation-form.njk" %}
+        {% include "_includes/review-variant-2/annotation-form.njk" %}
 
         {% if not isVideo and not isAudio and not isPhoto %}
           <form
             method="post"
-            action="/cases/{{ caseId }}/review/documents/{{ documentId }}/redactions/add"
+            action="/cases/{{ caseId }}/review-variant-2/material/documents/{{ documentId }}/redactions/add"
             class="js-redaction-form"
             hidden
           >

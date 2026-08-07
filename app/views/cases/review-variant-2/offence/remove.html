@@ -1,0 +1,37 @@
+{% extends "_layouts/main.html" %}
+
+{% set pageName = "Confirm that you want to remove this offence" %}
+{% set documentBasePath = '/cases/' + caseId + '/review-variant-2/material' %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: documentBasePath }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukInsetText({
+          text: charge.description
+        })
+      }}
+
+      {% if linkedAnnotationCount %}
+        <p class="govuk-body">
+          {{ linkedAnnotationCount }} {{ linkedAnnotationCount | pluralize("annotation is", "annotations are") }}
+          linked to an element for this offence. The reason will be kept as a plain note instead.
+        </p>
+      {% endif %}
+
+      <form method="post">{{ govukButton({ text: "Remove offence" }) }}</form>
+      <p class="govuk-body">
+        <a href="{{ documentBasePath }}" class="govuk-link">
+          Cancel
+        </a>
+      </p>
+    </div>
+  </div>
+{% endblock %}
