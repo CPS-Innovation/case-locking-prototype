@@ -290,3 +290,11 @@ $statuses: (
 .app-element {
   margin-bottom: govuk-spacing(7);
 }
+
+.app-document-section:first-of-type .app-document-area {
+  padding-top: govuk-spacing(4);
+}
+
+.app-document-section:last-of-type .app-document-area {
+  padding-bottom: govuk-spacing(6);
+}

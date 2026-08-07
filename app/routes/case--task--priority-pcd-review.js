@@ -1,7 +1,6 @@
 const _ = require('lodash')
 const { DateTime } = require('luxon')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const { getAreaForUnit, getAllAreas, getUnitsForArea } = require('../helpers/unitAreaMapping')
 const { handlePost } = require('../helpers/form-flow')
 

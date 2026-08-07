@@ -1,7 +1,26 @@
 const statuses = require('../data/case-statuses')
 const { formatDefendantNames } = require('./informationRequest')
-const { groupElementsByCharge } = require('./documentAnnotations')
+const { groupElementsByCharge, joinSelectedTextByGroup } = require('./documentAnnotations')
 const { getDocumentPhotoUrls } = require('./documentContent')
+const categoryOrder = require('../data/document-categories')
+
+// Material with categories is grouped under category headings, in the order
+// a prosecutor would work through it. Uncategorised material renders as a
+// single flat list.
+function groupDocumentsByCategory(documents) {
+  const categorised = documents.filter(document => document.category)
+  const uncategorised = documents.filter(document => !document.category)
+
+  const groups = categoryOrder
+    .map(category => ({ heading: category, documents: categorised.filter(document => document.category === category) }))
+    .filter(group => group.documents.length)
+
+  if (uncategorised.length) {
+    groups.push({ heading: groups.length ? 'Other material' : 'Material', documents: uncategorised })
+  }
+
+  return groups
+}
 
 // A case's review is shared - whoever opens it continues the same review
 // rather than getting their own private copy, so document status and
@@ -128,8 +147,16 @@ async function getElementAnnotations(prisma, elementId) {
       }
     }
   })
+
+  // Each link's annotation is the primary row of its group (see
+  // groupAnnotationRows in documentAnnotations.js) - only that row carries
+  // element links - so the full quote across every paragraph the selection
+  // touched has to be looked up separately.
+  const joinedByGroup = await joinSelectedTextByGroup(prisma, annotationLinks.map(link => link.annotation))
+
   return annotationLinks.map(link => ({
     ...link.annotation,
+    selectedText: joinedByGroup.get(link.annotation.groupId) ?? link.annotation.selectedText,
     elementGroups: groupElementsByCharge(link.annotation.elements),
     photoUrl: getDocumentPhotoUrls(link.annotation.caseReviewDocument.document)[0]
   }))
@@ -169,4 +196,5 @@ module.exports = {
   getEligibleCharges,
   getElementAnnotations,
   resetReviewCompletionAfterOffenceChange,
+  groupDocumentsByCategory,
 }

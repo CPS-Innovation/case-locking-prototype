@@ -1,6 +1,5 @@
-const { PrismaClient } = require('@prisma/client')
 const { DateTime } = require('luxon')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 
 function formatLeaveDate(leave) {
   const start = DateTime.fromJSDate(leave.startDate).toFormat('d MMMM yyyy')

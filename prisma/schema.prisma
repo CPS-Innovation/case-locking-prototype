@@ -434,6 +434,7 @@ model CaseReview {
   caseId    Int
   userId    Int
   status    String               @default("in_progress")
+  materialStatus String          @default("not_started")
   summary   String?
   summaryComplete Boolean?
   chargingDecisionComplete Boolean?
@@ -471,6 +472,7 @@ model CaseReviewDocument {
 model CaseReviewAnnotation {
   id                   Int                @id @default(autoincrement())
   caseReviewDocumentId Int
+  groupId              String
   type                 String
   selectedText         String
   paragraphIndex       Int                @default(0)

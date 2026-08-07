@@ -1,6 +1,5 @@
 const _ = require('lodash')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const { asyncHandler } = require('../helpers/async-handler')
 const Pagination = require('../helpers/pagination')
 const types = require('../data/types')

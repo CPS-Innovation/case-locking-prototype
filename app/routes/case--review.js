@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const statuses = require('../data/case-statuses')
 const hearingStatuses = require('../data/hearing-statuses')
 const {
@@ -8,29 +7,11 @@ const {
   buildDecisionsMap,
   shapeInformationRequest,
   shapeFirstHearing,
+  groupDocumentsByCategory,
 } = require('../helpers/caseReview')
 const { createInformationRequestFromSession } = require('../helpers/informationRequest')
-const { groupElementsByCharge } = require('../helpers/documentAnnotations')
+const { groupElementsByCharge, groupAnnotationRows } = require('../helpers/documentAnnotations')
 const { getDocumentPhotoUrls } = require('../helpers/documentContent')
-const categoryOrder = require('../data/document-categories')
-
-// Material with categories is grouped under category headings, in the order
-// a prosecutor would work through it. Uncategorised material renders as a
-// single flat list.
-function groupDocumentsByCategory(documents) {
-  const categorised = documents.filter(document => document.category)
-  const uncategorised = documents.filter(document => !document.category)
-
-  const groups = categoryOrder
-    .map(category => ({ heading: category, documents: categorised.filter(document => document.category === category) }))
-    .filter(group => group.documents.length)
-
-  if (uncategorised.length) {
-    groups.push({ heading: groups.length ? 'Other material' : 'Material', documents: uncategorised })
-  }
-
-  return groups
-}
 
 function parseHearingTime(time) {
   const match = String(time || '').trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(am|pm)?$/i)
@@ -140,8 +121,11 @@ module.exports = (router) => {
         return { ...sorted[0], kind: 'redaction', selectedText: sorted.map(row => row.selectedText).join(' ') }
       })
 
+      // A selection spanning multiple paragraphs is stored as several
+      // CaseReviewAnnotation rows sharing one groupId too — collapse each
+      // group back into a single card, same as redactions above.
       const items = [
-        ...dr.annotations.map(annotation => ({
+        ...groupAnnotationRows(dr.annotations).map(annotation => ({
           ...annotation,
           kind: 'annotation',
           elementGroups: groupElementsByCharge(annotation.elements),

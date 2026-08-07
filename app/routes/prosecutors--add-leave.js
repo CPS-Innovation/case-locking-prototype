@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 
 function buildDate(dateData) {
   if (!dateData || !dateData.day || !dateData.month || !dateData.year) return null

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const sessionDataDefaults = require('../data/session-data-defaults')
 
 // Temporary: skip the sign-in screen and sign straight in as Simon Whatley

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 
 // Stable links for research participants. The case ID in /cases/:caseId
 // changes every time the database is reseeded, so these resolve by

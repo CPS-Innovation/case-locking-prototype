@@ -1,13 +1,16 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const { addTimeLimitDates } = require('../helpers/timeLimit')
 const { addCaseStatus } = require('../helpers/caseStatus')
 const { buildOverviewCharges } = require('../helpers/caseOverview')
+const { joinSelectedTextByGroup } = require('../helpers/documentAnnotations')
 
 module.exports = router => {
   router.get("/cases/:caseId", async (req, res) => {
+    const caseId = parseInt(req.params.caseId)
+    if (isNaN(caseId)) return res.status(404).send('Case not found')
+
     let _case = await prisma.case.findUnique({
-      where: { id: parseInt(req.params.caseId) },
+      where: { id: caseId },
       include: {
         unit: true,
         prosecutors: {
@@ -40,6 +43,8 @@ module.exports = router => {
       },
     })
 
+    if (!_case) return res.status(404).send('Case not found')
+
     addTimeLimitDates(_case)
     addCaseStatus(_case)
 
@@ -67,7 +72,8 @@ module.exports = router => {
       where: { caseId: _case.id, status: 'submitted' }
     })
 
-    const charges = buildOverviewCharges(_case.defendants, annotationLinks, submittedReview)
+    const joinedByGroup = await joinSelectedTextByGroup(prisma, annotationLinks.map(link => link.annotation))
+    const charges = buildOverviewCharges(_case.defendants, annotationLinks, submittedReview, joinedByGroup)
 
     const summary = submittedReview ? submittedReview.summary : null
     const elementsAssessed = !!submittedReview
@@ -76,8 +82,11 @@ module.exports = router => {
   })
 
   router.get("/cases/:caseId/complexity-calculation", async (req, res) => {
+    const caseId = parseInt(req.params.caseId)
+    if (isNaN(caseId)) return res.status(404).send('Case not found')
+
     let _case = await prisma.case.findUnique({
-      where: { id: parseInt(req.params.caseId) },
+      where: { id: caseId },
       include: {
         unit: true,
         prosecutors: {
@@ -110,6 +119,8 @@ module.exports = router => {
         dga: true
       },
     })
+
+    if (!_case) return res.status(404).send('Case not found')
 
     addTimeLimitDates(_case)
     addCaseStatus(_case)

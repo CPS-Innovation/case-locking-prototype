@@ -1,31 +1,38 @@
 const _ = require('lodash')
 
 // Targets the exact paragraph/occurrence the user selected, rather than
-// replacing every matching string across the document.
+// replacing every matching string across the document. Section headings are
+// addressable too - each section contributes its heading (if any) as one
+// block ahead of its paragraphs, so paragraphIndex is an index into that
+// flat block list, not just paragraphs.
+function flattenBlocks(sections) {
+  return sections.flatMap(s => (s.heading ? [s.heading] : []).concat(s.paragraphs))
+}
+
 function applyMarks(sections, items, markUp) {
   if (!items.length) return sections
-  const flatParagraphs = sections.flatMap(s => s.paragraphs)
+  const flatBlocks = flattenBlocks(sections)
   items.forEach(item => {
-    const paraIdx = item.paragraphIndex
-    if (paraIdx < 0 || paraIdx >= flatParagraphs.length) return
+    const blockIdx = item.paragraphIndex
+    if (blockIdx < 0 || blockIdx >= flatBlocks.length) return
     const escaped = item.selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     const regex = new RegExp(escaped, 'g')
     const target = item.occurrenceIndex
     let count = 0
-    flatParagraphs[paraIdx] = flatParagraphs[paraIdx].replace(regex, function(match) {
+    flatBlocks[blockIdx] = flatBlocks[blockIdx].replace(regex, function(match) {
       return count++ === target ? markUp(item) : match
     })
   })
   let flatIdx = 0
   return sections.map(section => ({
-    heading: section.heading,
-    paragraphs: section.paragraphs.map(() => flatParagraphs[flatIdx++])
+    heading: section.heading ? flatBlocks[flatIdx++] : section.heading,
+    paragraphs: section.paragraphs.map(() => flatBlocks[flatIdx++])
   }))
 }
 
 function applyHighlights(sections, annotations) {
   return applyMarks(sections, annotations, annotation =>
-    `<mark class="app-annotation app-annotation--${annotation.type}" data-annotation-id="${annotation.id}">${annotation.selectedText}</mark>`
+    `<mark class="app-annotation app-annotation--${annotation.type}" data-annotation-id="${annotation.groupId}">${annotation.selectedText}</mark>`
   )
 }
 
@@ -33,6 +40,49 @@ function applyRedactions(sections, redactions) {
   return applyMarks(sections, redactions, redaction =>
     `<mark class="app-redaction" data-redaction-group-id="${redaction.groupId}">${redaction.selectedText}</mark>`
   )
+}
+
+// A selection spanning multiple paragraphs is stored as several
+// CaseReviewAnnotation rows sharing one groupId (see getParagraphSelections
+// in annotation-panel.js) — collapse each group back into a single item,
+// keyed off the row for the first paragraph touched, which is also the only
+// row any CaseReviewAnnotationElement links attach to.
+function groupAnnotationRows(rows) {
+  const byGroup = {}
+  rows.forEach(row => {
+    (byGroup[row.groupId] = byGroup[row.groupId] || []).push(row)
+  })
+  return Object.values(byGroup)
+    .map(groupRows => {
+      const sorted = [...groupRows].sort((a, b) => (a.paragraphIndex - b.paragraphIndex) || (a.occurrenceIndex - b.occurrenceIndex))
+      return { ...sorted[0], selectedText: sorted.map(row => row.selectedText).join(' ') }
+    })
+    .sort((a, b) => a.createdAt - b.createdAt)
+}
+
+// Some callers only ever load the primary row of a group (eg via the
+// CaseReviewAnnotationElement relation, which only ever links to the primary
+// row) — this batches one lookup of every sibling paragraph row so the full
+// selected quote can be shown instead of just the first paragraph.
+async function joinSelectedTextByGroup(prisma, rows) {
+  const groupIds = [...new Set(rows.map(row => row.groupId))]
+  const joinedByGroup = new Map()
+  if (!groupIds.length) return joinedByGroup
+
+  const allRows = await prisma.caseReviewAnnotation.findMany({
+    where: { groupId: { in: groupIds } },
+    orderBy: [{ paragraphIndex: 'asc' }, { occurrenceIndex: 'asc' }]
+  })
+
+  const byGroup = {}
+  allRows.forEach(row => {
+    (byGroup[row.groupId] = byGroup[row.groupId] || []).push(row)
+  })
+  Object.entries(byGroup).forEach(([groupId, groupRows]) => {
+    joinedByGroup.set(groupId, groupRows.map(row => row.selectedText).join(' '))
+  })
+
+  return joinedByGroup
 }
 
 // Evidence and issue annotations can link elements from more than one
@@ -106,10 +156,10 @@ function buildOffencesWithAnnotations(defendantCharges, annotations, caseId, doc
     charge,
     elementRows: buildElementRows(charge.elements || [], caseId, documentId),
     elementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
-      idPrefix: `reasoning-charge-${charge.id}`
+      idPrefix: `reasoning-doc-${documentId}-charge-${charge.id}`
     }),
     issueElementCheckboxItems: buildElementCheckboxItems(charge.elements || [], {
-      idPrefix: `issue-reasoning-charge-${charge.id}`
+      idPrefix: `issue-reasoning-doc-${documentId}-charge-${charge.id}`
     })
   }))
 
@@ -150,5 +200,8 @@ module.exports = {
   applyRedactions,
   buildElementCheckboxItems,
   buildOffencesWithAnnotations,
-  groupElementsByCharge
+  flattenBlocks,
+  groupElementsByCharge,
+  groupAnnotationRows,
+  joinSelectedTextByGroup
 }

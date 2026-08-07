@@ -2,12 +2,13 @@
 
 {% set navId = 'cases' %}
 {% set pageName = "Check details and add offences" %}
+{% set documentBasePath = documentBasePath or ('/cases/' + caseId + '/review/documents/' + documentId) %}
 
 {% block beforeContent %}
   {{
     govukBackLink({
       text: 'Back',
-      href: '/cases/' + caseId + '/review/documents/' + documentId + '/add-offence'
+      href: documentBasePath + '/add-offence'
     })
   }}
 {% endblock %}
@@ -34,7 +35,7 @@
               value: { html: offencesValue },
               actions: {
                 items: [{
-                  href: '/cases/' + caseId + '/review/documents/' + documentId + '/add-offence',
+                  href: documentBasePath + '/add-offence',
                   text: "Change",
                   visuallyHiddenText: "offences"
                 }]

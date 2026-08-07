@@ -1,10 +1,9 @@
 const _ = require('lodash')
 const crypto = require('crypto')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
 const { findOrCreateReview, findOrCreateDocumentReview, getElementAnnotations, resetReviewCompletionAfterOffenceChange } = require('../helpers/caseReview')
-const { applyHighlights, applyRedactions, buildOffencesWithAnnotations, groupElementsByCharge } = require('../helpers/documentAnnotations')
+const { applyHighlights, applyRedactions, buildOffencesWithAnnotations, groupElementsByCharge, groupAnnotationRows } = require('../helpers/documentAnnotations')
 const charges = require('../data/charges')
 const elementsByChargeCode = require('../data/elements')
 
@@ -13,6 +12,29 @@ function formatTimestamp(totalSeconds) {
   const mins = Math.floor(seconds / 60)
   const secs = seconds % 60
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
+
+// Creates one CaseReviewAnnotation row per paragraph a selection touches, all
+// sharing groupId. createMany can't be used here because the first created
+// row's id is needed to attach CaseReviewAnnotationElement links to.
+async function createAnnotationGroup(prisma, caseReviewDocumentId, groupId, type, note, timestampSeconds, userId, selections) {
+  const rows = []
+  for (const selection of selections) {
+    rows.push(await prisma.caseReviewAnnotation.create({
+      data: {
+        caseReviewDocumentId,
+        groupId,
+        type,
+        selectedText: selection.selectedText,
+        paragraphIndex: parseInt(selection.paragraphIndex) || 0,
+        occurrenceIndex: parseInt(selection.occurrenceIndex) || 0,
+        note,
+        timestampSeconds,
+        userId
+      }
+    }))
+  }
+  return rows
 }
 
 async function loadAnnotationSidebarData(prisma, caseId, documentId, docReviewId) {
@@ -28,8 +50,9 @@ async function loadAnnotationSidebarData(prisma, caseId, documentId, docReviewId
     })
   ])
   const defendantCharges = _case.defendants[0]?.charges || []
-  const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, annotations, caseId, documentId)
-  return { annotations, offences, hasElements }
+  const groupedAnnotations = groupAnnotationRows(annotations)
+  const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, groupedAnnotations, caseId, documentId)
+  return { annotations, groupedAnnotations, offences, hasElements }
 }
 
 async function loadDocumentBodySections(prisma, document, docReviewId, annotations) {
@@ -46,15 +69,15 @@ function renderView(res, view, locals) {
   })
 }
 
-async function respondWithAnnotationUpdate(req, res, prisma, { caseId, documentId, docReview, annotationId }) {
+async function respondWithAnnotationUpdate(req, res, prisma, { caseId, documentId, docReview, groupId }) {
   const document = await prisma.document.findUnique({ where: { id: documentId } })
-  const { annotations, offences, hasElements } = await loadAnnotationSidebarData(prisma, caseId, documentId, docReview.id)
+  const { annotations, groupedAnnotations, offences, hasElements } = await loadAnnotationSidebarData(prisma, caseId, documentId, docReview.id)
   // Render just the inner content of the sidebar/document panes, not the
   // wrapper elements around them — the client swaps this into those wrappers'
   // existing `.html()`, so rendering the wrappers too would nest a duplicate
   // copy of them inside themselves.
   const sidebarHtml = await renderView(res, '_includes/review/annotation-sidebar-inner.njk', {
-    annotations, offences, hasElements, caseId, documentId, user: req.session.data.user
+    annotations: groupedAnnotations, offences, hasElements, caseId, documentId, user: req.session.data.user
   })
 
   const isTextDocument = !['MP4', 'MP3', 'JPG', 'PNG'].includes(document.type)
@@ -64,7 +87,7 @@ async function respondWithAnnotationUpdate(req, res, prisma, { caseId, documentI
       })
     : null
 
-  res.json({ sidebarHtml, documentHtml, annotationId })
+  res.json({ sidebarHtml, documentHtml, annotationId: groupId })
 }
 
 // Redactions only affect the inline marks in the document body, not the
@@ -128,7 +151,8 @@ module.exports = (router) => {
 
     const defendantCharges = _case.defendants[0]?.charges || []
 
-    const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, annotations, caseId, documentId)
+    const groupedAnnotations = groupAnnotationRows(annotations)
+    const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, groupedAnnotations, caseId, documentId)
 
     let sections = []
     if (!isVideo && !isAudio && !isPhoto) {
@@ -148,7 +172,7 @@ module.exports = (router) => {
       offences,
       hasElements,
       sections,
-      annotations,
+      annotations: groupedAnnotations,
       redactions,
       isVideo,
       isAudio,
@@ -489,19 +513,26 @@ module.exports = (router) => {
     const timestampSeconds = req.body.timestampSeconds !== undefined && req.body.timestampSeconds !== ''
       ? parseFloat(req.body.timestampSeconds)
       : null
-    const selectedText = timestampSeconds !== null ? formatTimestamp(timestampSeconds) : req.body.selectedText
-    const paragraphIndex = parseInt(req.body.paragraphIndex) || 0
-    const occurrenceIndex = parseInt(req.body.occurrenceIndex) || 0
 
     const reasoningByElementId = req.body.elements || {}
     const elementIds = Object.keys(reasoningByElementId).map(id => parseInt(id))
 
-    let annotation = null
+    // A selection spanning multiple paragraphs arrives as one entry per
+    // paragraph it touches (see getParagraphSelections in annotation-panel.js),
+    // and is split into one row per entry sharing a groupId. Timestamp-based
+    // annotations (video/audio/photo) aren't paragraph-based, so they're
+    // always a single entry.
+    const selections = timestampSeconds !== null
+      ? [{ selectedText: formatTimestamp(timestampSeconds), paragraphIndex: 0, occurrenceIndex: 0 }]
+      : JSON.parse(req.body.selections || '[]')
+          .sort((a, b) => (a.paragraphIndex - b.paragraphIndex) || (a.occurrenceIndex - b.occurrenceIndex))
+
+    let groupId = null
 
     // Evidence and issue are only linked to elements when some are selected —
     // if none exist yet (no offence added) they fall back to a plain note, same
     // as information-request, and can be linked later.
-    if ((type === 'evidence' || type === 'issue') && selectedText && elementIds.length) {
+    if ((type === 'evidence' || type === 'issue') && selections.length && elementIds.length) {
       const elements = await prisma.element.findMany({
         where: { id: { in: elementIds } }
       })
@@ -510,36 +541,37 @@ module.exports = (router) => {
         .map(element => element.description + (reasoningByElementId[element.id] ? `: ${reasoningByElementId[element.id]}` : ''))
         .join('; ')
 
-      annotation = await prisma.caseReviewAnnotation.create({
-        data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds, userId }
-      })
+      groupId = crypto.randomUUID()
+      const rows = await createAnnotationGroup(prisma, docReview.id, groupId, type, note, timestampSeconds, userId, selections)
 
       await prisma.caseReviewAnnotationElement.createMany({
         data: elements.map(element => ({
-          annotationId: annotation.id,
+          annotationId: rows[0].id,
           elementId: element.id,
           reasoning: reasoningByElementId[element.id]
         }))
       })
     } else {
       const { note } = req.body
-      if (selectedText && type && note) {
-        annotation = await prisma.caseReviewAnnotation.create({
-          data: { caseReviewDocumentId: docReview.id, type, selectedText, paragraphIndex, occurrenceIndex, note, timestampSeconds, userId }
-        })
+      if (selections.length && type && note) {
+        groupId = crypto.randomUUID()
+        await createAnnotationGroup(prisma, docReview.id, groupId, type, note, timestampSeconds, userId, selections)
       }
     }
 
     await respondWithAnnotationUpdate(req, res, prisma, {
-      caseId, documentId, docReview, annotationId: annotation?.id ?? null
+      caseId, documentId, docReview, groupId
     })
   })
 
   // Edit annotation — POST
-  router.post('/cases/:caseId/review/documents/:documentId/annotations/:annotationId/edit', async (req, res) => {
+  // A selection spanning multiple paragraphs is stored as several
+  // CaseReviewAnnotation rows sharing one groupId (see getParagraphSelections
+  // in annotation-panel.js) — the whole group is edited as one annotation here.
+  router.post('/cases/:caseId/review/documents/:documentId/annotations/:groupId/edit', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const annotationId = parseInt(req.params.annotationId)
+    const groupId = req.params.groupId
     const userId = req.session.data.user.id
 
     const review = await findOrCreateReview(prisma, caseId, userId)
@@ -548,6 +580,12 @@ module.exports = (router) => {
     const { linkAsType } = req.body
     const reasoningByElementId = req.body.elements || {}
     const elementIds = Object.keys(reasoningByElementId).map(id => parseInt(id))
+
+    const rows = await prisma.caseReviewAnnotation.findMany({
+      where: { groupId },
+      orderBy: [{ paragraphIndex: 'asc' }, { occurrenceIndex: 'asc' }]
+    })
+    const primaryRowId = rows[0].id
 
     if (elementIds.length) {
       const elements = await prisma.element.findMany({
@@ -558,10 +596,10 @@ module.exports = (router) => {
         .map(element => element.description + (reasoningByElementId[element.id] ? `: ${reasoningByElementId[element.id]}` : ''))
         .join('; ')
 
-      await prisma.caseReviewAnnotationElement.deleteMany({ where: { annotationId } })
+      await prisma.caseReviewAnnotationElement.deleteMany({ where: { annotationId: { in: rows.map(row => row.id) } } })
       await prisma.caseReviewAnnotationElement.createMany({
         data: elements.map(element => ({
-          annotationId,
+          annotationId: primaryRowId,
           elementId: element.id,
           reasoning: reasoningByElementId[element.id]
         }))
@@ -569,53 +607,62 @@ module.exports = (router) => {
 
       // Linking a note to evidence or issue elements turns it into that
       // type - it stops being a plain note once it's carrying that structure.
-      await prisma.caseReviewAnnotation.update({
-        where: { id: annotationId },
+      await prisma.caseReviewAnnotation.updateMany({
+        where: { groupId },
         data: linkAsType ? { note, type: linkAsType } : { note }
       })
     } else {
       const { note } = req.body
-      await prisma.caseReviewAnnotation.update({
-        where: { id: annotationId },
+      await prisma.caseReviewAnnotation.updateMany({
+        where: { groupId },
         data: { note }
       })
     }
 
     await respondWithAnnotationUpdate(req, res, prisma, {
-      caseId, documentId, docReview, annotationId
+      caseId, documentId, docReview, groupId
     })
   })
 
   // Delete annotation — confirm GET
-  router.get('/cases/:caseId/review/documents/:documentId/annotations/:annotationId/delete', async (req, res) => {
+  // A selection spanning multiple paragraphs is stored as several
+  // CaseReviewAnnotation rows sharing one groupId (see getParagraphSelections
+  // in annotation-panel.js) — the whole group is treated as one annotation here.
+  router.get('/cases/:caseId/review/documents/:documentId/annotations/:groupId/delete', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const annotationId = parseInt(req.params.annotationId)
+    const groupId = req.params.groupId
 
-    const [_case, document, annotation] = await Promise.all([
+    const [_case, document, rows] = await Promise.all([
       prisma.case.findUnique({ where: { id: caseId } }),
       prisma.document.findUnique({ where: { id: documentId } }),
-      prisma.caseReviewAnnotation.findUnique({
-        where: { id: annotationId },
+      prisma.caseReviewAnnotation.findMany({
+        where: { groupId },
+        orderBy: [{ paragraphIndex: 'asc' }, { occurrenceIndex: 'asc' }],
         include: { elements: { include: { element: { include: { charge: true } } } } }
       })
     ])
 
     const from = req.query.from || 'list'
-    annotation.elementGroups = groupElementsByCharge(annotation.elements)
-    annotation.photoUrl = getDocumentPhotoUrls(document)[0]
+    const annotation = {
+      ...rows[0],
+      selectedText: rows.map(row => row.selectedText).join(' '),
+      elementGroups: groupElementsByCharge(rows[0].elements),
+      photoUrl: getDocumentPhotoUrls(document)[0]
+    }
 
     res.render('cases/review/annotations/delete', { _case, document, annotation, caseId, documentId, from })
   })
 
   // Delete annotation — POST
-  router.post('/cases/:caseId/review/documents/:documentId/annotations/:annotationId/delete', async (req, res) => {
+  router.post('/cases/:caseId/review/documents/:documentId/annotations/:groupId/delete', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const annotationId = parseInt(req.params.annotationId)
+    const groupId = req.params.groupId
 
-    await prisma.caseReviewAnnotationElement.deleteMany({ where: { annotationId } })
-    await prisma.caseReviewAnnotation.delete({ where: { id: annotationId } })
+    const rows = await prisma.caseReviewAnnotation.findMany({ where: { groupId }, select: { id: true } })
+    await prisma.caseReviewAnnotationElement.deleteMany({ where: { annotationId: { in: rows.map(row => row.id) } } })
+    await prisma.caseReviewAnnotation.deleteMany({ where: { groupId } })
 
     const from = req.body.from
     if (from === 'document') {

@@ -1,3 +1,4 @@
+const crypto = require('crypto')
 const statuses = require('../../app/data/case-statuses')
 const charges = require('../../app/data/charges')
 const palmerMaterial = require('../../app/data/palmer-material')
@@ -419,6 +420,7 @@ async function createFullPalmerReview(prisma, { caseId, userId, defendant, statu
       const annotation = await prisma.caseReviewAnnotation.create({
         data: {
           caseReviewDocumentId: docReview.id,
+          groupId: crypto.randomUUID(),
           type: snippet.type,
           selectedText: snippet.selectedText,
           paragraphIndex,
