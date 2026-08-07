@@ -472,6 +472,7 @@ model CaseReviewDocument {
 model CaseReviewAnnotation {
   id                   Int                @id @default(autoincrement())
   caseReviewDocumentId Int
+  groupId              String
   type                 String
   selectedText         String
   paragraphIndex       Int                @default(0)

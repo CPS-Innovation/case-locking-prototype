@@ -1,6 +1,5 @@
 const _ = require('lodash')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const { getEligibleCharges, findOrCreateReview, findOrCreateReviewWithAnswers, buildDecisionsMap } = require('../helpers/caseReview')
 
 module.exports = (router) => {

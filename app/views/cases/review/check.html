@@ -82,7 +82,7 @@
                     <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
                     <p class="govuk-!-margin-bottom-0">
                       <a
-                        href="/cases/{{ _case.id }}/review/documents/{{ document.id }}{{ '#annotation-' + item.id if item.kind == 'annotation' }}"
+                        href="/cases/{{ _case.id }}/review/documents/{{ document.id }}{{ '#annotation-' + item.groupId if item.kind == 'annotation' }}"
                         class="govuk-link govuk-link--no-visited-state"
                       >
                         Change
@@ -92,7 +92,7 @@
                       </a>
                       {% if item.kind == 'annotation' %}
                         <a
-                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/annotations/{{ item.id }}/delete?from=check"
+                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/annotations/{{ item.groupId }}/delete?from=check"
                           class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
                         >
                           Delete

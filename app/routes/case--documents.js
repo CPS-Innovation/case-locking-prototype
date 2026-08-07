@@ -1,6 +1,5 @@
 const _ = require('lodash')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const { mediaTypes, fileTypesByMediaType, getMediaType } = require('../data/document-media-types')
 const documentCategories = require('../data/document-categories')
 const { addTimeLimitDates } = require('../helpers/timeLimit')

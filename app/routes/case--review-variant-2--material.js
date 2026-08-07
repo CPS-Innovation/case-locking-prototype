@@ -1,12 +1,11 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const { generateDocumentContent, getDocumentPhotoUrls } = require('../helpers/documentContent')
 const {
   findOrCreateReview,
   resetReviewCompletionAfterOffenceChange,
   groupDocumentsByCategory,
 } = require('../helpers/caseReview')
-const { applyHighlights, applyRedactions, buildOffencesWithAnnotations, groupElementsByCharge } = require('../helpers/documentAnnotations')
+const { applyHighlights, applyRedactions, buildOffencesWithAnnotations, groupElementsByCharge, groupAnnotationRows } = require('../helpers/documentAnnotations')
 const charges = require('../data/charges')
 const elementsByChargeCode = require('../data/elements')
 
@@ -108,9 +107,10 @@ module.exports = (router) => {
       const isPhoto = document.type === 'JPG' || document.type === 'PNG'
 
       const annotations = annotationsByDocReviewId.get(docReview.id) || []
+      const groupedAnnotations = groupAnnotationRows(annotations)
       const redactions = (isVideo || isAudio || isPhoto) ? [] : (redactionsByDocReviewId.get(docReview.id) || [])
 
-      const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, annotations, caseId, document.id)
+      const { offences, hasElements } = buildOffencesWithAnnotations(defendantCharges, groupedAnnotations, caseId, document.id)
 
       let sections = []
       if (!isVideo && !isAudio && !isPhoto) {
@@ -126,7 +126,7 @@ module.exports = (router) => {
         offences,
         hasElements,
         sections,
-        annotations,
+        annotations: groupedAnnotations,
         redactions,
         isVideo,
         isAudio,
@@ -456,23 +456,31 @@ module.exports = (router) => {
   })
 
   // Delete annotation — confirm GET (same data as case--review--document.js's
-  // equivalent route, just landing back on the combined material page)
-  router.get('/cases/:caseId/review-variant-2/material/documents/:documentId/annotations/:annotationId/delete', async (req, res) => {
+  // equivalent route, just landing back on the combined material page). A
+  // selection spanning multiple paragraphs is stored as several
+  // CaseReviewAnnotation rows sharing one groupId (see getParagraphSelections
+  // in annotation-panel.js) — the whole group is treated as one annotation here.
+  router.get('/cases/:caseId/review-variant-2/material/documents/:documentId/annotations/:groupId/delete', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const annotationId = parseInt(req.params.annotationId)
+    const groupId = req.params.groupId
 
-    const [_case, document, annotation] = await Promise.all([
+    const [_case, document, rows] = await Promise.all([
       prisma.case.findUnique({ where: { id: caseId } }),
       prisma.document.findUnique({ where: { id: documentId } }),
-      prisma.caseReviewAnnotation.findUnique({
-        where: { id: annotationId },
+      prisma.caseReviewAnnotation.findMany({
+        where: { groupId },
+        orderBy: [{ paragraphIndex: 'asc' }, { occurrenceIndex: 'asc' }],
         include: { elements: { include: { element: { include: { charge: true } } } } }
       })
     ])
 
-    annotation.elementGroups = groupElementsByCharge(annotation.elements)
-    annotation.photoUrl = getDocumentPhotoUrls(document)[0]
+    const annotation = {
+      ...rows[0],
+      selectedText: rows.map(row => row.selectedText).join(' '),
+      elementGroups: groupElementsByCharge(rows[0].elements),
+      photoUrl: getDocumentPhotoUrls(document)[0]
+    }
 
     res.render('cases/review/annotations/delete', {
       _case, document, annotation, caseId, documentId,
@@ -481,13 +489,14 @@ module.exports = (router) => {
   })
 
   // Delete annotation — POST
-  router.post('/cases/:caseId/review-variant-2/material/documents/:documentId/annotations/:annotationId/delete', async (req, res) => {
+  router.post('/cases/:caseId/review-variant-2/material/documents/:documentId/annotations/:groupId/delete', async (req, res) => {
     const caseId = parseInt(req.params.caseId)
     const documentId = parseInt(req.params.documentId)
-    const annotationId = parseInt(req.params.annotationId)
+    const groupId = req.params.groupId
 
-    await prisma.caseReviewAnnotationElement.deleteMany({ where: { annotationId } })
-    await prisma.caseReviewAnnotation.delete({ where: { id: annotationId } })
+    const rows = await prisma.caseReviewAnnotation.findMany({ where: { groupId }, select: { id: true } })
+    await prisma.caseReviewAnnotationElement.deleteMany({ where: { annotationId: { in: rows.map(row => row.id) } } })
+    await prisma.caseReviewAnnotation.deleteMany({ where: { groupId } })
 
     res.redirect(`/cases/${caseId}/review-variant-2/material#document-${documentId}`)
   })

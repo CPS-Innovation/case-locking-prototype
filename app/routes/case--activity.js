@@ -1,6 +1,5 @@
 const _ = require('lodash')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const Pagination = require('../helpers/pagination')
 const eventTypes = require('../data/event-types')
 const { addTimeLimitDates } = require('../helpers/timeLimit')

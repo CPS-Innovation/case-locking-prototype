@@ -1,7 +1,9 @@
+const crypto = require('crypto')
 const { faker } = require('@faker-js/faker')
 const statuses = require('../../app/data/case-statuses')
 const annotationSnippets = require('../../app/data/annotation-snippets')
 const { generateDocumentContent } = require('../../app/helpers/documentContent')
+const { flattenBlocks } = require('../../app/helpers/documentAnnotations')
 
 const photoTypes = ['JPG', 'PNG']
 
@@ -12,8 +14,8 @@ function findParagraphOccurrence(document, selectedText) {
   if (photoTypes.includes(document.type) || document.type === 'MP4' || document.type === 'MP3') {
     return { paragraphIndex: 0, occurrenceIndex: 0 }
   }
-  const flatParagraphs = generateDocumentContent(document).flatMap(section => section.paragraphs)
-  const paragraphIndex = flatParagraphs.findIndex(para => para.includes(selectedText))
+  const flatBlocks = flattenBlocks(generateDocumentContent(document))
+  const paragraphIndex = flatBlocks.findIndex(block => block.includes(selectedText))
   return { paragraphIndex: Math.max(paragraphIndex, 0), occurrenceIndex: 0 }
 }
 
@@ -139,6 +141,7 @@ async function seedCaseReviewAnnotations(prisma, { users }) {
         const annotation = await prisma.caseReviewAnnotation.create({
           data: {
             caseReviewDocumentId: docReview.id,
+            groupId: crypto.randomUUID(),
             type: snippet.type,
             selectedText: snippet.selectedText,
             paragraphIndex,

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 
 function getWeeksForMonth (year, month) {
   const lastDay = new Date(year, month, 0).getDate()

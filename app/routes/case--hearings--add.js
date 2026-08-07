@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const hearingTypes = require('../data/hearing-types')
 const hearingStatuses = require('../data/hearing-statuses')
 

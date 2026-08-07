@@ -1,6 +1,6 @@
 const statuses = require('../data/case-statuses')
 const { formatDefendantNames } = require('./informationRequest')
-const { groupElementsByCharge } = require('./documentAnnotations')
+const { groupElementsByCharge, joinSelectedTextByGroup } = require('./documentAnnotations')
 const { getDocumentPhotoUrls } = require('./documentContent')
 const categoryOrder = require('../data/document-categories')
 
@@ -147,8 +147,16 @@ async function getElementAnnotations(prisma, elementId) {
       }
     }
   })
+
+  // Each link's annotation is the primary row of its group (see
+  // groupAnnotationRows in documentAnnotations.js) - only that row carries
+  // element links - so the full quote across every paragraph the selection
+  // touched has to be looked up separately.
+  const joinedByGroup = await joinSelectedTextByGroup(prisma, annotationLinks.map(link => link.annotation))
+
   return annotationLinks.map(link => ({
     ...link.annotation,
+    selectedText: joinedByGroup.get(link.annotation.groupId) ?? link.annotation.selectedText,
     elementGroups: groupElementsByCharge(link.annotation.elements),
     photoUrl: getDocumentPhotoUrls(link.annotation.caseReviewDocument.document)[0]
   }))

@@ -180,7 +180,7 @@
   {% set noteLabel = 'Evidence note' if annotation.type == 'evidence' else ('Anticipated issue note' if annotation.type == 'issue' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
   <div
     class="app-annotation-card js-annotation-card app-annotation-card--{{ tagColour }}"
-    data-annotation-id="{{ annotation.id }}"
+    data-annotation-id="{{ annotation.groupId }}"
     {% if annotation.timestampSeconds != null %}data-timestamp-seconds="{{ annotation.timestampSeconds }}"{% endif %}
   >
     <div class="js-annotation-view">
@@ -228,7 +228,7 @@
         {% endif %}
 
         {% set isLinkable = (annotation.type == 'evidence' or annotation.type == 'issue' or annotation.type == 'note') and not annotation.elements.length and hasElements %}
-        {% set editUrl = '/cases/' + caseId + '/review/documents/' + documentId + '/annotations/' + annotation.id + '/edit' %}
+        {% set editUrl = '/cases/' + caseId + '/review/documents/' + documentId + '/annotations/' + annotation.groupId + '/edit' %}
         {% set documentBasePath = documentBasePath or ('/cases/' + caseId + '/review/documents/' + documentId) %}
 
         <div class="app-annotation-card__actions govuk-button-group govuk-!-margin-bottom-0">
@@ -236,7 +236,7 @@
             Change
           </a>
           <a
-            href="{{ documentBasePath }}/annotations/{{ annotation.id }}/delete?from=document"
+            href="{{ documentBasePath }}/annotations/{{ annotation.groupId }}/delete?from=document"
             class="govuk-link"
           >
             Delete

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 
 module.exports = (router) => {
   router.get('/cases/record-dga-dispute-outcomes-as-not-disputed/select-all', (req, res) => {

@@ -18,8 +18,7 @@ App.AnnotationPanel = function(params) {
   this.selectedTextInput             = this.section.find('.js-annotation-selected-text')
   this.typeHiddenInput               = this.section.find('.js-annotation-type-hidden')
   this.noteHiddenInput               = this.section.find('.js-annotation-note-hidden')
-  this.annotationParagraphIndexInput  = this.section.find('.js-annotation-paragraph-index')
-  this.annotationOccurrenceIndexInput = this.section.find('.js-annotation-occurrence-index')
+  this.annotationSelectionsInput      = this.section.find('.js-annotation-selections')
   this.redactionForm                  = this.section.find('.js-redaction-form')
   this.redactionSelectionsInput       = this.section.find('.js-redaction-selections')
   this.redactionDeleteForm           = this.section.find('.js-redaction-delete-form')
@@ -32,9 +31,10 @@ App.AnnotationPanel = function(params) {
   this.documentId = this.container.data('document-id')
 
   this.currentRange                = null
-  this.selectionMark               = null
+  this.selectionMarks              = []
   this.redactionsHidden            = false
   this.pendingAnnotationType       = null
+  this.pendingAnnotationSelections = null
   this.pendingDeleteRedactionGroupId = null
   this.formSelectionDocumentY      = null
 
@@ -125,13 +125,15 @@ App.AnnotationPanel.prototype.showRedactionPopup = function(rect, groupId) {
 // ── Cards ─────────────────────────────────────────────────────────────────────
 
 App.AnnotationPanel.prototype.clearSelectionHighlight = function() {
-  if (!this.selectionMark) return
-  var parent = this.selectionMark.parentNode
-  while (this.selectionMark.firstChild) {
-    parent.insertBefore(this.selectionMark.firstChild, this.selectionMark)
-  }
-  parent.removeChild(this.selectionMark)
-  this.selectionMark = null
+  this.selectionMarks.forEach(function(mark) {
+    var parent = mark.parentNode
+    if (!parent) return
+    while (mark.firstChild) {
+      parent.insertBefore(mark.firstChild, mark)
+    }
+    parent.removeChild(mark)
+  })
+  this.selectionMarks = []
 }
 
 App.AnnotationPanel.prototype.hideNewCard = function() {
@@ -146,6 +148,7 @@ App.AnnotationPanel.prototype.hideNewCard = function() {
   this.clearSelectionHighlight()
   this.selectedTextInput.val('')
   this.pendingAnnotationType = null
+  this.pendingAnnotationSelections = null
   this.currentRange = null
   this.formSelectionDocumentY = null
   this.positionAllCards()
@@ -228,7 +231,7 @@ App.AnnotationPanel.prototype.activateCard = function(annotationId, scrollIntoVi
 }
 
 App.AnnotationPanel.prototype.handleUrlHash = function() {
-  var match = window.location.hash.match(/^#annotation-(\d+)$/)
+  var match = window.location.hash.match(/^#annotation-([\w-]+)$/)
   if (!match) return
   this.activateCard(match[1])
   this.activateMark(match[1])
@@ -350,25 +353,28 @@ App.AnnotationPanel.prototype.onDocumentMouseup = function(e) {
 App.AnnotationPanel.prototype.onAnnotateBtnClick = function(e) {
   if (!this.currentRange) return
 
-  this.pendingAnnotationType = $(e.currentTarget).data('type')
-  var selectedText = this.currentRange.toString().trim()
-  this.selectedTextInput.val(selectedText)
+  var selections = this.getParagraphSelections(this.currentRange)
+  if (!selections.length) return
 
-  var position = this.getParagraphOccurrence(this.currentRange, selectedText)
-  this.annotationParagraphIndexInput.val(position.paragraphIndex)
-  this.annotationOccurrenceIndexInput.val(position.occurrenceIndex)
+  this.pendingAnnotationType = $(e.currentTarget).data('type')
+  this.pendingAnnotationSelections = selections
+  this.selectedTextInput.val(selections.map(function(selection) { return selection.selectedText }).join(' '))
 
   var rect = this.currentRange.getBoundingClientRect()
   this.formSelectionDocumentY = rect.top + rect.height / 2 + window.scrollY
 
   this.clearSelectionHighlight()
-  try {
-    this.selectionMark = document.createElement('span')
-    this.selectionMark.className = 'app-annotation-selecting'
-    this.currentRange.surroundContents(this.selectionMark)
-  } catch(err) {
-    this.selectionMark = null
-  }
+  this.getParagraphRanges(this.currentRange).forEach(function(paragraphRange) {
+    try {
+      var mark = document.createElement('span')
+      mark.className = 'app-annotation app-annotation--' + this.pendingAnnotationType
+      mark.style.cursor = 'default'
+      paragraphRange.range.surroundContents(mark)
+      this.selectionMarks.push(mark)
+    } catch(err) {
+      // Skip this paragraph's highlight rather than losing the others.
+    }
+  }, this)
 
   window.getSelection().removeAllRanges()
   this.hidePopup()
@@ -385,42 +391,19 @@ App.AnnotationPanel.prototype.onAnnotateBtnClick = function(e) {
   }
 }
 
-// Finds which paragraph a range's selection starts in and which occurrence
-// of the selected text within that paragraph it is, so the server can target
-// the exact instance the user selected rather than every matching string in
-// the document.
-App.AnnotationPanel.prototype.getParagraphOccurrence = function(range, selectedText) {
-  var allParas = this.container.find('.app-document__paragraph').toArray()
-  var startNode = range.startContainer
-  var startEl = startNode.nodeType === 3 ? startNode.parentNode : startNode
-  var paraEl = $(startEl).closest('.app-document__paragraph')[0]
-  var paragraphIndex = paraEl ? allParas.indexOf(paraEl) : 0
-  var occurrenceIndex = 0
+// Section headings are addressable alongside paragraphs (see flattenBlocks in
+// documentAnnotations.js, which the server applies the same paragraphIndex
+// against), so a selection can touch a heading and a paragraph together.
+App.AnnotationPanel.PARAGRAPH_BLOCK_SELECTOR = '.app-document__paragraph, .app-document__section-heading'
 
-  if (paraEl) {
-    var paraRange = document.createRange()
-    paraRange.setStart(paraEl, 0)
-    paraRange.setEnd(range.startContainer, range.startOffset)
-    var selectionStart = paraRange.toString().length
-    var paraText = paraEl.textContent
-    var searchFrom = 0
-    while (true) {
-      var idx = paraText.indexOf(selectedText, searchFrom)
-      if (idx === -1 || idx >= selectionStart) break
-      occurrenceIndex++
-      searchFrom = idx + 1
-    }
-  }
-
-  return { paragraphIndex: paragraphIndex, occurrenceIndex: occurrenceIndex }
-}
-
-// A redaction is stored per paragraph (selectedText + paragraphIndex +
-// occurrenceIndex), so a selection spanning multiple paragraphs is split
-// into one entry per paragraph it touches, each with the text and occurrence
-// count scoped to that paragraph alone.
-App.AnnotationPanel.prototype.getParagraphSelections = function(range) {
-  var allParas = this.container.find('.app-document__paragraph').toArray()
+// A selection spanning multiple blocks is split into one sub-range per
+// block it touches, each scoped entirely within that block element. Used
+// both to compute the per-block save payload (getParagraphSelections) and to
+// drive a per-block pending highlight (onAnnotateBtnClick), since a single
+// Range.surroundContents() call fails once a range straddles more than one
+// element.
+App.AnnotationPanel.prototype.getParagraphRanges = function(range) {
+  var allParas = this.container.find(App.AnnotationPanel.PARAGRAPH_BLOCK_SELECTOR).toArray()
   var touchedParas = allParas.filter(function(paraEl) {
     return range.intersectsNode(paraEl)
   })
@@ -431,8 +414,23 @@ App.AnnotationPanel.prototype.getParagraphSelections = function(range) {
     if (paraEl.contains(range.startContainer)) paraRange.setStart(range.startContainer, range.startOffset)
     if (paraEl.contains(range.endContainer)) paraRange.setEnd(range.endContainer, range.endOffset)
 
+    if (!paraRange.toString().trim()) return null
+
+    return { paraEl: paraEl, range: paraRange }
+  }).filter(function(paragraphRange) { return paragraphRange !== null })
+}
+
+// A redaction or annotation is stored per paragraph (selectedText +
+// paragraphIndex + occurrenceIndex), so a selection spanning multiple
+// paragraphs is split into one entry per paragraph it touches, each with the
+// text and occurrence count scoped to that paragraph alone.
+App.AnnotationPanel.prototype.getParagraphSelections = function(range) {
+  var allParas = this.container.find(App.AnnotationPanel.PARAGRAPH_BLOCK_SELECTOR).toArray()
+
+  return this.getParagraphRanges(range).map(function(paragraphRange) {
+    var paraEl = paragraphRange.paraEl
+    var paraRange = paragraphRange.range
     var selectedText = paraRange.toString().trim()
-    if (!selectedText) return null
 
     var beforeRange = document.createRange()
     beforeRange.setStart(paraEl, 0)
@@ -453,7 +451,7 @@ App.AnnotationPanel.prototype.getParagraphSelections = function(range) {
       occurrenceIndex: occurrenceIndex,
       selectedText: selectedText
     }
-  }).filter(function(selection) { return selection !== null })
+  })
 }
 
 App.AnnotationPanel.prototype.onRedactClick = function() {
@@ -507,6 +505,7 @@ App.AnnotationPanel.prototype.onSaveClick = function(e) {
   if (!note) { noteInput.focus(); return }
   this.typeHiddenInput.val(this.pendingAnnotationType)
   this.noteHiddenInput.val(note)
+  this.annotationSelectionsInput.val(JSON.stringify(this.pendingAnnotationSelections))
   this.submitAnnotationForm(this.annotationForm, $(e.currentTarget))
 }
 
@@ -543,6 +542,7 @@ App.AnnotationPanel.prototype.onSaveEvidenceClick = function(e) {
 
   this.typeHiddenInput.val(this.pendingAnnotationType)
   this.noteHiddenInput.val('')
+  this.annotationSelectionsInput.val(JSON.stringify(this.pendingAnnotationSelections))
   this.submitAnnotationForm(this.annotationForm, $(e.currentTarget))
 }
 

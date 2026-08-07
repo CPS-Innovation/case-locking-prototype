@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 
 function buildWorkingPattern(sessionData) {
   const days = [].concat(sessionData?.days || [])

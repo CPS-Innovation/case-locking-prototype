@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 const statuses = require('../data/case-statuses')
 const hearingStatuses = require('../data/hearing-statuses')
 const {
@@ -11,7 +10,7 @@ const {
   groupDocumentsByCategory,
 } = require('../helpers/caseReview')
 const { createInformationRequestFromSession } = require('../helpers/informationRequest')
-const { groupElementsByCharge } = require('../helpers/documentAnnotations')
+const { groupElementsByCharge, groupAnnotationRows } = require('../helpers/documentAnnotations')
 const { getDocumentPhotoUrls } = require('../helpers/documentContent')
 
 function parseHearingTime(time) {
@@ -122,8 +121,11 @@ module.exports = (router) => {
         return { ...sorted[0], kind: 'redaction', selectedText: sorted.map(row => row.selectedText).join(' ') }
       })
 
+      // A selection spanning multiple paragraphs is stored as several
+      // CaseReviewAnnotation rows sharing one groupId too — collapse each
+      // group back into a single card, same as redactions above.
       const items = [
-        ...dr.annotations.map(annotation => ({
+        ...groupAnnotationRows(dr.annotations).map(annotation => ({
           ...annotation,
           kind: 'annotation',
           elementGroups: groupElementsByCharge(annotation.elements),

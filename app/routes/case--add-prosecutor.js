@@ -1,6 +1,5 @@
 const _ = require('lodash')
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const prisma = require('../lib/prisma')
 
 async function getRecommendedProsecutor(excludedIds = []) {
   const excludeFilter = excludedIds.length ? { NOT: { id: { in: excludedIds } } } : {}

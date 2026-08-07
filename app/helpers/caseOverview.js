@@ -40,14 +40,15 @@ function getElementWitnesses(links) {
   return _.uniqBy(witnesses, 'id').map(toWitnessItem)
 }
 
-function toAnnotationItem(annotation, reasoning) {
+function toAnnotationItem(annotation, reasoning, joinedByGroup) {
   const { document, documentId } = annotation.caseReviewDocument
   return {
     id: annotation.id,
+    groupId: annotation.groupId,
     documentId,
     documentName: document.name,
     documentType: document.type,
-    selectedText: annotation.selectedText,
+    selectedText: joinedByGroup.get(annotation.groupId) ?? annotation.selectedText,
     timestampSeconds: annotation.timestampSeconds,
     photoUrl: getDocumentPhotoUrls(document)[0],
     addedByName: annotation.user ? `${annotation.user.firstName} ${annotation.user.lastName}` : null,
@@ -56,7 +57,7 @@ function toAnnotationItem(annotation, reasoning) {
   }
 }
 
-function buildOverviewElement(element, links, submittedReview) {
+function buildOverviewElement(element, links, submittedReview, joinedByGroup) {
   if (!submittedReview) {
     return {
       id: element.id,
@@ -74,16 +75,20 @@ function buildOverviewElement(element, links, submittedReview) {
     description: element.description,
     strength: element.strength,
     strengthReasoning: element.strengthReasoning,
-    evidence: links.filter(link => link.annotation.type === 'evidence').map(link => toAnnotationItem(link.annotation, link.reasoning)),
-    issues: links.filter(link => link.annotation.type === 'issue').map(link => toAnnotationItem(link.annotation, link.reasoning)),
+    evidence: links.filter(link => link.annotation.type === 'evidence').map(link => toAnnotationItem(link.annotation, link.reasoning, joinedByGroup)),
+    issues: links.filter(link => link.annotation.type === 'issue').map(link => toAnnotationItem(link.annotation, link.reasoning, joinedByGroup)),
     witnesses: getElementWitnesses(links)
   }
 }
 
 // Shapes the case's charges/elements for the overview page so the view can
 // just loop over evidence/issues/witnesses without working out how to split
-// or dedupe anything itself.
-function buildOverviewCharges(defendants, annotationLinks, submittedReview) {
+// or dedupe anything itself. joinedByGroup maps a grouped annotation's
+// groupId to its full selected text across every paragraph it touched (see
+// joinSelectedTextByGroup in documentAnnotations.js) - each link's annotation
+// is only ever the primary row of its group, so its own selectedText alone
+// would just be the first paragraph.
+function buildOverviewCharges(defendants, annotationLinks, submittedReview, joinedByGroup) {
   const linksByElementId = _.groupBy(annotationLinks, 'elementId')
 
   return defendants.flatMap(defendant =>
@@ -91,7 +96,7 @@ function buildOverviewCharges(defendants, annotationLinks, submittedReview) {
       id: charge.id,
       description: charge.description,
       elements: charge.elements.map(element =>
-        buildOverviewElement(element, linksByElementId[element.id] || [], submittedReview)
+        buildOverviewElement(element, linksByElementId[element.id] || [], submittedReview, joinedByGroup)
       )
     }))
   )
