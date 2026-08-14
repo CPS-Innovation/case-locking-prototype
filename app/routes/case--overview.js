@@ -78,7 +78,9 @@ module.exports = router => {
     const summary = submittedReview ? submittedReview.summary : null
     const elementsAssessed = !!submittedReview
 
-    res.render("cases/overview/index", { _case, charges, summary, elementsAssessed })
+    // res.render("cases/overview/index", { _case, charges, summary, elementsAssessed })
+    // Temporarily changed route for a user test
+    res.render('cases/interruption/index', { _case, charges, summary, elementsAssessed })
   })
 
   router.get("/cases/:caseId/complexity-calculation", async (req, res) => {
