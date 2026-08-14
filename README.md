@@ -1,3 +1,3 @@
-# Manage cases prototype
+# Case locking prototype
 
-Updated 13 August 2:07pm
+Updated 14 August 1:43pm
