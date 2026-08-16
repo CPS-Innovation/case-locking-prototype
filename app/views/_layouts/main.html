@@ -8,10 +8,25 @@
 {% from "_components/identity-bar/macro.njk" import appIdentityBar %}
 {% from "_components/activity-log-item/macro.njk" import appActivityLogItem %}
 {% from "_components/annotation-card/macro.njk" import appAnnotationCard %}
+{% from "_components/notification-banner-pinned/macro.njk" import appNotificationBannerPinned %}
 
 {% block header %}
   {% include "_includes/header.njk" %}
   {% include "_includes/navigation.njk" %}
+  {% if _case %}
+    {{ appNotificationBannerPinned({
+      titleText: "Case locked as 1 user is editing with 2 users viewing",
+      html: "
+        <h4 class=\"govuk-heading-s\">Witnesses</h4>
+        <p class=\"govuk-body\">Contact <a class=\"govuk-notification-banner__link\" href=\"#\">oliver.del-staff@cps.gov.uk</a> since 15:38 on 21 September 2026.</p>
+        <h3 class=\"govuk-notification-banner__heading\">Other users are viewing the following sections:</h3>
+        <h4 class=\"govuk-heading-s\">Witnesses</h4>
+        <p class=\"govuk-body\">Contact <a class=\"govuk-notification-banner__link\" href=\"#\">alice.bennett@cps.gov.uk</a> since 15:38 on 21 September 2026.</p>
+        <h4 class=\"govuk-heading-s\">Defendants</h4>
+        <p class=\"govuk-body\">Contact <a class=\"govuk-notification-banner__link\" href=\"#\">oliver.del-staff@cps.gov.uk</a> since 15:15 on 21 September 2026.</p>
+      "
+    }) }}
+  {% endif %}
 {% endblock %}
 
 {% block footer %}
@@ -29,6 +44,7 @@
   <script src="/public/javascripts/components/button-menu.js"></script>
   <script src="/public/javascripts/components/text-expander.js"></script>
   <script src="/public/javascripts/components/checkbox-selector.js"></script>
+  <script src="/public/javascripts/components/notification-banner-pinned.js"></script>
 {% endblock %}
 
 {% block scripts %}
@@ -38,6 +54,10 @@
     if ($header) {
       new App.AccountNavigation($header)
     }
+
+    new App.NotificationBannerPinned({
+      container: $('.app-notification-banner-pinned')
+    })
   </script>
   {% include "_includes/case/identity-bar-scripts.njk" %}
 {% endblock %}
