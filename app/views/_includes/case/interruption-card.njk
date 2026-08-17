@@ -4,11 +4,11 @@
     heading: "Are you sure you want to review this?",
     primaryAction: {
         text: "Continue",
-        href: "#"
+        href: continueUrl or ("/cases/" + _case.id + "/review")
     },
     secondaryAction: {
-        text: "Go back to case list",
-        href: "/overview"
+        text: "Go back to the case",
+        href: backUrl or ("/cases/" + _case.id)
     }
 }) -%}
 

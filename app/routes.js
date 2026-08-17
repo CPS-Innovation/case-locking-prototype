@@ -5,6 +5,7 @@ const prisma = require('./lib/prisma')
 const checkSignedIn = require('./middleware/checkSignedIn')
 const setLocals = require('./middleware/setLocals')
 const blockDuringReset = require('./middleware/blockDuringReset')
+const { reviewInterruptionGuard, resetReviewInterruptionOnCaseDetail } = require('./middleware/reviewInterruptionGuard')
 
 // Route handlers here don't consistently catch errors, so one bad request
 // (e.g. a stale case ID after a /clear-data reset) can otherwise crash the
@@ -97,6 +98,15 @@ router.use('/cases/:caseId*', async (req, res, next) => {
 
 require('./routes/hearings')(router)
 
+// Clear any review-interruption acknowledgement for this case as soon as
+// the user is on an ordinary case-detail route (i.e. has left the review
+// journey for this case) - see resetReviewInterruptionOnCaseDetail for the
+// exact boundary. Registered broadly here (like the two case-wide
+// middlewares above) rather than added to every individual case-detail
+// route module, and it internally excludes review/review-variant-2/
+// interruption paths so acknowledging review is never immediately undone.
+router.use('/cases/:caseId*', resetReviewInterruptionOnCaseDetail)
+
 // Case routes
 require('./routes/cases')(router)
 // require('./routes/cases--select-all')(router)
@@ -109,6 +119,26 @@ require('./routes/case--add-paralegal-officer')(router)
 require('./routes/case--prosecutors')(router)
 require('./routes/case--paralegal-officers')(router)
 require('./routes/case--overview')(router)
+require('./routes/case--interruption')(router)
+
+// Entry gate for the review journey (both /review and /review-variant-2):
+// intercepts the first unacknowledged request into either flow and renders
+// the interruption instead, before any of the review route modules below
+// get a chance to run. Registered as router.use so it covers every review
+// sub-route without duplicating a check in each one - see
+// app/middleware/reviewInterruptionGuard.js for details.
+//
+// A single '/cases/:caseId/review*' pattern was tried first, but Express's
+// glob-style '*' matches anything immediately following "review" with no
+// path-separator boundary, so it also matched unrelated paths such as
+// "/cases/6/reviewer-notes". Listing the exact prefixes instead avoids that.
+router.use([
+  '/cases/:caseId/review',
+  '/cases/:caseId/review/*',
+  '/cases/:caseId/review-variant-2',
+  '/cases/:caseId/review-variant-2/*'
+], reviewInterruptionGuard)
+
 require('./routes/case--review--charging-decision')(router)
 require('./routes/case--review--strength-assessment')(router)
 require('./routes/case--review--document')(router)
@@ -160,4 +190,3 @@ require('./routes/case--review-variant-2--strength-assessment')(router)
 require('./routes/case--review-variant-2--summary')(router)
 require('./routes/case--review-variant-2--information-request')(router)
 require('./routes/case--review-variant-2--first-hearing')(router)
-require('./routes/case--interruption')(router)
