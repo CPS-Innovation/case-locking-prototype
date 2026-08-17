@@ -78,7 +78,7 @@ This is a [GOV.UK Prototype Kit](https://prototype-kit.service.gov.uk/) service,
    npm run generate-data
    ```
 
-   This runs `prisma db push --force-reset` followed by `prisma db seed`, so it drops and recreates the local SQLite schema before reseeding it with fresh sample data. It is only needed once, when setting up the prototype for the first time - running it again will reset and overwrite any local data (including anything created while using the prototype).
+   This runs `prisma db push --force-reset` followed by `prisma db seed`, so it drops and recreates the local SQLite schema before reseeding it with fresh sample data. Run this when setting up the prototype for the first time, or when you need to reset it to the seeded sample data. It drops and recreates the local SQLite schema, so running it will overwrite any existing local data.
 
 4. Start the prototype in development mode:
 
