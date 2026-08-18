@@ -1,0 +1,14 @@
+.app-document--photo {
+  max-width: none;
+  padding: 15px;
+}
+
+.app-document__photo {
+  display: block;
+  width: 100%;
+  background: govuk-colour("black");
+}
+
+.app-photo-annotation-actions {
+  margin-bottom: govuk-spacing(4);
+}

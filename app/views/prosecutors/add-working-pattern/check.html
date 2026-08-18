@@ -1,0 +1,49 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'prosecutors' %}
+{% set pageName = "Check details and add working pattern" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{prosecutor.firstName}} {{prosecutor.lastName}}</span>
+      <h1 class="govuk-heading-l">{{pageName}}</h1>
+
+      {% set workingPatternValue %}
+        <ul class="govuk-list govuk-list--bullet">
+          {% for item in workingPattern %}
+            <li>{{item.day}}: {{item.hours}} {{ "hour" if item.hours == "1" else "hours" }}</li>
+          {% endfor %}
+        </ul>
+      {% endset %}
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Working pattern" },
+            value: { html: workingPatternValue },
+            actions: {
+              items: [
+                {
+                  href: "/prosecutors/:prosecutorId/add-working-pattern" | replace(':prosecutorId', prosecutor.id),
+                  text: "Change",
+                  visuallyHiddenText: "Working pattern"
+                }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <form method="post">
+        {{ govukButton({ text: "Add working pattern" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{%- from "moj/components/interruption-card/macro.njk" import interruptionCard -%}
+
+{% call interruptionCard({
+    heading: "Are you sure you want to review this?",
+    primaryAction: {
+        text: "Continue",
+        href: continueUrl or ("/cases/" + _case.id + "/review")
+    },
+    secondaryAction: {
+        text: "Go back to the case",
+        href: backUrl or ("/cases/" + _case.id)
+    }
+}) -%}
+
+    <p>The case is currently being edited by Oliver Del-Staff.</p>
+    <p>If you enter this review at the same time, any information provided is at risk of being lost. If needed, contact Oliver Del-Staff and ask them to exit this review.</p>
+    <p>You can go back to view a different case.</p>
+{%- endcall %}

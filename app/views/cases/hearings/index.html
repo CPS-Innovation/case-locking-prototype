@@ -1,0 +1,81 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'hearings' %}
+{% set pageName = "Hearings" %}
+
+{% block beforeContent %}
+  {% include "_includes/case/identity-bar.njk" %}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+  {% include "_includes/case/navigation.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukButton({
+          text: "Add hearing",
+          href: "/cases/" + _case.id + "/hearings/add"
+        })
+      }}
+
+      {% if _case.hearings.length %}
+        <div class="app-list">
+          {% for hearing in _case.hearings %}
+            {% if hearing.defendants.length == _case.defendants.length %}
+              {% set hearingDefendantNames = 'All' %}
+            {% else %}
+              {% set hearingDefendantNames %}{% for d in hearing.defendants %}{{ d.firstName }} {{ d.lastName }}{% if not loop.last %}, {% endif %}{% endfor %}{% endset %}
+            {% endif %}
+            <div class="app-list__item">
+              <h3 class="govuk-heading-s govuk-!-margin-bottom-1">
+                <div>
+                  <a
+                    href="/cases/{{ _case.id }}/hearings/{{ hearing.id }}"
+                    class="govuk-link--no-visited-state"
+                  >
+                    {{ hearing.type }}
+                  </a>
+                </div>
+                <div class="app-list__tag">
+                  {{
+                    govukTag({
+                      text: hearing.status | replace("Hearing ", "") | capitalize,
+                      classes: hearing.status | hearingStatusTagClass
+                    })
+                  }}
+                </div>
+              </h3>
+
+              {{
+                govukSummaryList({
+                  classes: 'govuk-summary-list--no-border app-summary-list--compact app-summary-list--small-text',
+                  rows: [
+                    {
+                      key: { text: 'Date' },
+                      value: { html: hearing.startDate | isoDateString | govukDateTime }
+                    },
+                    {
+                      key: { text: 'Venue' },
+                      value: { text: hearing.venue }
+                    },
+                    {
+                      key: { text: 'Defendants' },
+                      value: { text: hearingDefendantNames }
+                    } if _case.defendants.length > 1
+                  ]
+                })
+              }}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>There are no hearings.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

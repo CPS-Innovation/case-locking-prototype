@@ -1,0 +1,94 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Check details and return to review first hearing outcome" %}
+
+{%
+  set outcomeLabels = {
+    "trial-in-magistrates-court": "Trial in magistrates court",
+    "pleads-guilty": "Sentencing",
+    "sent-to-crown-court": "Trial in crown court"
+  }
+%}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: 'javascript:history.back()'
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – record first hearing outcome</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "Outcome" },
+              value: { text: outcomeLabels[data.recordFirstHearingOutcome.outcome] },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/record-first-hearing-outcome",
+                  text: "Change",
+                  visuallyHiddenText: "outcome"
+                }]
+              }
+            },
+            {
+              key: { text: "Transfer unit" },
+              value: { text: "Yes" if data.recordFirstHearingOutcome.changeUnit == "Yes" else "No" },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/record-first-hearing-outcome/change-unit",
+                  text: "Change",
+                  visuallyHiddenText: "unit transfer"
+                }]
+              }
+            } if data.recordFirstHearingOutcome.changeUnit,
+            {
+              key: { text: "New unit" },
+              value: { text: newUnit.name },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/record-first-hearing-outcome/select-unit",
+                  text: "Change",
+                  visuallyHiddenText: "new unit"
+                }]
+              }
+            } if newUnit,
+            {
+              key: { text: "PTPH date" },
+              value: { text: data.recordFirstHearingOutcome.ptphDate | isoDateFromDateInput | govukDateTime },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/record-first-hearing-outcome/ptph-date",
+                  text: "Change",
+                  visuallyHiddenText: "PTPH hearing date"
+                }]
+              }
+            } if data.recordFirstHearingOutcome.outcome == "sent-to-crown-court",
+            {
+              key: { text: "Venue" },
+              value: { text: data.recordFirstHearingOutcome.ptphVenue },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/record-first-hearing-outcome/ptph-venue",
+                  text: "Change",
+                  visuallyHiddenText: "venue"
+                }]
+              }
+            } if data.recordFirstHearingOutcome.outcome == "sent-to-crown-court"
+          ]
+        })
+      }}
+
+      <form method="post">{{ govukButton({ text: "Record outcome" }) }}</form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,313 @@
+{% set filterOptionsHtml %}
+
+  {{ appCheckboxFilter({
+    idPrefix: "caseListFilters[prosecutors]",
+    name: "caseListFilters[prosecutors]",
+    classes: "govuk-checkboxes--small prosecutor-filter" ,
+    attributes: {
+      id: 'prosecutor-filter'
+    },
+    fieldset: {
+      legend: {
+        text: "Prosecutor",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    maxHeight: true,
+    items: prosecutorItems,
+    values: selectedProsecutorFilters,
+    selectedItems: selectedProsecutorItems
+  }) }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[statuses]",
+    name: "caseListFilters[statuses]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Status",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: statusItems,
+    values: selectedStatusFilters
+  }) if statusItems.length }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[review]",
+    name: "caseListFilters[review]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Review status",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: reviewItems,
+    values: selectedReviewFilters
+  }) }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[firstHearing]",
+    name: "caseListFilters[firstHearing]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "First hearing",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: firstHearingItems,
+    values: selectedFirstHearingFilters
+  }) if false }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[hearingStatuses]",
+    name: "caseListFilters[hearingStatuses]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Hearing status",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: hearingStatusItems,
+    values: selectedHearingStatusFilters
+  }) }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[defendants]",
+    name: "caseListFilters[defendants]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Defendants",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: defendantItems,
+    values: selectedDefendantFilters
+  }) if false}}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[statusMix]",
+    name: "caseListFilters[statusMix]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Status mix",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: statusMixItems,
+    values: selectedStatusMixFilters
+  }) if false}}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[informationRequests]",
+    name: "caseListFilters[informationRequests]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Information requests",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: informationRequestsItems,
+    values: data.caseListFilters.informationRequests
+  }) if false}}
+
+  {{ appCheckboxFilter({
+    idPrefix: "caseListFilters[paralegalOfficers]",
+    name: "caseListFilters[paralegalOfficers]",
+    classes: "govuk-checkboxes--small paralegal-officer-filter" ,
+    attributes: {
+      id: 'paralegal-officer-filter'
+    },
+    fieldset: {
+      legend: {
+        text: "Paralegal officer",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    maxHeight: true,
+    items: paralegalOfficerItems,
+    values: selectedParalegalOfficerFilters,
+    selectedItems: selectedParalegalOfficerItems
+  }) if false}}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[unit]",
+    name: "caseListFilters[unit]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Unit",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: unitItems,
+    values: data.caseListFilters.unit
+  }) if unitItems.length > 1}}
+
+  {# {{ govukCheckboxes({
+    idPrefix: "caseListFilters[complexities]",
+    name: "caseListFilters[complexities]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Complexity",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: complexityItems,
+    values: data.caseListFilters.complexities
+  }) }} #}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[custodyTimeLimitRange]",
+    name: "caseListFilters[custodyTimeLimitRange]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Custody time limit",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: custodyTimeLimitRangeItems,
+    values: selectedCustodyTimeLimitRangeFilters
+  }) if false }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[statutoryTimeLimitRange]",
+    name: "caseListFilters[statutoryTimeLimitRange]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Statutory time limit",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: statutoryTimeLimitRangeItems,
+    values: selectedStatutoryTimeLimitRangeFilters
+  }) if false }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[paceClockRange]",
+    name: "caseListFilters[paceClockRange]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "PACE clock",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: paceClockRangeItems,
+    values: selectedPaceClockRangeFilters
+  }) if false }}
+
+  {{ govukCheckboxes({
+    idPrefix: "caseListFilters[hearingPrepDateRange]",
+    name: "caseListFilters[hearingPrepDateRange]",
+    classes: "govuk-checkboxes--small",
+    fieldset: {
+      legend: {
+        text: "Hearing date",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    items: hearingPrepDateRangeItems,
+    values: selectedHearingPrepDateRangeFilters
+  }) if false }}
+
+  {% if data.user.role == "Manager" %}
+    {{ govukCheckboxes({
+      idPrefix: "caseListFilters[dga]",
+      name: "caseListFilters[dga]",
+      classes: "govuk-checkboxes--small",
+      fieldset: {
+        legend: {
+          text: "DGA dispute outcome",
+          classes: "govuk-fieldset__legend--s"
+        }
+      },
+      items: dgaItems,
+      values: data.caseListFilters.dga
+    }) }}
+
+    {{ govukCheckboxes({
+      idPrefix: "caseListFilters[dgaMonth]",
+      name: "caseListFilters[dgaMonth]",
+      classes: "govuk-checkboxes--small",
+      fieldset: {
+        legend: {
+          text: "DGA reporting month",
+          classes: "govuk-fieldset__legend--s"
+        }
+      },
+      items: dgaMonthItems,
+      values: data.caseListFilters.dgaMonth
+    }) if dgaMonthItems.length }}
+  {% endif %}
+
+  {{ appCheckboxFilter({
+    idPrefix: "caseListFilters[policeUnit]",
+    name: "caseListFilters[policeUnit]",
+    classes: "govuk-checkboxes--small police-unit-filter",
+    attributes: {
+      id: 'police-unit-filter'
+    },
+    fieldset: {
+      legend: {
+        text: "Police force",
+        classes: "govuk-fieldset__legend--s"
+      }
+    },
+    maxHeight: true,
+    items: policeUnitItems,
+    values: data.caseListFilters.policeUnit,
+    selectedItems: selectedPoliceUnitItems
+  }) if policeUnitItems.length and false }}
+
+{% endset %}
+
+<section aria-labelledby="app-filter-heading">
+<div class="app-filter">
+  <div class="app-filter__header">
+    <div class="app-filter__header-title">
+      <h2 class="govuk-heading-m" id="app-filter-heading">Filter</h2>
+    </div>
+    <div class="app-filter__header-action">
+
+    </div>
+  </div>
+  <div class="app-filter__content">
+    {% if selectedFilters.categories.length %}
+      <div class="app-filter__selected">
+        <div class="app-filter__selected-heading">
+          <div class="app-filter__heading-title">
+            <h3 class="govuk-heading-m govuk-!-margin-bottom-1">Selected filters</h3>
+            <p class="govuk-body"><a class="govuk-link govuk-link--no-visited-state" href="/cases/clear-filters">Clear filters</a></p>
+          </div>
+        </div>
+        {% for category in selectedFilters.categories %}
+          <h3 class="govuk-heading-s govuk-!-margin-bottom-0">{{ category.heading.text }}</h3>
+          <ul class="app-filter-tags">
+            {% for item in category.items %}
+              <li><a class="app-filter__tag" href="{{item.href}}"><span class="govuk-visually-hidden">Remove this filter</span> {{item.text}}</a></li>
+            {% endfor %}
+          </ul>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <div class="app-filter__options">
+      <form method="get" novalidate>
+        <button class="govuk-button" data-module="govuk-button">
+          Apply filters
+        </button>
+        {{filterOptionsHtml | safe}}
+      </form>
+    </div>
+  </div>
+</div>
+</section>

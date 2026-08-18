@@ -1,0 +1,31 @@
+{% extends "_layouts/main.html" %}
+{% from "_includes/case/charges-elements.njk" import chargesElements %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'overview' %}
+{% set pageName = 'Overview' %}
+
+{% block beforeContent %}
+{% include "_includes/case/identity-bar.njk" %}
+{% endblock %}
+
+{% block content %}
+{% include "_includes/success-banner.njk" %}
+{% include "_includes/case/navigation.njk" %}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full-from-desktop">
+
+    {% include "_includes/case/interruption-card.njk" %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+  $('.js-annotation-excerpt').each(function () {
+    new App.TextExpander({ container: $(this), maxLength: 80 })
+  })
+</script>
+{% endblock %}

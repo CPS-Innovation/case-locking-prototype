@@ -1,0 +1,43 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Unit" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: 'javascript:history.back()' }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – {{ hearing.type }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% set unitInset %}
+        <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Current unit</h2>
+        <p>{{ _case.unit.name }}</p>
+      {% endset %}
+
+      {{ govukInsetText({ html: unitInset }) }}
+
+      <form method="post">
+        {{
+          govukRadios({
+            name: "unitId",
+            value: selectedUnitId,
+            fieldset: {
+              legend: {
+                text: pageName,
+                isPageHeading: false,
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: unitItems
+          })
+        }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

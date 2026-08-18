@@ -1,0 +1,38 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Hearing type" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + _case.id + '/hearings'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – add hearing</span>
+
+      <form method="post">
+        {{ govukRadios({
+          name: "addHearing[type]",
+          fieldset: {
+            legend: {
+              text: pageName,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          value: data.addHearing.type,
+          items: hearingTypeItems
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

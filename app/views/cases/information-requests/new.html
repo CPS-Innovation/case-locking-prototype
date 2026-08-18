@@ -1,0 +1,33 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: "/cases/" + _case.id + "/information-requests"
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }} - create information request</span>
+      <form method="post">
+        {{ govukTextarea({
+          name: "newInformationRequest[description]",
+          id: "description",
+          label: {
+            text: "Title",
+            classes: "govuk-label--l",
+            isPageHeading: true
+          },
+          value: data['newInformationRequest']['description']
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

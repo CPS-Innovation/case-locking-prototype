@@ -1,0 +1,47 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Select cases" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: '/cases?page=' + page
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <form method="post" action="/cases/select-all">
+        <input type="hidden" name="page" value="{{ page }}" />
+        {{
+          govukRadios({
+            name: "selection",
+            fieldset: {
+              legend: {
+                text: "Do you want to select all cases or just the cases on this page?",
+                isPageHeading: true,
+                classes: "govuk-fieldset__legend--l"
+              }
+            },
+            items: [
+              {
+                value: "all",
+                text: "Select all " + totalCases + " cases"
+              },
+              {
+                value: "page",
+                text: "Select the " + pageCount + " cases on the page"
+              }
+            ]
+          })
+        }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

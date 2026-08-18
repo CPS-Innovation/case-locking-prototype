@@ -1,0 +1,33 @@
+{% from "govuk/components/inset-text/macro.njk" import govukInsetText %}
+
+{% macro annotationCardBody(params) %}
+  {% if params.selectedText == 'Whole photo' %}
+    <img
+      src="{{ params.photoUrl }}"
+      alt="{{ params.documentName }}"
+      class="app-annotation-media__photo"
+    />
+  {% elif params.timestampSeconds != null %}
+    {% if params.documentType == 'MP3' %}
+      <audio
+        src="/public/audio/999-call-placeholder.mp3#t={{ params.timestampSeconds }}"
+        class="app-annotation-media__audio"
+        controls
+      ></audio>
+    {% else %}
+      <video
+        src="/public/videos/cctv-placeholder.mp4#t={{ params.timestampSeconds }}"
+        class="app-annotation-media__video"
+        controls
+      ></video>
+    {% endif %}
+    <p class="app-annotation-media__label">Timestamp</p>
+    <p>{{ params.selectedText }}</p>
+  {% else %}
+    <p class="app-annotation-media__label">Excerpt</p>
+    {{ govukInsetText({
+      classes: "js-annotation-excerpt govuk-!-margin-top-1 govuk-!-margin-bottom-3 govuk-!-padding-top-0 govuk-!-padding-bottom-0",
+      text: params.selectedText
+    }) }}
+  {% endif %}
+{% endmacro %}

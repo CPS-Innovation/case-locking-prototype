@@ -1,0 +1,107 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "CTL log entry" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: "/cases/:caseId/ctl-log" | replace(':caseId', _case.id)
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} - add CTL log entry</span>
+      <form method="post">
+        {{
+          govukRadios({
+            name: "addCtlLogEntry[description]",
+            fieldset: {
+              legend: {
+                text: pageName,
+                isPageHeading: true,
+                classes: "govuk-fieldset__legend--l"
+              }
+            },
+            value: data.addCtlLogEntry.description,
+            items: [
+              {
+                value: "Ad-hoc review",
+                text: "Ad-hoc review"
+              },
+              {
+                value: "Applications to vary judges’ directions",
+                text: "Applications to vary judges’ directions"
+              },
+              {
+                value: "Case Action Plans - sent",
+                text: "Case Action Plans - sent"
+              },
+              {
+                value: "Case conference",
+                text: "Case conference"
+              },
+              {
+                value: "Chase upgrade file",
+                text: "Chase upgrade file"
+              },
+              {
+                value: "CTL extension application - draft approval and service",
+                text: "CTL extension application - draft approval and service"
+              },
+              {
+                value: "Digital diary creation and update",
+                text: "Digital diary creation and update"
+              },
+              {
+                value: "Escalations",
+                text: "Escalations"
+              },
+              {
+                value: "Prepare PTPH",
+                text: "Prepare PTPH"
+              },
+              {
+                value: "Receipt of defence statement",
+                text: "Receipt of defence statement"
+              },
+              {
+                value: "Threshold test review",
+                text: "Threshold test review"
+              },
+              {
+                value: "Weekly assurance report",
+                text: "Weekly assurance report"
+              },
+              {
+                divider: "or"
+              },
+              {
+                value: "Other",
+                text: "Other",
+                conditional: {
+                  html: govukInput({
+                    name: "addCtlLogEntry[otherDescription]",
+                    id: "other-description",
+                    label: { text: "Description" },
+                    value: data.addCtlLogEntry.otherDescription
+                  })
+                }
+              }
+            ]
+          })
+        }}
+
+        {{
+          govukButton({
+            text: "Continue"
+          })
+        }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

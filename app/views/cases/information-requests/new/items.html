@@ -1,0 +1,76 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% from "_components/page-header/macro.njk" import appPageHeader %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: 'javascript:history.back()' }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }} - create information request</span>
+      <h1 class="govuk-heading-l">Items requested</h1>
+
+      {% for item in items %}
+        {{ appPageHeader({
+          classes: 'govuk-!-margin-bottom-1 govuk-!-margin-top-7',
+          heading: {
+            level: 2,
+            text: item.description,
+            classes: 'govuk-heading-m'
+          },
+          items: [{
+            text: 'Delete item',
+            href: '/cases/' + _case.id + '/information-requests/new/items/' + loop.index0 + '/delete'
+          }]
+        }) }}
+
+        {{
+          govukSummaryList({
+            rows: [
+              {
+                key: { text: "Category" },
+                value: { text: item.category },
+                actions: { items: [{ href: '/cases/' + _case.id + '/information-requests/new/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "category" }] }
+              },
+              {
+                key: { text: "Description" },
+                value: { text: item.description },
+                actions: { items: [{ href: '/cases/' + _case.id + '/information-requests/new/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "description" }] }
+              },
+              {
+                key: { text: "Due date" },
+                value: { text: item.formattedDueDate },
+                actions: { items: [{ href: '/cases/' + _case.id + '/information-requests/new/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "due date" }] }
+              },
+              {
+                key: { text: "Defendants" },
+                value: { text: item.defendantNames or "—" },
+                actions: { items: [{ href: '/cases/' + _case.id + '/information-requests/new/items/' + loop.index0 + '/edit', text: "Change", visuallyHiddenText: "defendants" }] }
+              } if _case.defendants.length > 1
+            ]
+          })
+        }}
+      {% endfor %}
+
+      <form method="post">
+        {{ govukRadios({
+          name: "addAnother",
+          fieldset: {
+            legend: {
+              text: "Do you want to add another item?",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: [
+            { value: "yes", text: "Yes" },
+            { value: "no", text: "No" }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

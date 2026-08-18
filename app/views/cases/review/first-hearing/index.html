@@ -1,0 +1,59 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Date" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + _case.id + '/review'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+
+      <form method="post">
+        {{ govukDateInput({
+          id: "hearing-date",
+          fieldset: {
+            legend: {
+              text: pageName,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: {
+            text: "For example, " + dateHintExample
+          },
+          items: [
+            {
+              name: "reviewFirstHearing[hearingDate][day]",
+              label: "Day",
+              value: reviewFirstHearing.hearingDate.day,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "reviewFirstHearing[hearingDate][month]",
+              label: "Month",
+              value: reviewFirstHearing.hearingDate.month,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "reviewFirstHearing[hearingDate][year]",
+              label: "Year",
+              value: reviewFirstHearing.hearingDate.year,
+              classes: "govuk-input--width-4"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

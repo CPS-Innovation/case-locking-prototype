@@ -1,0 +1,78 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = element.description %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: 'javascript:history.back()' }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }} – element strength</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% include "_includes/element-annotation-cards.njk" %}
+
+      <form method="post">
+        <input type="hidden" name="from" value="{{ from }}" />
+        <input type="hidden" name="documentId" value="{{ documentId }}" />
+
+        {{
+          govukRadios({
+            name: "strength",
+            value: element.strength or "Not assessed",
+            fieldset: {
+              legend: {
+                text: "Element strength",
+                isPageHeading: false,
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: [
+              {
+                value: "Strong",
+                text: "Strong",
+                conditional: {
+                  html: govukTextarea({
+                    name: "strengthReasoning[Strong]",
+                    id: "strength-reasoning-strong",
+                    value: element.strengthReasoning if element.strength == "Strong" else "",
+                    label: { text: "Reason" }
+                  })
+                }
+              },
+              {
+                value: "Moderate",
+                text: "Moderate",
+                conditional: {
+                  html: govukTextarea({
+                    name: "strengthReasoning[Moderate]",
+                    id: "strength-reasoning-moderate",
+                    value: element.strengthReasoning if element.strength == "Moderate" else "",
+                    label: { text: "Reason" }
+                  })
+                }
+              },
+              {
+                value: "Weak",
+                text: "Weak",
+                conditional: {
+                  html: govukTextarea({
+                    name: "strengthReasoning[Weak]",
+                    id: "strength-reasoning-weak",
+                    value: element.strengthReasoning if element.strength == "Weak" else "",
+                    label: { text: "Reason" }
+                  })
+                }
+              }
+            ]
+          })
+        }}
+
+        {{ govukButton({ text: "Update strength of element" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

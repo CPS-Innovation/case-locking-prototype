@@ -1,0 +1,120 @@
+{% set hasCTL = caseCTLCountsByRange.today > 0 or caseCTLCountsByRange.tomorrow > 0 %}
+{% set hasSTL = caseSTLCountsByRange.today > 0 or caseSTLCountsByRange.tomorrow > 0 %}
+{% set hasPace = casePaceClockCountsByRange.lessThan1Hour > 0 or casePaceClockCountsByRange.lessThan2Hours > 0 or casePaceClockCountsByRange.lessThan3Hours > 0 %}
+{% set hasHearings = caseHearingPrepCountsByRange.today > 0 or caseHearingPrepCountsByRange.tomorrow > 0 or caseHearingPrepCountsByRange.thisWeek > 0 or caseHearingPrepCountsByRange.nextWeek > 0 %}
+{% set hasDirections = (data.user.role == "Prosecutor" or data.user.role == "Paralegal officer") and (dueTodayDirectionCount > 0 or dueTomorrowDirectionCount > 0) %}
+
+{% if hasCTL or hasSTL or hasPace or hasHearings %}
+  <div class="app-overview-section">
+    <h2 class="govuk-heading-m">High priority cases</h2>
+
+    {% if hasCTL %}
+      <h3 class="govuk-heading-s">Custody time limit ending soon</h3>
+      <div class="app-overview-cards govuk-!-margin-bottom-6">
+        {% if caseCTLCountsByRange.today > 0 %}
+          <a href="/cases/shortcut/ctl-today" class="app-overview-card app-overview-card--red">
+            <span class="app-overview-card__count">{{ caseCTLCountsByRange.today }}</span>
+            <span class="app-overview-card__status">{{ caseCTLCountsByRange.today | pluralize("case has", "cases have") }} a custody time limit ending today</span>
+          </a>
+        {% endif %}
+        {% if caseCTLCountsByRange.tomorrow > 0 %}
+          <a href="/cases/shortcut/ctl-tomorrow" class="app-overview-card app-overview-card--orange">
+            <span class="app-overview-card__count">{{ caseCTLCountsByRange.tomorrow }}</span>
+            <span class="app-overview-card__status">{{ caseCTLCountsByRange.tomorrow | pluralize("case has", "cases have") }} a custody time limit ending tomorrow</span>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if hasSTL %}
+      <h3 class="govuk-heading-s">Statutory time limit ending soon</h3>
+      <div class="app-overview-cards govuk-!-margin-bottom-6">
+        {% if caseSTLCountsByRange.today > 0 %}
+          <a href="/cases/shortcut/stl-today" class="app-overview-card app-overview-card--red">
+            <span class="app-overview-card__count">{{ caseSTLCountsByRange.today }}</span>
+            <span class="app-overview-card__status">{{ caseSTLCountsByRange.today | pluralize("case has", "cases have") }} a statutory time limit ending today</span>
+          </a>
+        {% endif %}
+        {% if caseSTLCountsByRange.tomorrow > 0 %}
+          <a href="/cases/shortcut/stl-tomorrow" class="app-overview-card app-overview-card--orange">
+            <span class="app-overview-card__count">{{ caseSTLCountsByRange.tomorrow }}</span>
+            <span class="app-overview-card__status">{{ caseSTLCountsByRange.tomorrow | pluralize("case has", "cases have") }} a statutory time limit ending tomorrow</span>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if hasPace %}
+      <h3 class="govuk-heading-s">PACE clock expiring soon</h3>
+      <div class="app-overview-cards govuk-!-margin-bottom-6">
+        {% if casePaceClockCountsByRange.lessThan1Hour > 0 %}
+          <a href="/cases/shortcut/pace-less-than-1-hour" class="app-overview-card app-overview-card--red">
+            <span class="app-overview-card__count">{{ casePaceClockCountsByRange.lessThan1Hour }}</span>
+            <span class="app-overview-card__status">{{ casePaceClockCountsByRange.lessThan1Hour | pluralize("case has", "cases have") }} a PACE clock ending in less than 1 hour</span>
+          </a>
+        {% endif %}
+        {% if casePaceClockCountsByRange.lessThan2Hours > 0 %}
+          <a href="/cases/shortcut/pace-less-than-2-hours" class="app-overview-card app-overview-card--orange">
+            <span class="app-overview-card__count">{{ casePaceClockCountsByRange.lessThan2Hours }}</span>
+            <span class="app-overview-card__status">{{ casePaceClockCountsByRange.lessThan2Hours | pluralize("case has", "cases have") }} a PACE clock ending in less than 2 hours</span>
+          </a>
+        {% endif %}
+        {% if casePaceClockCountsByRange.lessThan3Hours > 0 %}
+          <a href="/cases/shortcut/pace-less-than-3-hours" class="app-overview-card app-overview-card--yellow">
+            <span class="app-overview-card__count">{{ casePaceClockCountsByRange.lessThan3Hours }}</span>
+            <span class="app-overview-card__status">{{ casePaceClockCountsByRange.lessThan3Hours | pluralize("case has", "cases have") }} a PACE clock ending in less than 3 hours</span>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if hasHearings %}
+      <h3 class="govuk-heading-s">Hearing due to start soon</h3>
+      <div class="app-overview-cards govuk-!-margin-bottom-6">
+        {% if caseHearingPrepCountsByRange.today > 0 %}
+          <a href="/cases/shortcut/hearing-prep-today" class="app-overview-card app-overview-card--red">
+            <span class="app-overview-card__count">{{ caseHearingPrepCountsByRange.today }}</span>
+            <span class="app-overview-card__status">{{ caseHearingPrepCountsByRange.today | pluralize("case needs", "cases need") }} hearing preparation for a hearing today</span>
+          </a>
+        {% endif %}
+        {% if caseHearingPrepCountsByRange.tomorrow > 0 %}
+          <a href="/cases/shortcut/hearing-prep-tomorrow" class="app-overview-card app-overview-card--orange">
+            <span class="app-overview-card__count">{{ caseHearingPrepCountsByRange.tomorrow }}</span>
+            <span class="app-overview-card__status">{{ caseHearingPrepCountsByRange.tomorrow | pluralize("case needs", "cases need") }} hearing preparation for a hearing tomorrow</span>
+          </a>
+        {% endif %}
+        {% if caseHearingPrepCountsByRange.thisWeek > 0 %}
+          <a href="/cases/shortcut/hearing-prep-this-week" class="app-overview-card app-overview-card--yellow">
+            <span class="app-overview-card__count">{{ caseHearingPrepCountsByRange.thisWeek }}</span>
+            <span class="app-overview-card__status">{{ caseHearingPrepCountsByRange.thisWeek | pluralize("case needs", "cases need") }} hearing preparation for a hearing this week</span>
+          </a>
+        {% endif %}
+        {% if caseHearingPrepCountsByRange.nextWeek > 0 %}
+          <a href="/cases/shortcut/hearing-prep-next-week" class="app-overview-card app-overview-card--grey">
+            <span class="app-overview-card__count">{{ caseHearingPrepCountsByRange.nextWeek }}</span>
+            <span class="app-overview-card__status">{{ caseHearingPrepCountsByRange.nextWeek | pluralize("case needs", "cases need") }} hearing preparation for a hearing next week</span>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+    {% if hasDirections and false %}
+      <h3 class="govuk-heading-s">Directions due soon</h3>
+      <div class="app-overview-cards govuk-!-margin-bottom-6">
+        {% if dueTodayDirectionCount > 0 %}
+          <a href="/directions/shortcut/due-today" class="app-overview-card app-overview-card--red">
+            <span class="app-overview-card__count">{{ dueTodayDirectionCount }}</span>
+            <span class="app-overview-card__status">{{ dueTodayDirectionCount | pluralize("direction") }} assigned to prosecution due today</span>
+          </a>
+        {% endif %}
+        {% if dueTomorrowDirectionCount > 0 %}
+          <a href="/directions/shortcut/due-tomorrow" class="app-overview-card app-overview-card--orange">
+            <span class="app-overview-card__count">{{ dueTomorrowDirectionCount }}</span>
+            <span class="app-overview-card__status">{{ dueTomorrowDirectionCount | pluralize("direction") }} assigned to prosecution due tomorrow</span>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  </div>
+{% endif %}

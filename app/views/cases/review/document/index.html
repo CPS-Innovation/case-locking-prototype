@@ -1,0 +1,128 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = document.name %}
+{% set mainClasses = "govuk-!-padding-bottom-0" %}
+
+{% block beforeContent %}
+  {% if isMaterialsView %}
+    {{ govukBreadcrumbs({
+      items: [
+        {
+          text: _case.reference,
+          href: '/cases/' + caseId
+        },
+        {
+          text: 'Material',
+          href: '/cases/' + caseId + '/documents'
+        },
+        {
+          text: document.name
+        }
+      ]
+    }) }}
+  {% else %}
+    {{
+      govukBackLink({
+        text: 'Back',
+        href: '/cases/' + caseId + '/review'
+      })
+    }}
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <span class="govuk-caption-l">{{ _case.reference }}</span>
+  <h1 class="govuk-heading-l">{{ document.name }}</h1>
+
+  <div class="{{ 'app-actions-disabled' if isMaterialsView }}">
+    {% include "_includes/review/offences.njk" %}
+  </div>
+
+  {% if isMaterialsView %}
+    {% include "_includes/document/toolbar.njk" %}
+  {% else %}
+    {% include "_includes/review/toolbar.njk" %}
+  {% endif %}
+
+  <div class="app-document-section" data-document-id="{{ documentId }}">
+    <div class="app-document-area {{ 'app-actions-disabled' if isMaterialsView }}">
+      <div class="app-document-layout">
+        {% include "cases/documents/_document-pane-text.html" %}
+        {% include "_includes/review/annotation-sidebar.njk" %}
+      </div>
+    </div>
+
+    <div class="app-annotation-popup js-annotation-popup {{ 'app-actions-disabled' if isMaterialsView }}" hidden aria-hidden="true">
+      <div class="app-annotation-popup__actions js-selection-actions">
+        <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="note">
+          Note
+        </button>
+        {% if offences.length %}
+          <button type="button" class="app-annotation-popup__btn js-annotate-btn" data-type="evidence">
+            Evidence
+          </button>
+        {% endif %}
+        {% if offences.length %}
+          <button
+            type="button"
+            class="app-annotation-popup__btn js-annotate-btn"
+            data-type="issue"
+          >
+            Anticipated issue
+          </button>
+        {% endif %}
+        <button type="button" class="app-annotation-popup__btn js-redact-btn">Redact</button>
+        <button
+          type="button"
+          class="app-annotation-popup__btn js-annotate-btn"
+          data-type="information-request"
+        >
+          Information request note
+        </button>
+      </div>
+      <div class="app-annotation-popup__actions js-redaction-actions" hidden>
+        <button type="button" class="app-annotation-popup__btn js-delete-redaction-btn">
+          Unredact
+        </button>
+      </div>
+    </div>
+
+    {% include "_includes/review/annotation-form.njk" %}
+
+    <form
+      method="post"
+      action="/cases/{{ caseId }}/review/documents/{{ documentId }}/redactions/add"
+      class="js-redaction-form"
+      hidden
+    >
+      <input type="hidden" name="redactions" class="js-redaction-selections" />
+    </form>
+
+    <form method="post" class="js-redaction-delete-form" hidden></form>
+  </div>
+{% endblock %}
+
+{% block pageScripts %}
+  {{ super() }}
+  <script src="/public/javascripts/components/annotation-panel.js"></script>
+  {% if isMaterialsView %}
+    <script src="/public/javascripts/components/actions-disabled-guard.js"></script>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    new App.AnnotationPanel({
+      container: $('#document-content-{{ documentId }}'),
+      redirectUrl: {% if isMaterialsView %}'/cases/{{ caseId }}/documents/{{ documentId }}/review-required'{% else %}null{% endif %}
+    })
+    $('.js-annotation-note').each(function () {
+      new App.TextExpander({ container: $(this), maxLength: 50 })
+    })
+    {% if isMaterialsView %}
+      new App.ActionsDisabledGuard({ redirectUrl: '/cases/{{ caseId }}/documents/{{ documentId }}/review-required' })
+    {% endif %}
+  </script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'prosecutors' %}
+{% set pageName = prosecutor.firstName + ' ' + prosecutor.lastName %}
+
+{% block beforeContent %}
+  {{ govukBreadcrumbs({
+    items: [
+      {
+        text: "Prosecutors",
+        href: "/prosecutors"
+      },
+      {
+        text: pageName
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      
+      <span class="govuk-caption-l">{{_case.reference}}</span>
+      <h1 class="govuk-heading-l">
+        {{ pageName }}
+      </h1>
+
+      {% set specialistAreas %}
+        {% if prosecutor.specialistAreas.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for item in prosecutor.specialistAreas %}
+              <li>
+                {{item.name}}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          No specialist areas
+        {% endif %}
+      {% endset %}
+
+      {% set preferredAreas %}
+        {% if prosecutor.preferredAreas.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for item in prosecutor.preferredAreas %}
+              <li>
+                {{item.name}}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          No preferred areas
+        {% endif %}
+      {% endset %}
+
+      {% set restrictedAreas %}
+        {% if prosecutor.restrictedAreas.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for item in prosecutor.restrictedAreas %}
+              <li>
+                {{item.name}}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          No restricted areas
+        {% endif %}
+      {% endset %}
+
+      {% set workingPatternValue %}
+        {% if prosecutor.workingPattern and prosecutor.workingPattern.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for item in prosecutor.workingPattern %}
+              <li>{{item.day}}: {{item.hours}} {{ "hour" if item.hours == "1" else "hours" }}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          No working pattern
+        {% endif %}
+      {% endset %}
+
+      {% set units %}
+        {% if prosecutor.units.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for item in prosecutor.units %}
+              <li>
+                {{item.unit.name}}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          No units
+        {% endif %}
+      {% endset %}
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: "First name"
+            },
+            value: {
+              html: prosecutor.firstName
+            }
+          },
+          {
+            key: {
+              text: "Last name"
+            },
+            value: {
+              html: prosecutor.lastName
+            }
+          },
+          {
+            key: {
+              text: "Unit"
+            },
+            value: {
+              html: units
+            }
+          },
+          {
+            key: {
+              text: "Working pattern"
+            },
+            value: {
+              html: workingPatternValue
+            },
+            actions: {
+              items: [
+                {
+                  href: ("/prosecutors/:prosecutorId/edit-working-pattern" if prosecutor.workingPattern and prosecutor.workingPattern.length else "/prosecutors/:prosecutorId/add-working-pattern") | replace(':prosecutorId', prosecutor.id),
+                  text: "Change" if prosecutor.workingPattern and prosecutor.workingPattern.length else "Add",
+                  visuallyHiddenText: "Working pattern"
+                }
+              ]
+            }
+          },
+          {
+            key: {
+              text: "Work load adjustments"
+            },
+            value: {
+              html: '50% capacity'
+            },
+            actions: {
+              items: [
+                {
+                  href: ("/prosecutors/:prosecutorId/edit-working-pattern" if prosecutor.workingPattern and prosecutor.workingPattern.length else "/prosecutors/:prosecutorId/add-working-pattern") | replace(':prosecutorId', prosecutor.id),
+                  text: "Change" if prosecutor.workingPattern and prosecutor.workingPattern.length else "Add",
+                  visuallyHiddenText: "Working pattern"
+                }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">Specialist areas</h2>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: "Specialist areas"
+            },
+            value: {
+              html: specialistAreas
+            },
+            actions: {
+              items: [
+                {
+                  href: "/prosecutors/:prosecutorId/edit-specialist-areas" | replace(':prosecutorId', prosecutor.id),
+                  text: "Change",
+                  visuallyHiddenText: "Specialist areas"
+                }
+              ]
+            }
+          },
+          {
+            key: {
+              text: "Preferred areas"
+            },
+            value: {
+              html: preferredAreas
+            },
+            actions: {
+              items: [
+                {
+                  href: "/prosecutors/:prosecutorId/edit-preferred-areas" | replace(':prosecutorId', prosecutor.id),
+                  text: "Change",
+                  visuallyHiddenText: "Preferred areas"
+                }
+              ]
+            }
+          },
+          {
+            key: {
+              text: "Restricted areas"
+            },
+            value: {
+              html: restrictedAreas
+            },
+            actions: {
+              items: [
+                {
+                  href: "/prosecutors/:prosecutorId/edit-restricted-areas" | replace(':prosecutorId', prosecutor.id),
+                  text: "Change",
+                  visuallyHiddenText: "Restricted areas"
+                }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <h2 class="govuk-heading-m">Leave</h2>
+
+      {{ govukButton({
+        text: "Add leave",
+        classes: "govuk-button--secondary",
+        href: "/prosecutors/" + prosecutor.id + "/add-leave"
+      }) }}
+
+      {% if prosecutor.leave.length %}
+        <div class="app-list">
+          {% for item in prosecutor.leave %}
+            <div class="app-list__item">
+              <p class="govuk-body govuk-!-margin-bottom-0">
+                {{ item.startDate | isoDateString | govukDate }}{% if item.endDate %} to {{ item.endDate | isoDateString | govukDate }}{% endif %}
+              </p>
+              <div class="app-list__actions">
+                <a href="/prosecutors/{{ prosecutor.id }}/leave/{{ item.id }}/remove" class="govuk-link govuk-link--no-visited-state">Remove</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>There is no leave recorded.</p>
+      {% endif %}
+
+    </div>
+  </div>
+{% endblock %}

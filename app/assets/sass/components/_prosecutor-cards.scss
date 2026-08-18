@@ -1,0 +1,26 @@
+
+.app-prosecutor-cards {
+  border-top: 1px solid $govuk-border-colour;
+  margin-top: govuk-spacing(6);
+}
+
+.app-prosecutor-cards__item {
+  border-bottom: 1px solid $govuk-border-colour;
+  // border-left: 1px solid $govuk-border-colour;
+  // padding: govuk-spacing(4);
+  padding-top: govuk-spacing(4);
+  padding-bottom: govuk-spacing(4);
+  // margin-bottom: govuk-spacing(6);
+  position: relative;
+}
+
+.app-prosecutor-cards__item__tag {
+  position: absolute;
+  top: govuk-spacing(4);
+  right: govuk-spacing(4);
+}
+
+.app-prosecutor-cards__item--selected {
+  // background: govuk-colour("light-grey");
+  // border: 5px solid govuk-colour("black");
+}

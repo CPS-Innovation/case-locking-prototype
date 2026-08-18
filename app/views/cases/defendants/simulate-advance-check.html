@@ -1,0 +1,45 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+
+{% set simulateLabel = "Information received" %}
+
+{% set pageName = "Check details and simulate: " + simulateLabel %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/simulate-advance' }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – simulate: {{ simulateLabel | lower }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% set defendantNames %}{% for d in selectedDefendants %}{{ d.firstName }} {{ d.lastName }}{% if not loop.last %}, {% endif %}{% endfor %}{% endset %}
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Action" },
+            value: { text: "Simulate: " + simulateLabel }
+          },
+          {
+            key: { text: "Defendants" },
+            value: { text: defendantNames },
+            actions: {
+              items: [{
+                href: '/cases/' + _case.id + '/defendants/' + defendant.id + '/simulate-advance',
+                text: "Change",
+                visuallyHiddenText: "defendants"
+              }]
+            }
+          }
+        ]
+      }) }}
+
+      <form method="post">
+        {{ govukButton({ text: "Confirm", classes: "app-button--blue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

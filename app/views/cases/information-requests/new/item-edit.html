@@ -1,0 +1,74 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: "/cases/" + _case.id + "/information-requests/new/items"
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }} - create information request</span>
+      <h1 class="govuk-heading-l">Information request item {{ itemNumber }}</h1>
+
+      <form method="post">
+        {{ govukRadios({
+          name: "newInformationRequestItem[category]",
+          value: item.category,
+          fieldset: {
+            legend: {
+              text: "Category",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          items: itemCategoryItems
+        }) }}
+
+        {{ govukTextarea({
+          name: "newInformationRequestItem[description]",
+          id: "description",
+          label: { text: "Description", classes: "govuk-label--m" },
+          value: item.description
+        }) }}
+
+        {{ govukDateInput({
+          id: "dueDate",
+          fieldset: {
+            legend: {
+              text: "Due date",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: { text: "For example, 31 3 2025" },
+          items: [
+            { name: "newInformationRequestItem[dueDate][day]", label: "Day", classes: "govuk-input--width-2", value: item.dueDate.day },
+            { name: "newInformationRequestItem[dueDate][month]", label: "Month", classes: "govuk-input--width-2", value: item.dueDate.month },
+            { name: "newInformationRequestItem[dueDate][year]", label: "Year", classes: "govuk-input--width-4", value: item.dueDate.year }
+          ]
+        }) }}
+
+        {% if defendantItems.length > 1 %}
+          {{ govukCheckboxes({
+            name: "newInformationRequestItem[defendants]",
+            idPrefix: "defendants",
+            fieldset: {
+              legend: {
+                text: "Defendants",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: defendantItems,
+            values: selectedDefendantIds
+          }) }}
+        {% endif %}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% from "_includes/annotation-element-groups.njk" import annotationElementList %}
+{% from "_includes/annotation-card-body.njk" import annotationCardBody %}
+
+{% if annotations.length %}
+  <div class="govuk-!-margin-bottom-6">
+    {% for annotation in annotations %}
+      {% if annotation.type == 'evidence' %}
+        {% set typeLabel = 'Evidence' %}
+        {% set typeColour = 'blue' %}
+      {% else %}
+        {% set typeLabel = 'Anticipated issue' %}
+        {% set typeColour = 'red' %}
+      {% endif %}
+      <div class="app-review-annotation-card app-review-annotation-card--{{ typeColour }}">
+        <div
+          class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
+        >
+          <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
+          {% if annotationCardsShowChange != false %}
+            <p class="govuk-!-margin-bottom-0">
+              <a
+                href="/cases/{{ _case.id }}/review/documents/{{ annotation.caseReviewDocument.documentId }}#annotation-{{ annotation.groupId }}"
+                class="govuk-link govuk-link--no-visited-state"
+              >
+                Change
+                <span class="govuk-visually-hidden">{{ typeLabel | lower }} annotation</span>
+              </a>
+            </p>
+          {% endif %}
+        </div>
+        <div class="app-review-annotation-card__body">
+          {{
+            annotationCardBody({
+              selectedText: annotation.selectedText,
+              timestampSeconds: annotation.timestampSeconds,
+              documentType: annotation.caseReviewDocument.document.type,
+              documentName: annotation.caseReviewDocument.document.name,
+              photoUrl: annotation.photoUrl
+            })
+          }}
+
+          {{ annotationElementList(annotation.elementGroups) }}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}

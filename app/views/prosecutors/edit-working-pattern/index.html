@@ -1,0 +1,71 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'prosecutors' %}
+{% set pageName = "Working pattern" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: "/prosecutors/:prosecutorId" | replace(':prosecutorId', prosecutor.id)
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{prosecutor.firstName}} {{prosecutor.lastName}}</span>
+      <form method="post">
+
+        {% set mondayHtml %}
+          {{ govukInput({ label: { text: "Number of hours" }, id: "editWorkingPattern-hours-Monday", name: "editWorkingPattern[hours][Monday]", classes: "govuk-input--width-4", value: data.editWorkingPattern.hours.Monday or currentHours.Monday }) }}
+        {% endset %}
+
+        {% set tuesdayHtml %}
+          {{ govukInput({ label: { text: "Number of hours" }, id: "editWorkingPattern-hours-Tuesday", name: "editWorkingPattern[hours][Tuesday]", classes: "govuk-input--width-4", value: data.editWorkingPattern.hours.Tuesday or currentHours.Tuesday }) }}
+        {% endset %}
+
+        {% set wednesdayHtml %}
+          {{ govukInput({ label: { text: "Number of hours" }, id: "editWorkingPattern-hours-Wednesday", name: "editWorkingPattern[hours][Wednesday]", classes: "govuk-input--width-4", value: data.editWorkingPattern.hours.Wednesday or currentHours.Wednesday }) }}
+        {% endset %}
+
+        {% set thursdayHtml %}
+          {{ govukInput({ label: { text: "Number of hours" }, id: "editWorkingPattern-hours-Thursday", name: "editWorkingPattern[hours][Thursday]", classes: "govuk-input--width-4", value: data.editWorkingPattern.hours.Thursday or currentHours.Thursday }) }}
+        {% endset %}
+
+        {% set fridayHtml %}
+          {{ govukInput({ label: { text: "Number of hours" }, id: "editWorkingPattern-hours-Friday", name: "editWorkingPattern[hours][Friday]", classes: "govuk-input--width-4", value: data.editWorkingPattern.hours.Friday or currentHours.Friday }) }}
+        {% endset %}
+
+        {% set saturdayHtml %}
+          {{ govukInput({ label: { text: "Number of hours" }, id: "editWorkingPattern-hours-Saturday", name: "editWorkingPattern[hours][Saturday]", classes: "govuk-input--width-4", value: data.editWorkingPattern.hours.Saturday or currentHours.Saturday }) }}
+        {% endset %}
+
+        {% set sundayHtml %}
+          {{ govukInput({ label: { text: "Number of hours" }, id: "editWorkingPattern-hours-Sunday", name: "editWorkingPattern[hours][Sunday]", classes: "govuk-input--width-4", value: data.editWorkingPattern.hours.Sunday or currentHours.Sunday }) }}
+        {% endset %}
+
+        {{ govukCheckboxes({
+          name: "editWorkingPattern[days]",
+          fieldset: {
+            legend: {
+              text: pageName,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          values: data.editWorkingPattern.days or currentDays,
+          items: [
+            { value: "Monday",    text: "Monday",    conditional: { html: mondayHtml } },
+            { value: "Tuesday",   text: "Tuesday",   conditional: { html: tuesdayHtml } },
+            { value: "Wednesday", text: "Wednesday", conditional: { html: wednesdayHtml } },
+            { value: "Thursday",  text: "Thursday",  conditional: { html: thursdayHtml } },
+            { value: "Friday",    text: "Friday",    conditional: { html: fridayHtml } },
+            { value: "Saturday",  text: "Saturday",  conditional: { html: saturdayHtml } },
+            { value: "Sunday",    text: "Sunday",    conditional: { html: sundayHtml } }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

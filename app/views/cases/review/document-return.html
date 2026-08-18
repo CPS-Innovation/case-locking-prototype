@@ -1,0 +1,44 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Have you finished reviewing this document?" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + caseId + '/review/documents/' + documentId
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ document.name }}</span>
+
+      <form method="post">
+        {{ govukRadios({
+          name: "markAsReviewed",
+          fieldset: {
+            legend: {
+              text: pageName,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "yes",
+              text: "Yes, mark as reviewed"
+            },
+            {
+              value: "no",
+              text: "No, return without marking as reviewed"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "govuk-prototype-kit/layouts/govuk-branded.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+
+{% block header %}
+  <div class="app-toolbar">
+    <div class="app-toolbar__inner">
+      <div class="app-toolbar__back">
+        <a href="/cases/{{ caseId }}/review/documents/{{ documentId }}/return" class="govuk-link govuk-link--no-visited-state app-toolbar__back-link">
+          &larr; Return
+        </a>
+      </div>
+      <div class="app-toolbar__title">{{ document.name }}</div>
+      <div class="app-toolbar__actions">
+        <a href="/cases/{{ caseId }}/review/documents/{{ documentId }}/return" class="govuk-button govuk-button--secondary govuk-button--small govuk-!-margin-bottom-0">
+          Done reviewing
+        </a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block footer %}{% endblock %}
+
+{% block container %}
+  <div class="app-document-layout govuk-width-container" id="main-content">
+    <div class="app-document-pane">
+      <main class="app-document-main">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+    <aside class="app-annotation-sidebar" id="annotation-sidebar" aria-label="Annotations">
+      {% block sidebar %}{% endblock %}
+    </aside>
+  </div>
+{% endblock %}
+
+{% block bodyEnd %}
+  {{ super() }}
+  <script src="/public/javascripts/components/annotation-panel.js"></script>
+{% endblock %}

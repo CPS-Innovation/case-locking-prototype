@@ -1,0 +1,36 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Venue" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – add PTPH hearing</span>
+
+      <form method="post">
+        {{ govukInput({
+          label: {
+            text: pageName,
+            classes: "govuk-label--l",
+            isPageHeading: true
+          },
+          id: "venue",
+          name: "addPtphHearing[venue]",
+          value: data.addPtphHearing.venue
+        }) }}
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

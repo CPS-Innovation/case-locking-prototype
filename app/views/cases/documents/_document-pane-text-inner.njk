@@ -1,0 +1,8 @@
+{% for section in sections %}
+  {% if section.heading %}
+    <h2 class="app-document__section-heading">{{ section.heading | safe }}</h2>
+  {% endif %}
+  {% for paragraph in section.paragraphs %}
+    <p class="app-document__paragraph">{{ paragraph | safe }}</p>
+  {% endfor %}
+{% endfor %}

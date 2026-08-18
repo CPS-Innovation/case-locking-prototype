@@ -1,0 +1,14 @@
+.app-document--video {
+  max-width: none;
+  padding: 15px;
+}
+
+.app-document__video {
+  display: block;
+  width: 100%;
+  background: govuk-colour("black");
+}
+
+.app-video-annotation-actions {
+  margin-bottom: govuk-spacing(4);
+}

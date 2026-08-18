@@ -1,0 +1,115 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'information-requests' %}
+{% from "_components/page-header/macro.njk" import appPageHeader %}
+
+{% block beforeContent %}
+  {{
+    govukBreadcrumbs({
+      items: [
+        {
+          text: _case.reference,
+          href: "/cases/:caseId" | replace(':caseId', _case.id)
+        },
+        {
+          text: 'Information requests',
+          href: "/cases/:caseId/information-requests" | replace(':caseId', _case.id)
+        }
+      ]
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">
+        {% if informationRequest.description and informationRequest.description.length > 75 %}
+          {{ informationRequest.description | truncate(75) }}
+        {% elif informationRequest.description %}
+          {{ informationRequest.description }}
+        {% else %}
+          Request sent {{ informationRequest.sentDate | isoDateString | govukDate }}
+        {% endif %}
+      </h1>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: 'Description' },
+              value: { text: informationRequest.description }
+            } if informationRequest.description,
+            {
+              key: { text: 'Sent' },
+              value: { text: informationRequest.sentDate | isoDateString | govukDate }
+            }
+          ]
+        })
+      }}
+
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">Items requested</h2>
+
+      {% for item in informationRequest.items %}
+
+        {% if item.status === 'Pending' %}
+          {{ appPageHeader({
+            classes: 'govuk-!-margin-bottom-1 govuk-!-margin-top-7',
+            heading: { level: 3, text: item.description, classes: 'govuk-heading-m' },
+            items: [
+              {
+                text: 'Mark as received',
+                href: '/cases/' + _case.id + '/information-requests/' + informationRequest.id + '/items/' + item.id + '/mark-received'
+              },
+              {
+                text: 'Cancel request',
+                href: '/cases/' + _case.id + '/information-requests/' + informationRequest.id + '/items/' + item.id + '/cancel'
+              }
+            ]
+          }) }}
+        {% else %}
+          {{ appPageHeader({
+            classes: 'govuk-!-margin-bottom-1 govuk-!-margin-top-7',
+            heading: { level: 3, text: item.description, classes: 'govuk-heading-m' }
+          }) }}
+        {% endif %}
+
+        {{
+          govukSummaryList({
+            rows: [
+              {
+                key: { text: 'Status' },
+                value: { html: govukTag({ text: item.status, classes: item.status | informationRequestStatusTagClass }) }
+              },
+              {
+                key: { text: 'Category' },
+                value: { text: item.category if item.category else '—' }
+              },
+              {
+                key: { text: 'Defendants' },
+                value: { text: item.defendantNames if item.defendantNames else '—' }
+              } if _case.defendants.length > 1,
+              {
+                key: { text: 'Due date' },
+                value: { text: item.dueDate | isoDateString | govukDate }
+              },
+              {
+                key: { text: 'Received' },
+                value: { text: item.receivedDate | isoDateString | govukDate }
+              } if item.status === 'Received',
+              {
+                key: { text: 'Cancelled' },
+                value: { text: item.cancelledDate | isoDateString | govukDate }
+              } if item.status === 'Cancelled',
+              {
+                key: { text: 'Reason for cancellation' },
+                value: { text: item.cancelledReason }
+              } if item.status === 'Cancelled'
+            ]
+          })
+        }}
+
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

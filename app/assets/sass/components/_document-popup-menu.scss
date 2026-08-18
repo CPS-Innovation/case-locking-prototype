@@ -1,0 +1,73 @@
+.app-annotation-popup {
+  position: absolute;
+  z-index: 300;
+  background: govuk-colour("white");
+  border: 1px solid $govuk-text-colour;
+
+  // Downward-pointing arrow centered at the bottom
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    pointer-events: none;
+  }
+
+  // Outer arrow — border colour
+  &::before {
+    bottom: -9px;
+    border-top: 9px solid $govuk-text-colour;
+  }
+
+  // Inner arrow — white fill
+  &::after {
+    bottom: -7px;
+    border-top: 8px solid govuk-colour("white");
+  }
+
+  &:hover::after {
+    border-top-color: govuk-colour("light-grey");
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.app-annotation-popup__actions {
+  display: flex;
+  padding: govuk-spacing(1);
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.app-annotation-popup__btn {
+  display: block;
+  padding: govuk-spacing(2) govuk-spacing(3);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: $govuk-font-family;
+  font-size: 16px;
+  line-height: 1.25;
+  color: $govuk-text-colour;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: govuk-colour("light-grey");
+  }
+
+  &[disabled] {
+    color: govuk-colour("mid-grey");
+    cursor: default;
+
+    &:hover {
+      background-color: transparent;
+    }
+  }
+}

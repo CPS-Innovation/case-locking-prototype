@@ -1,0 +1,451 @@
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
+{% from "govuk/components/checkboxes/macro.njk" import govukCheckboxes %}
+
+<div
+  class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--evidence"
+  hidden
+>
+  <div class="app-annotation-form app-annotation-card--blue">
+    <p class="app-annotation-card__tag app-annotation-card__tag--blue govuk-!-margin-bottom-0">Evidence</p>
+    <div class="app-annotation-form__body">
+      {% if hasElements %}
+        {% for offence in offences %}
+          {% if offence.elementCheckboxItems.length %}
+            {{
+              govukCheckboxes({
+                name: "elementsCheckbox",
+                idPrefix: "element-doc-" + documentId + "-charge-" + offence.charge.id,
+                fieldset: {
+                  legend: {
+                    text: offence.charge.description,
+                    isPageHeading: false,
+                    classes: "govuk-fieldset__legend--s"
+                  }
+                },
+                classes: "govuk-checkboxes--small js-annotation-element-checkboxes",
+                items: offence.elementCheckboxItems
+              })
+            }}
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        {{
+          govukTextarea({
+            label: {
+              text: "Evidence note",
+              classes: "govuk-label--s"
+            },
+            classes: "govuk-!-margin-bottom-0 js-annotation-note-input",
+            rows: 3
+          })
+        }}
+      {% endif %}
+
+      <div class="govuk-button-group govuk-!-margin-bottom-0">
+        {{
+          govukButton({
+            text: "Save",
+            classes: "govuk-button--small govuk-!-margin-bottom-0 js-save-annotation",
+            attributes: { type: "button" }
+          })
+        }}
+        <a href="#" class="govuk-link js-cancel-annotation">Cancel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--issue"
+  hidden
+>
+  <div class="app-annotation-form app-annotation-card--red">
+    <p class="app-annotation-card__tag app-annotation-card__tag--red govuk-!-margin-bottom-0">Anticipated issue</p>
+    <div class="app-annotation-form__body">
+      {% if hasElements %}
+        {% for offence in offences %}
+          {% if offence.issueElementCheckboxItems.length %}
+            {{
+              govukCheckboxes({
+                name: "elementsCheckbox",
+                idPrefix: "issue-element-doc-" + documentId + "-charge-" + offence.charge.id,
+                fieldset: {
+                  legend: {
+                    text: offence.charge.description,
+                    isPageHeading: false,
+                    classes: "govuk-fieldset__legend--s"
+                  }
+                },
+                classes: "govuk-checkboxes--small js-annotation-element-checkboxes",
+                items: offence.issueElementCheckboxItems
+              })
+            }}
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        {{
+          govukTextarea({
+            label: {
+              text: "Anticipated issue note",
+              classes: "govuk-label--s"
+            },
+            classes: "govuk-!-margin-bottom-0 js-annotation-note-input",
+            rows: 3
+          })
+        }}
+      {% endif %}
+
+      <div class="govuk-button-group govuk-!-margin-bottom-0">
+        {{
+          govukButton({
+            text: "Save",
+            classes: "govuk-button--small govuk-!-margin-bottom-0 js-save-annotation",
+            attributes: { type: "button" }
+          })
+        }}
+        <a href="#" class="govuk-link js-cancel-annotation">Cancel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--information-request"
+  hidden
+>
+  <div class="app-annotation-form app-annotation-card--orange">
+    <p class="app-annotation-card__tag app-annotation-card__tag--orange govuk-!-margin-bottom-0">Information request</p>
+    <div class="app-annotation-form__body">
+      {{
+        govukTextarea({
+          label: {
+            text: "Information request note",
+            classes: "govuk-label--s"
+          },
+          classes: "govuk-!-margin-bottom-0 js-annotation-note-input",
+          rows: 3
+        })
+      }}
+
+      <div class="govuk-button-group govuk-!-margin-bottom-0">
+        {{
+          govukButton({
+            text: "Save",
+            classes: "govuk-button--small govuk-!-margin-bottom-0 js-save-annotation",
+            attributes: { type: "button" }
+          })
+        }}
+        <a href="#" class="govuk-link js-cancel-annotation">Cancel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="app-annotation-sidebar__new js-new-annotation-card js-new-annotation-card--note"
+  hidden
+>
+  <div class="app-annotation-form app-annotation-card--yellow">
+    <p class="app-annotation-card__tag app-annotation-card__tag--yellow govuk-!-margin-bottom-0">Note</p>
+    <div class="app-annotation-form__body">
+      {{
+        govukTextarea({
+          label: {
+            text: "Note",
+            classes: "govuk-label--s"
+          },
+          classes: "govuk-!-margin-bottom-0 js-annotation-note-input",
+          rows: 3
+        })
+      }}
+
+      <div class="govuk-button-group govuk-!-margin-bottom-0">
+        {{
+          govukButton({
+            text: "Save",
+            classes: "govuk-button--small govuk-!-margin-bottom-0 js-save-annotation",
+            attributes: { type: "button" }
+          })
+        }}
+        <a href="#" class="govuk-link js-cancel-annotation">Cancel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% for annotation in annotations %}
+  {% set typeLabel = 'Evidence' if annotation.type == 'evidence' else ('Anticipated issue' if annotation.type == 'issue' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
+  {% set tagColour = 'blue' if annotation.type == 'evidence' else ('red' if annotation.type == 'issue' else ('yellow' if annotation.type == 'note' else 'orange')) %}
+  {% set noteLabel = 'Evidence note' if annotation.type == 'evidence' else ('Anticipated issue note' if annotation.type == 'issue' else ('Note' if annotation.type == 'note' else 'Information request note')) %}
+  <div
+    class="app-annotation-card js-annotation-card app-annotation-card--{{ tagColour }}"
+    data-annotation-id="{{ annotation.groupId }}"
+    {% if annotation.timestampSeconds != null %}data-timestamp-seconds="{{ annotation.timestampSeconds }}"{% endif %}
+  >
+    <div class="js-annotation-view">
+      <p class="app-annotation-card__tag app-annotation-card__tag--{{ tagColour }} govuk-!-margin-bottom-0">
+        {{ typeLabel }}
+      </p>
+
+      <div class="app-annotation-card__body">
+        <div class="app-annotation-card__header">
+          <p class="app-annotation-card__name">{{ user.firstName }} {{ user.lastName }}</p>
+          <p class="app-annotation-card__time">
+            {{ annotation.createdAt | isoDateString | govukDateTime }}
+          </p>
+        </div>
+
+        {% if annotation.timestampSeconds != null %}
+          <dl class="app-annotation-card__elements">
+            <dt class="govuk-body govuk-!-font-weight-bold govuk-!-margin-bottom-0">
+              Timestamp
+            </dt>
+            <dd class="app-annotation-card__note govuk-!-margin-left-0">
+              {{ annotation.selectedText }}
+            </dd>
+          </dl>
+        {% endif %}
+
+        {% if annotation.elementGroups.length %}
+          {% for group in annotation.elementGroups %}
+            <p class="govuk-!-font-weight-bold govuk-!-margin-bottom-1">
+              {{ group.charge.description }}
+            </p>
+            <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-{{ '0' if loop.last else '2' }}">
+              {% for element in group.elements %}
+                <li>
+                  {{ element.description }}
+                  {% if element.reasoning %}
+                    <br><span class="govuk-hint govuk-!-margin-bottom-0">Comment: {{ element.reasoning }}</span>
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% endfor %}
+        {% else %}
+          <p class="app-annotation-card__note js-annotation-note">{{ annotation.note }}</p>
+        {% endif %}
+
+        {% set isLinkable = (annotation.type == 'evidence' or annotation.type == 'issue' or annotation.type == 'note') and not annotation.elements.length and hasElements %}
+        {% set editUrl = '/cases/' + caseId + '/review/documents/' + documentId + '/annotations/' + annotation.groupId + '/edit' %}
+        {% set documentBasePath = documentBasePath or ('/cases/' + caseId + '/review/documents/' + documentId) %}
+
+        <div class="app-annotation-card__actions govuk-button-group govuk-!-margin-bottom-0">
+          <a href="#" class="govuk-link js-change-annotation"{% if isLinkable %} data-edit-target="note"{% endif %}>
+            Change
+          </a>
+          <a
+            href="{{ documentBasePath }}/annotations/{{ annotation.groupId }}/delete?from=document"
+            class="govuk-link"
+          >
+            Delete
+          </a>
+          {% if isLinkable %}
+            {% if annotation.type == 'note' %}
+              <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes">
+                Convert to evidence
+              </a>
+              <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes-issue">
+                Convert to anticipated issue
+              </a>
+            {% else %}
+              <a href="#" class="govuk-link js-change-annotation" data-edit-target="checkboxes">
+                Link to {{ 'anticipated issue' if annotation.type == 'issue' else 'evidence' }}
+              </a>
+            {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="app-annotation-form js-annotation-edit-form" hidden>
+      {% if isLinkable %}
+        <div class="app-annotation-card--{{ 'red' if annotation.type == 'issue' else 'blue' }} js-annotation-edit-tag-checkboxes" hidden>
+          <p class="app-annotation-card__tag app-annotation-card__tag--{{ 'red' if annotation.type == 'issue' else 'blue' }} govuk-!-margin-bottom-0">{{ 'Anticipated issue' if annotation.type == 'issue' else 'Evidence' }}</p>
+        </div>
+        {% if annotation.type == 'note' %}
+          <div class="app-annotation-card--red js-annotation-edit-tag-checkboxes-issue" hidden>
+            <p class="app-annotation-card__tag app-annotation-card__tag--red govuk-!-margin-bottom-0">Anticipated issue</p>
+          </div>
+        {% endif %}
+        <div class="app-annotation-card--{{ tagColour }} js-annotation-edit-tag-note" hidden>
+          <p class="app-annotation-card__tag app-annotation-card__tag--{{ tagColour }} govuk-!-margin-bottom-0">{{ typeLabel }}</p>
+        </div>
+
+        <div class="app-annotation-form__body">
+          <form method="post" action="{{ editUrl }}" class="js-annotation-edit-checkboxes" hidden>
+            <input type="hidden" name="linkAsType" value="{{ 'issue' if annotation.type == 'issue' else 'evidence' }}" />
+            {% for offence in annotation.editOffences %}
+              {% if offence.elementCheckboxItems.length %}
+                {{
+                  govukCheckboxes({
+                    name: "elementsCheckbox",
+                    idPrefix: "element-" + annotation.id + "-charge-" + offence.charge.id,
+                    fieldset: {
+                      legend: {
+                        text: offence.charge.description,
+                        isPageHeading: false,
+                        classes: "govuk-fieldset__legend--s"
+                      }
+                    },
+                    classes: "govuk-checkboxes--small js-annotation-element-checkboxes",
+                    items: offence.elementCheckboxItems
+                  })
+                }}
+              {% endif %}
+            {% endfor %}
+
+            <div class="govuk-button-group govuk-!-margin-bottom-0">
+              {{
+                govukButton({
+                  text: "Save",
+                  classes: "govuk-button--small govuk-!-margin-bottom-0 js-save-change-annotation",
+                  attributes: { type: "button" }
+                })
+              }}
+              <a href="#" class="govuk-link js-cancel-change-annotation">Cancel</a>
+            </div>
+          </form>
+
+          {% if annotation.type == 'note' %}
+            <form method="post" action="{{ editUrl }}" class="js-annotation-edit-checkboxes-issue" hidden>
+              <input type="hidden" name="linkAsType" value="issue" />
+              {% for offence in annotation.editIssueOffences %}
+                {% if offence.elementCheckboxItems.length %}
+                  {{
+                    govukCheckboxes({
+                      name: "elementsCheckbox",
+                      idPrefix: "issue-element-" + annotation.id + "-charge-" + offence.charge.id,
+                      fieldset: {
+                        legend: {
+                          text: offence.charge.description,
+                          isPageHeading: false,
+                          classes: "govuk-fieldset__legend--s"
+                        }
+                      },
+                      classes: "govuk-checkboxes--small js-annotation-element-checkboxes",
+                      items: offence.elementCheckboxItems
+                    })
+                  }}
+                {% endif %}
+              {% endfor %}
+
+              <div class="govuk-button-group govuk-!-margin-bottom-0">
+                {{
+                  govukButton({
+                    text: "Save",
+                    classes: "govuk-button--small govuk-!-margin-bottom-0 js-save-change-annotation",
+                    attributes: { type: "button" }
+                  })
+                }}
+                <a href="#" class="govuk-link js-cancel-change-annotation">Cancel</a>
+              </div>
+            </form>
+          {% endif %}
+
+          <form method="post" action="{{ editUrl }}" class="js-annotation-edit-note">
+            {{
+              govukTextarea({
+                name: "note",
+                id: "note-" + annotation.id,
+                value: annotation.note,
+                label: {
+                  text: noteLabel,
+                  classes: "govuk-label--s"
+                },
+                classes: "govuk-!-margin-bottom-0",
+                rows: 3
+              })
+            }}
+
+            <div class="govuk-button-group govuk-!-margin-bottom-0">
+              {{
+                govukButton({
+                  text: "Save",
+                  classes: "govuk-button--small govuk-!-margin-bottom-0"
+                })
+              }}
+              <a href="#" class="govuk-link js-cancel-change-annotation">Cancel</a>
+            </div>
+          </form>
+        </div>
+      {% elif (annotation.type == 'evidence' or annotation.type == 'issue') and hasElements %}
+        <div class="app-annotation-card--{{ tagColour }}">
+          <p class="app-annotation-card__tag app-annotation-card__tag--{{ tagColour }} govuk-!-margin-bottom-0">{{ typeLabel }}</p>
+        </div>
+
+        <div class="app-annotation-form__body">
+          <form method="post" action="{{ editUrl }}" class="js-annotation-edit-checkboxes">
+            {% for offence in annotation.editOffences %}
+              {% if offence.elementCheckboxItems.length %}
+                {{
+                  govukCheckboxes({
+                    name: "elementsCheckbox",
+                    idPrefix: "element-" + annotation.id + "-charge-" + offence.charge.id,
+                    fieldset: {
+                      legend: {
+                        text: offence.charge.description,
+                        isPageHeading: false,
+                        classes: "govuk-fieldset__legend--s"
+                      }
+                    },
+                    classes: "govuk-checkboxes--small js-annotation-element-checkboxes",
+                    items: offence.elementCheckboxItems
+                  })
+                }}
+              {% endif %}
+            {% endfor %}
+
+            <div class="govuk-button-group govuk-!-margin-bottom-0">
+              {{
+                govukButton({
+                  text: "Save",
+                  classes: "govuk-button--small govuk-!-margin-bottom-0 js-save-change-annotation",
+                  attributes: { type: "button" }
+                })
+              }}
+              <a href="#" class="govuk-link js-cancel-change-annotation">Cancel</a>
+            </div>
+          </form>
+        </div>
+      {% else %}
+        <div class="app-annotation-card--{{ tagColour }}">
+          <p class="app-annotation-card__tag app-annotation-card__tag--{{ tagColour }} govuk-!-margin-bottom-0">{{ typeLabel }}</p>
+        </div>
+
+        <div class="app-annotation-form__body">
+          <form method="post" action="{{ editUrl }}" class="js-annotation-edit-note">
+            {{
+              govukTextarea({
+                name: "note",
+                id: "note-" + annotation.id,
+                value: annotation.note,
+                label: {
+                  text: noteLabel,
+                  classes: "govuk-label--s"
+                },
+                classes: "govuk-!-margin-bottom-0",
+                rows: 3
+              })
+            }}
+
+            <div class="govuk-button-group govuk-!-margin-bottom-0">
+              {{
+                govukButton({
+                  text: "Save",
+                  classes: "govuk-button--small govuk-!-margin-bottom-0"
+                })
+              }}
+              <a href="#" class="govuk-link js-cancel-change-annotation">Cancel</a>
+            </div>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}
+
+{% if not annotations or not annotations.length %}
+  <p class="app-annotation-sidebar__empty govuk-body-s js-sidebar-empty"></p>
+{% endif %}

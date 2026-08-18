@@ -1,0 +1,38 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/radios/macro.njk" import govukRadios %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Record hearing outcome" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + _case.id + '/hearings/' + hearing.id
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – {{ hearing.type }}</span>
+
+      <form method="post">
+        {{ govukRadios({
+          name: "outcome",
+          fieldset: {
+            legend: {
+              text: pageName,
+              classes: "govuk-fieldset__legend--l",
+              isPageHeading: true
+            }
+          },
+          items: outcomeItems,
+          value: selectedOutcome
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

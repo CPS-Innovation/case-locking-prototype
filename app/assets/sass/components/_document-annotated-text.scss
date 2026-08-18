@@ -1,0 +1,37 @@
+.app-annotation {
+  border-radius: 2px;
+  padding: 1px 0;
+  cursor: pointer;
+}
+
+.app-annotation--evidence {
+  background-color: #cce0ff;
+
+  &.app-annotation--active {
+    background-color: #5c93d5;
+  }
+}
+
+.app-annotation--issue {
+  background-color: mix(govuk-colour("white"), govuk-colour("red"), 85%);
+
+  &.app-annotation--active {
+    background-color: mix(govuk-colour("white"), govuk-colour("red"), 50%);
+  }
+}
+
+.app-annotation--information-request {
+  background-color: #fde8d8;
+
+  &.app-annotation--active {
+    background-color: #f6b495;
+  }
+}
+
+.app-annotation--note {
+  background-color: govuk-colour("yellow", $variant: "tint-50");
+
+  &.app-annotation--active {
+    background-color: govuk-colour("yellow");
+  }
+}

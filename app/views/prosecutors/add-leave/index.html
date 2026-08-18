@@ -1,0 +1,89 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'prosecutors' %}
+{% set pageName = "Leave dates" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: "/prosecutors/:prosecutorId" | replace(':prosecutorId', prosecutor.id)
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ prosecutor.firstName }} {{ prosecutor.lastName }} - add leave</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      <form method="post">
+        {{ govukDateInput({
+          id: "addLeave-startDate",
+          fieldset: {
+            legend: {
+              text: "Start date",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: {
+            text: "For example, 31 3 2025"
+          },
+          items: [
+            {
+              name: "addLeave[startDate][day]",
+              label: "Day",
+              value: data.addLeave.startDate.day,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "addLeave[startDate][month]",
+              label: "Month",
+              value: data.addLeave.startDate.month,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "addLeave[startDate][year]",
+              label: "Year",
+              value: data.addLeave.startDate.year,
+              classes: "govuk-input--width-4"
+            }
+          ]
+        }) }}
+
+        {{ govukDateInput({
+          id: "addLeave-endDate",
+          fieldset: {
+            legend: {
+              text: "End date (optional)",
+              classes: "govuk-fieldset__legend--m"
+            }
+          },
+          hint: {
+            text: "Leave blank if this is a single day"
+          },
+          items: [
+            {
+              name: "addLeave[endDate][day]",
+              label: "Day",
+              value: data.addLeave.endDate.day,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "addLeave[endDate][month]",
+              label: "Month",
+              value: data.addLeave.endDate.month,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "addLeave[endDate][year]",
+              label: "Year",
+              value: data.addLeave.endDate.year,
+              classes: "govuk-input--width-4"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

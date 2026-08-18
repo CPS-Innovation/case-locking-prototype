@@ -1,0 +1,95 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Check and record outcome" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – {{ hearing.type }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Outcome" },
+            value: { text: outcomeLabel },
+            actions: {
+              items: [{
+                href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/record-outcome",
+                text: "Change",
+                visuallyHiddenText: "outcome"
+              }]
+            }
+          },
+          {
+            key: { text: "Transfer unit" },
+            value: { text: data.recordHearingOutcome.changeUnit },
+            actions: {
+              items: [{
+                href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/record-outcome/change-unit",
+                text: "Change",
+                visuallyHiddenText: "unit transfer"
+              }]
+            }
+          } if data.recordHearingOutcome.changeUnit,
+          {
+            key: { text: "New unit" },
+            value: { text: newUnit.name },
+            actions: {
+              items: [{
+                href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/record-outcome/select-unit",
+                text: "Change",
+                visuallyHiddenText: "new unit"
+              }]
+            }
+          } if newUnit
+        ]
+      }) }}
+
+      {% if nextHearingType %}
+        <h2 class="govuk-heading-m">{{ nextHearingType }} hearing</h2>
+
+        {{ govukSummaryList({
+          rows: [
+            {
+              key: { text: "Date" },
+              value: { text: data.recordHearingOutcome.nextHearingDate | isoDateFromDateInput | govukDateTime },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/record-outcome/next-hearing-date",
+                  text: "Change",
+                  visuallyHiddenText: "date"
+                }]
+              }
+            },
+            {
+              key: { text: "Venue" },
+              value: { text: data.recordHearingOutcome.nextHearingVenue },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/record-outcome/next-hearing-venue",
+                  text: "Change",
+                  visuallyHiddenText: "venue"
+                }]
+              }
+            }
+          ]
+        }) }}
+      {% endif %}
+
+      <form method="post">
+        {{ govukButton({ text: "Record outcome" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

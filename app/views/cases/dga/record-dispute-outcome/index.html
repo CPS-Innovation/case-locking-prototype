@@ -1,0 +1,45 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'dga' %}
+{% set pageName = 'Record dispute outcome' %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: "Back",
+      href: "/cases/" + case.id + "/dga"
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ case.reference }} - record dispute outcome</span>
+      <h1 class="govuk-heading-l">Did the police dispute this failure?</h1>
+
+      {% include "_includes/record-dispute-outcome/failure-reason-inset.njk" %}
+
+      <form method="post">
+        {{
+          govukRadios({
+            name: "recordOutcome[didPoliceDisputeFailure]",
+            fieldset: {
+              legend: {
+                text: "Did the police dispute this failure?",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            value: selectedDisputed,
+            items: [
+              { value: "Yes", text: "Yes" },
+              { value: "No", text: "No" }
+            ]
+          })
+        }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

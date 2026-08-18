@@ -1,0 +1,48 @@
+{% from "_includes/annotation-card-body.njk" import annotationCardBody %}
+
+<div class="app-overview-annotation-card app-overview-annotation-card--{{ params.typeColour }}">
+  <div class="app-overview-annotation-card__header app-annotation-card__tag--{{ params.typeColour }}">
+    <p class="govuk-!-margin-bottom-0">{{ params.item.documentName }}</p>
+    <p class="govuk-!-margin-bottom-0">
+      <a
+        href="/cases/{{ params.caseId }}/documents/{{ params.item.documentId }}#annotation-{{ params.item.groupId }}"
+        class="govuk-link govuk-link--no-visited-state"
+      >
+        Change
+        <span class="govuk-visually-hidden">annotation</span>
+      </a>
+      <a
+        href="/cases/{{ params.caseId }}/review/documents/{{ params.item.documentId }}/annotations/{{ params.item.groupId }}/delete?from=overview"
+        class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
+      >
+        Delete
+        <span class="govuk-visually-hidden">annotation</span>
+      </a>
+    </p>
+  </div>
+  <div class="app-overview-annotation-card__body">
+    {{
+      annotationCardBody({
+        selectedText: params.item.selectedText,
+        timestampSeconds: params.item.timestampSeconds,
+        documentType: params.item.documentType,
+        documentName: params.item.documentName,
+        photoUrl: params.item.photoUrl
+      })
+    }}
+
+    {% if params.item.reasoning %}
+      <p class="app-annotation-media__label">Lawyer’s comment</p>
+      <p class="govuk-!-margin-bottom-1">{{ params.item.reasoning }}</p>
+    {% endif %}
+  </div>
+
+  {% if params.item.addedByName and false %}
+    <div class="app-overview-annotation-card__footer">
+      <p class="govuk-!-margin-bottom-0 govuk-!-font-size-16">
+        {{ params.item.addedByName }},
+        <time datetime="{{ params.item.createdAt }}">{{ params.item.createdAt | isoDateString | govukDateTime }}</time>
+      </p>
+    </div>
+  {% endif %}
+</div>
