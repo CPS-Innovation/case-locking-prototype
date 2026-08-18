@@ -1,0 +1,76 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'information-requests' %}
+{% set pageName = "Information requests" %}
+
+{% block beforeContent %}
+  {% include "_includes/case/identity-bar.njk" %}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+  {% include "_includes/case/navigation.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukButton({
+          text: "Create request",
+          href: "/cases/" + _case.id + "/information-requests/new"
+        })
+      }}
+
+      {% if informationRequests.length %}
+        <div class="app-list">
+          {% for request in informationRequests %}
+            {% set descriptionPreview %}
+              {% if request.description and request.description.length > 75 %}
+                {{ request.description | truncate(75) }}
+              {% elif request.description %}
+                {{ request.description }}
+              {% else %}
+                Request sent {{ request.sentDate | isoDateString | govukDate }}
+              {% endif %}
+            {% endset %}
+
+            <div class="app-list__item">
+              <h2 class="govuk-heading-s govuk-!-margin-bottom-1">
+                <div>
+                  <a
+                    href="/cases/{{ _case.id }}/information-requests/{{ request.id }}"
+                    class="govuk-link--no-visited-state"
+                  >
+                    {{ descriptionPreview | trim }}
+                  </a>
+                </div>
+                <div class="app-list__tag">
+                  {{ govukTag({ text: request.status, classes: request.status | informationRequestStatusTagClass }) }}
+                </div>
+              </h2>
+
+              {{
+                govukSummaryList({
+                  classes: 'govuk-summary-list--no-border app-summary-list--compact app-summary-list--small-text',
+                  rows: [
+                    {
+                      key: { text: 'Sent date' },
+                      value: { text: request.sentDate | isoDateString | govukDateTime }
+                    },
+                    {
+                      key: { text: 'Items' },
+                      value: { text: request.items.length | string }
+                    }
+                  ]
+                })
+              }}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="govuk-body">There are no information requests for this case.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

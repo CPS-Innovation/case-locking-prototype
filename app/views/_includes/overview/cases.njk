@@ -1,0 +1,40 @@
+<div class="app-overview-section">
+  <div class="app-overview-cards govuk-!-margin-bottom-4">
+    {% if needsReviewCaseCount > 0 %}
+      <a href="/cases/shortcut/needs-review" class="app-overview-card app-overview-card--blue">
+        <span class="app-overview-card__count">{{ needsReviewCaseCount }}</span>
+        <span class="app-overview-card__status">{{ needsReviewCaseCount | pluralize("case needs to be", "cases need to be") }} reviewed</span>
+      </a>
+    {% endif %}
+    {% if chargesPendingCaseCount > 0 and false %}
+      <a href="/cases/shortcut/charges-pending" class="app-overview-card app-overview-card--yellow">
+        <span class="app-overview-card__count">{{ chargesPendingCaseCount }}</span>
+        <span class="app-overview-card__status">{{ chargesPendingCaseCount | pluralize("case has", "cases have") }} charges pending authorisation</span>
+      </a>
+    {% endif %}
+    {% if firstHearingNeededCount > 0 and false %}
+      <a href="/cases/shortcut/first-hearing-needed" class="app-overview-card app-overview-card--green">
+        <span class="app-overview-card__count">{{ firstHearingNeededCount }}</span>
+        <span class="app-overview-card__status">{{ firstHearingNeededCount | pluralize("case needs", "cases need") }} a first hearing</span>
+      </a>
+    {% endif %}
+    {% if needsProsecutorCount > 0 and false %}
+      <a href="/cases/shortcut/needs-prosecutor" class="app-overview-card app-overview-card--turquoise">
+        <span class="app-overview-card__count">{{ needsProsecutorCount }}</span>
+        <span class="app-overview-card__status">{{ needsProsecutorCount | pluralize("case needs", "cases need") }} a prosecutor</span>
+      </a>
+    {% endif %}
+    {% if needsParalegalOfficerCount > 0 and false %}
+      <a href="/cases/shortcut/needs-paralegal-officer" class="app-overview-card app-overview-card--orange">
+        <span class="app-overview-card__count">{{ needsParalegalOfficerCount }}</span>
+        <span class="app-overview-card__status">{{ needsParalegalOfficerCount | pluralize("case needs", "cases need") }} a paralegal officer</span>
+      </a>
+    {% endif %}
+    {% if hearingPrepNeededCaseCount > 0 %}
+      <a href="/cases/shortcut/hearing-prep-needed" class="app-overview-card app-overview-card--pink">
+        <span class="app-overview-card__count">{{ hearingPrepNeededCaseCount }}</span>
+        <span class="app-overview-card__status">{{ hearingPrepNeededCaseCount | pluralize("case has", "cases have") }} a hearing that needs preparation</span>
+      </a>
+    {% endif %}
+  </div>
+</div>

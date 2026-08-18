@@ -1,0 +1,53 @@
+<div class="app-document-pane">
+  <div class="app-document app-document--video">
+    <div
+      class="app-document__content"
+      id="document-content-{{ documentId }}"
+      data-case-id="{{ caseId }}"
+      data-document-id="{{ documentId }}"
+    >
+      {% if isReviewMode %}
+        <div class="app-video-annotation-actions govuk-button-group govuk-!-margin-bottom-0">
+          {{
+            govukButton({
+              text: "Add note",
+              classes: "govuk-button--secondary js-video-annotate-btn",
+              type: "button",
+              attributes: { "data-type": "note" }
+            })
+          }}
+          {% if offences.length %}
+            {{
+              govukButton({
+                text: "Mark as evidence",
+                classes: "govuk-button--secondary js-video-annotate-btn",
+                type: "button",
+                attributes: { "data-type": "evidence" }
+              })
+            }}
+          {% endif %}
+          {% if offences.length %}
+            {{
+              govukButton({
+                text: "Add anticipated issue",
+                classes: "govuk-button--secondary js-video-annotate-btn",
+                type: "button",
+                attributes: { "data-type": "issue" }
+              })
+            }}
+          {% endif %}
+          {{
+            govukButton({
+              text: "Add information request note",
+              classes: "govuk-button--secondary js-video-annotate-btn",
+              type: "button",
+              attributes: { "data-type": "information-request" }
+            })
+          }}
+        </div>
+      {% endif %}
+
+      <video id="document-video-{{ documentId }}" class="app-document__video" src="{{ videoUrl }}" controls></video>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set pageName = "Check details and update complexity" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{_case.reference}}</span>
+      <h1 class="govuk-heading-l">{{pageName}}</h1>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: {
+              text: "Complexity"
+            },
+            value: {
+              text: data.editComplexity.complexity
+            },
+            actions: {
+              items: [
+                {
+                  href: "/cases/:caseId/edit-complexity" | replace(':caseId', _case.id),
+                  text: "Change",
+                  visuallyHiddenText: "Complexity"
+                }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <form method="post">
+        {{ govukButton({
+          text: "Update complexity"
+        }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

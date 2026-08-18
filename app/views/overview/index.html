@@ -1,0 +1,37 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'overview' %}
+{% set pageName = "Overview" %}
+{# {% set pageName = "Complete your casework tasks" %} #}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
+      {# {{ govukNotificationBanner({
+        text: "Introductory sessions to this service are available, and are recommended. Speak to your digital transformation lead to request yours."
+      })}} #}
+
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {# {% include "_includes/overview/nav-links.njk" %} #}
+      {% include "_includes/overview/cases.njk" %}
+
+      {% if data.user.role == "Manager" %}
+        {% include "_includes/overview/dga-reporting.njk" %}
+      {% endif %}
+
+      {# {% if data.user.role == "Casework assistant" %}
+        {% include "_includes/overview/unit-tasks.njk" %}
+      {% endif %}
+      {% include "_includes/overview/tasks.njk" %} #}
+
+      {% if data.user.role == "Manager" %}
+        {% include "_includes/overview/prosecutors.njk" %}
+      {% endif %}
+
+      {# {% include "_includes/overview/unit-breakdown.njk" %} #}
+      {# {% include "_includes/overview/priority-cases.njk" %} #}
+      {% include "_includes/overview/recent-cases.njk" %}
+    </div>
+  </div>
+{% endblock %}

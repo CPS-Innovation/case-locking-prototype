@@ -1,0 +1,97 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'dga' %}
+{% set pageName = 'Check details and update dispute outcome' %}
+
+{% set baseUrl = "/cases/" + case.id + "/dga/" + failureReason.id + "/update-dispute-outcome" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: "Back",
+      href: baseUrl + "/method" if data.updateOutcome.didPoliceDisputeFailure == "Yes" else baseUrl
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% include "_includes/record-dispute-outcome/failure-reason-inset.njk" %}
+
+
+      {% set methodsHtml %}
+        {% if data.updateOutcome.discussionMethods and data.updateOutcome.discussionMethods.length > 0 %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for method in data.updateOutcome.discussionMethods %}
+              <li>{{ method }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endset %}
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "Did the police dispute this failure?" },
+              value: { text: data.updateOutcome.didPoliceDisputeFailure },
+              actions: {
+                items: [{
+                  href: baseUrl + "?returnUrl=check",
+                  text: "Change",
+                  visuallyHiddenText: "did the police dispute this failure"
+                }]
+              }
+            },
+            {
+              key: { text: "Did CPS accept the dispute?" },
+              value: { text: data.updateOutcome.didCpsAcceptDispute },
+              actions: {
+                items: [{
+                  href: baseUrl + "/cps-accepted?returnUrl=check",
+                  text: "Change",
+                  visuallyHiddenText: "did CPS accept the dispute"
+                }]
+              }
+            } if data.updateOutcome.didPoliceDisputeFailure == "Yes",
+            {
+              key: { text: "Reason for outcome" },
+              value: { text: data.updateOutcome.reasonForOutcome },
+              actions: {
+                items: [{
+                  href: baseUrl + "/reason?returnUrl=check",
+                  text: "Change",
+                  visuallyHiddenText: "reason for outcome"
+                }]
+              }
+            } if data.updateOutcome.didPoliceDisputeFailure == "Yes",
+            {
+              key: { text: "How did you discuss this dispute with the police?" },
+              value: { html: methodsHtml },
+              actions: {
+                items: [{
+                  href: baseUrl + "/method?returnUrl=check",
+                  text: "Change",
+                  visuallyHiddenText: "how you discussed this dispute with the police"
+                }]
+              }
+            } if data.updateOutcome.didPoliceDisputeFailure == "Yes"
+          ]
+        })
+      }}
+
+      {% if legacyOutcome %}
+        <p class="govuk-body">
+          Recording this outcome will set the overall DGA outcome for this case to
+          '{{ legacyOutcome }}'.
+        </p>
+      {% endif %}
+
+      <form method="post">{{ govukButton({ text: "Update dispute outcome" }) }}</form>
+    </div>
+  </div>
+{% endblock %}

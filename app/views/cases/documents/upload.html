@@ -1,0 +1,51 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Upload material" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + _case.id + '/documents'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      <form method="post">
+        {{ govukFileUpload({
+          id: "file",
+          name: "file",
+          label: { text: "File" }
+        }) }}
+
+        <input type="hidden" id="upload-material-name" name="uploadMaterial[name]" value="{{ data.uploadMaterial.name }}">
+
+        {{ govukCharacterCount({
+          name: "uploadMaterial[description]",
+          id: "description",
+          value: data.uploadMaterial.description,
+          label: { text: "Description (optional)" },
+          rows: 5,
+          maxlength: 500
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    document.getElementById('file').addEventListener('change', function (event) {
+      var file = event.target.files[0]
+      document.getElementById('upload-material-name').value = file ? file.name : ''
+    })
+  </script>
+{% endblock %}

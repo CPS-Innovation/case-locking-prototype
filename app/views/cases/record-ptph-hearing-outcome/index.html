@@ -1,0 +1,57 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Record PTPH hearing outcome" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: 'javascript:history.back()'
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – record PTPH hearing outcome</span>
+
+      <form method="post">
+        {{
+          govukRadios({
+            name: "outcome",
+            value: selectedOutcome,
+            fieldset: {
+              legend: {
+                text: "What was the outcome?",
+                isPageHeading: true,
+                classes: "govuk-fieldset__legend--l"
+              }
+            },
+            items: [
+              {
+                value: "goes-to-trial",
+                text: "Goes to trial"
+              },
+              {
+                value: "pleads-guilty",
+                text: "Sentencing"
+              },
+              {
+                value: "no-further-action",
+                text: "No further action"
+              }
+            ]
+          })
+        }}
+
+        {{
+          govukButton({
+            text: "Continue"
+          })
+        }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

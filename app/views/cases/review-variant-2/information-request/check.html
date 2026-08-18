@@ -1,0 +1,106 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Information request" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: 'javascript:history.back()'
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "Do you want to request information?" },
+              value: { text: "Yes" if informationRequest.wantsInformationRequest == "yes" else "No" },
+              actions: {
+                items: [
+                  { href: "/cases/" + _case.id + "/review-variant-2/information-request", text: "Change", visuallyHiddenText: "whether you want to request information" }
+                ]
+              }
+            },
+            {
+              key: { text: "Title" },
+              value: { text: informationRequest.description or "—" },
+              actions: {
+                items: [
+                  { href: "/cases/" + _case.id + "/review-variant-2/information-request/description", text: "Change", visuallyHiddenText: "title" }
+                ]
+              }
+            } if informationRequest.wantsInformationRequest == "yes"
+          ]
+        })
+      }}
+
+      {% if informationRequest.wantsInformationRequest == "yes" %}
+        {% for item in informationRequest.items %}
+          <h2 class="govuk-heading-m">Item {{ loop.index }}</h2>
+          {{
+            govukSummaryList({
+              rows: [
+                {
+                  key: { text: "Category" },
+                  value: { text: item.category },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review-variant-2/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "category for item " + loop.index }] }
+                },
+                {
+                  key: { text: "Description" },
+                  value: { text: item.description },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review-variant-2/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "description for item " + loop.index }] }
+                },
+                {
+                  key: { text: "Due date" },
+                  value: { text: item.dueDate | isoDateFromDateInput | govukDate },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review-variant-2/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "due date for item " + loop.index }] }
+                },
+                {
+                  key: { text: "Defendants" },
+                  value: { text: item.defendantNames or "—" },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review-variant-2/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "defendants for item " + loop.index }] }
+                } if _case.defendants.length > 1
+              ]
+            })
+          }}
+        {% endfor %}
+      {% endif %}
+
+      <form method="post">
+        {{
+          govukRadios({
+            name: "complete",
+            fieldset: {
+              legend: {
+                text: "Have you completed this section?",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            value: "yes" if informationRequest.complete == true else ("no" if informationRequest.complete == false else ""),
+            items: [
+              {
+                value: "yes",
+                text: "Yes, I’ve completed this section"
+              },
+              {
+                value: "no",
+                text: "No, I’ll come back to it later"
+              }
+            ]
+          })
+        }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,380 @@
+{% extends "_layouts/main.html" %}
+{% from "_includes/annotation-element-groups.njk" import annotationElementGroups %}
+{% from "_includes/annotation-card-body.njk" import annotationCardBody %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Check and submit your review" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: '/cases/' + _case.id + '/review' }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% for group in documentGroups %}
+        {% if group.heading %}
+          <h2 class="govuk-heading-m {% if not loop.first %}govuk-!-margin-top-6{% endif %}">
+            {{ group.heading }}
+          </h2>
+        {% endif %}
+
+        {% for document in group.documents %}
+          {% set docReview = docReviewMap[document.id] %}
+          {% set items = docReview.items if docReview else [] %}
+
+          <h3 class="govuk-heading-s govuk-!-margin-bottom-2">
+            {{ document.name }}
+            {% if docReview.hasEvidence %}
+              {{
+                govukTag({
+                  text: "Will be shared",
+                  classes: 'govuk-!-margin-top-1'
+                }) if false
+              }}
+            {% else %}
+              {{
+                govukTag({
+                  text: "Will not be shared",
+                  classes: 'govuk-tag--grey govuk-!-margin-top-1'
+                }) if false
+              }}
+            {% endif %}
+          </h3>
+
+          <p class="govuk-!-margin-bottom-4">
+            <a
+              href="/cases/{{ _case.id }}/review/documents/{{ document.id }}"
+              class="govuk-link govuk-link--no-visited-state"
+            >
+              Add evidence, anticipated issue or note
+            </a>
+          </p>
+
+          {% if items.length %}
+            <div class="govuk-!-margin-bottom-6">
+              {% for item in items %}
+                {% if item.kind == 'redaction' %}
+                  {% set typeLabel = 'Redaction' %}
+                  {% set typeColour = 'grey' %}
+                {% elif item.type == 'evidence' %}
+                  {% set typeLabel = 'Evidence' %}
+                  {% set typeColour = 'blue' %}
+                {% elif item.type == 'issue' %}
+                  {% set typeLabel = 'Anticipated issue' %}
+                  {% set typeColour = 'red' %}
+                {% elif item.type == 'note' %}
+                  {% set typeLabel = 'Note' %}
+                  {% set typeColour = 'yellow' %}
+                {% else %}
+                  {% set typeLabel = 'Information request note' %}
+                  {% set typeColour = 'orange' %}
+                {% endif %}
+                <div
+                  class="app-review-annotation-card app-review-annotation-card--{{ typeColour }}"
+                >
+                  <div
+                    class="app-review-annotation-card__header app-annotation-card__tag--{{ typeColour }}"
+                  >
+                    <p class="govuk-!-margin-bottom-0">{{ typeLabel }}</p>
+                    <p class="govuk-!-margin-bottom-0">
+                      <a
+                        href="/cases/{{ _case.id }}/review/documents/{{ document.id }}{{ '#annotation-' + item.groupId if item.kind == 'annotation' }}"
+                        class="govuk-link govuk-link--no-visited-state"
+                      >
+                        Change
+                        <span class="govuk-visually-hidden">
+                          {{ typeLabel | lower }}{{ ' annotation' if item.kind == 'annotation' }}
+                        </span>
+                      </a>
+                      {% if item.kind == 'annotation' %}
+                        <a
+                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/annotations/{{ item.groupId }}/delete?from=check"
+                          class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
+                        >
+                          Delete
+                          <span class="govuk-visually-hidden">
+                            {{ typeLabel | lower }} annotation
+                          </span>
+                        </a>
+                      {% elif item.kind == 'redaction' %}
+                        <a
+                          href="/cases/{{ _case.id }}/review/documents/{{ document.id }}/redactions/{{ item.groupId }}/delete?from=check"
+                          class="govuk-link govuk-link--no-visited-state govuk-!-margin-left-3"
+                        >
+                          Delete
+                          <span class="govuk-visually-hidden">redaction</span>
+                        </a>
+                      {% endif %}
+                    </p>
+                  </div>
+                  <div class="app-review-annotation-card__body">
+                    {% if item.kind != 'annotation' %}
+                      <p class="js-annotation-excerpt govuk-!-margin-bottom-0">
+                        ‘{{ item.selectedText }}’
+                      </p>
+                    {% else %}
+                      {{
+                        annotationCardBody({
+                          selectedText: item.selectedText,
+                          timestampSeconds: item.timestampSeconds,
+                          documentType: document.type,
+                          documentName: document.name,
+                          photoUrl: item.photoUrl
+                        })
+                      }}
+
+                      {% if item.elementGroups.length %}
+                        {{ annotationElementGroups(item.elementGroups, true) }}
+                      {% else %}
+                        <p class="app-review-annotation-card__label">Note</p>
+                        <p class="govuk-!-margin-bottom-0">{{ item.note }}</p>
+                      {% endif %}
+                    {% endif %}
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+
+      <h2 class="govuk-heading-m govuk-!-margin-top-6">Assessment and decisions</h2>
+
+      <h3 class="govuk-heading-m govuk-!-margin-top-4">Case summary</h3>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "Case summary" },
+              value: { text: review.summary if review.summary else "Not provided" },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/review/summary",
+                  text: "Change",
+                  visuallyHiddenText: "case summary"
+                }]
+              }
+            }
+          ]
+        })
+      }}
+
+      <h3 class="govuk-heading-m govuk-!-margin-top-6">Information request</h3>
+
+      {{
+        govukSummaryList({
+          classes: "govuk-!-margin-bottom-4",
+          rows: [
+            {
+              key: { text: "Do you want to request information?" },
+              value: {
+                text: "Yes" if (informationRequest and informationRequest.wantsInformationRequest == "yes") else "No"
+              },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/review/information-request",
+                  text: "Change",
+                  visuallyHiddenText: "whether you want to request information"
+                }]
+              }
+            }
+          ]
+        })
+      }}
+
+      {% if informationRequest and informationRequest.wantsInformationRequest == "yes" %}
+        {{
+          govukSummaryList({
+            classes: "govuk-!-margin-bottom-4",
+            rows: [
+              {
+                key: { text: "Title" },
+                value: {
+                  text: informationRequest.description or "Not provided"
+                },
+                actions: {
+                  items: [{
+                    href: "/cases/" + _case.id + "/review/information-request/description",
+                    text: "Change",
+                    visuallyHiddenText: "information request title"
+                  }]
+                }
+              }
+            ]
+          })
+        }}
+
+        {% for item in informationRequest.items %}
+          <h4 class="govuk-heading-s">Item {{ loop.index }}</h4>
+          {{
+            govukSummaryList({
+              classes: "govuk-!-margin-bottom-4",
+              rows: [
+                {
+                  key: { text: "Category" },
+                  value: { text: item.category },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "category for item " + loop.index }] }
+                },
+                {
+                  key: { text: "Description" },
+                  value: { text: item.description },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "description for item " + loop.index }] }
+                },
+                {
+                  key: { text: "Due date" },
+                  value: { text: item.dueDate | isoDateFromDateInput | govukDate },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "due date for item " + loop.index }] }
+                },
+                {
+                  key: { text: "Defendants" },
+                  value: { text: item.defendantNames or "—" },
+                  actions: { items: [{ href: "/cases/" + _case.id + "/review/information-request/items/" + item.id + "/edit", text: "Change", visuallyHiddenText: "defendants for item " + loop.index }] }
+                } if _case.defendants.length > 1
+              ]
+            })
+          }}
+        {% endfor %}
+      {% endif %}
+
+      {% if needsChargingDecision %}
+        <h3 class="govuk-heading-m govuk-!-margin-top-6">
+          Offences and element strength assessment
+        </h3>
+
+        {% for charge in charges %}
+          <h4 class="govuk-heading-s">
+            {{ (charge.defendant.firstName + " " + charge.defendant.lastName + " – " + charge.description) if showDefendantName else charge.description }}
+          </h4>
+
+          {% set elementRows = [] %}
+          {% for element in charge.elements %}
+            {%
+              set elementRows = elementRows.concat([{
+                key: { text: element.description },
+                value: {
+                  html: ((element.strength or "Not assessed") | e) + ('<br><span class="govuk-hint govuk-!-margin-bottom-0">' + (element.strengthReasoning | e) + '</span>' if element.strengthReasoning else "")
+                },
+                actions: {
+                  items: [{
+                    href: "/cases/" + _case.id + "/review/strength-assessment/" + element.id + "?from=check",
+                    text: "Change",
+                    visuallyHiddenText: element.description
+                  }]
+                }
+              }])
+            %}
+          {% endfor %}
+
+          {{ govukSummaryList({ classes: "govuk-!-margin-bottom-4", rows: elementRows }) }}
+        {% endfor %}
+
+        <h3 class="govuk-heading-m govuk-!-margin-top-6">Charging decision</h3>
+
+        {% set chargingDecisionRows = [] %}
+        {% for charge in charges %}
+          {%
+            set chargingDecisionRows = chargingDecisionRows.concat([{
+              key: { text: (charge.defendant.firstName + " " + charge.defendant.lastName + " – " + charge.description) if showDefendantName else charge.description },
+              value: { text: charge.decision if charge.decision else "Not provided" },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/review/charging-decision/" + charge.id + "?from=check",
+                  text: "Change",
+                  visuallyHiddenText: charge.description
+                }]
+              }
+            }])
+          %}
+        {% endfor %}
+
+        {{ govukSummaryList({ rows: chargingDecisionRows }) }}
+      {% endif %}
+
+      {% if not firstHearings.length and not needsChargingDecision %}
+        <h3 class="govuk-heading-m govuk-!-margin-top-6">First hearing</h3>
+
+        {{
+          govukSummaryList({
+            rows: [
+              {
+                key: { text: "First hearing" },
+                value: {
+                  text: (reviewFirstHearing.hearingDate | isoDateFromDateInput | govukDate) + ", " + reviewFirstHearing.time + ", " + reviewFirstHearing.venue if (reviewFirstHearing and reviewFirstHearing.confirmed) else "Not provided"
+                },
+                actions: {
+                  items: [{
+                    href: "/cases/" + _case.id + "/review/first-hearing",
+                    text: "Change",
+                    visuallyHiddenText: "first hearing"
+                  }]
+                }
+              }
+            ]
+          })
+        }}
+      {% endif %}
+
+      {% if needsChargingDecision %}
+        {% if allChargesNoFurtherAction %}
+          <p class="govuk-body">When you submit this review, we will notify:</p>
+          <ul class="govuk-list govuk-list--bullet">
+            <li>the police, that the case has been marked as no further action</li>
+            <li>the advocate, that the review is done and the decision is no further action</li>
+          </ul>
+        {% else %}
+          <h2 class="govuk-heading-m govuk-!-margin-top-5">When you submit this review</h2>
+
+          <p>We’ll send your charging decision to the police.</p>
+
+          {% if informationRequest and informationRequest.wantsInformationRequest == "yes" %}
+            {# <p>We’ll also send your requests for more information.</p> #}
+          {% endif %}
+
+          <p>If the police charges match your charging decision, we’ll send the IPDC to:</p>
+
+          <ul class="govuk-list govuk-list--bullet">
+            <li>the defendant and their lawyer, if they have one</li>
+            <li>the court</li>
+          </ul>
+
+          <p>The IPDC will include:</p>
+
+          <ul class="govuk-list govuk-list--bullet">
+            <li>the police report and previous convictions</li>
+            <li>any other material which has evidence connected to the charges</li>
+          </ul>
+
+          <p>
+            If the police charges do not match your charging decision, the case will instead be
+            marked for a further review.
+          </p>
+        {% endif %}
+      {% else %}
+        <p class="govuk-body">When you submit this review, we will notify:</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>the advocate, that the case has been reviewed and confirmed as charged</li>
+          <li>the defence lawyer, with the case bundle</li>
+          <li>the court, with the case bundle</li>
+        </ul>
+      {% endif %}
+
+      <form method="post" action="/cases/{{ _case.id }}/review/submit">
+        {{ govukButton({ text: "Submit review" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $('.js-annotation-excerpt').each(function () {
+      new App.TextExpander({ container: $(this), maxLength: 80 })
+    })
+  </script>
+{% endblock %}

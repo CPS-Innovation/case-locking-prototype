@@ -1,0 +1,64 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Check details and upload material" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + _case.id + '/documents/upload'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "File name" },
+              value: { text: data.uploadMaterial.name },
+              actions: {
+                items: [{
+                  href: '/cases/' + _case.id + '/documents/upload',
+                  text: "Change",
+                  visuallyHiddenText: "file"
+                }]
+              }
+            },
+            {
+              key: { text: "Type" },
+              value: { text: data.uploadMaterial.type },
+              actions: {
+                items: [{
+                  href: '/cases/' + _case.id + '/documents/upload',
+                  text: "Change",
+                  visuallyHiddenText: "file"
+                }]
+              }
+            },
+            {
+              key: { text: "Description" },
+              value: { text: data.uploadMaterial.description if data.uploadMaterial.description else "Not provided" },
+              actions: {
+                items: [{
+                  href: '/cases/' + _case.id + '/documents/upload',
+                  text: "Change",
+                  visuallyHiddenText: "description"
+                }]
+              }
+            }
+          ]
+        })
+      }}
+
+      <form method="post">
+        {{ govukButton({ text: "Upload material" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/date-input/macro.njk" import govukDateInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Change date" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + _case.id + '/hearings/' + hearing.id
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <form method="post">
+        {{ govukDateInput({
+          id: "hearing-date",
+          fieldset: {
+            legend: {
+              text: pageName,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: {
+            text: "For example, 31 3 2025"
+          },
+          items: [
+            {
+              name: "hearingDate[day]",
+              label: "Day",
+              value: hearingDateParts.day,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "hearingDate[month]",
+              label: "Month",
+              value: hearingDateParts.month,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "hearingDate[year]",
+              label: "Year",
+              value: hearingDateParts.year,
+              classes: "govuk-input--width-4"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Save changes" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

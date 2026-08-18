@@ -1,0 +1,52 @@
+{% if not hideNav %}
+  {{ govukServiceNavigation({
+    navigationId: 'primaryNavigation',
+    navigation: [
+      {
+        href: "/overview",
+        text: "Overview",
+        active: navId == 'overview'
+      },
+      {
+        href: "/cases",
+        text: "Cases",
+        active: navId == 'cases'
+      },
+      {
+        href: "/hearings",
+        text: "Hearings",
+        active: navId == 'hearings'
+      } if false,
+      {
+        href: "/directions",
+        text: "Directions",
+        active: navId == 'directions'
+      } if false,
+      {
+        href: "/tasks",
+        text: "Tasks",
+        active: navId == 'tasks'
+      } if false,
+      {
+        href: "/dga-reporting",
+        text: "DGA reporting",
+        active: navId == 'dga'
+      } if false,
+      {
+        href: "/prosecutors",
+        text: "Prosecutors",
+        active: navId == 'prosecutors'
+      } if false,
+      {
+        href: "/paralegal-officers",
+        text: "Paralegal officers",
+        active: navId == 'paralegalOfficers'
+      } if false,
+      {
+        href: "/activity",
+        text: "Activity",
+        active: navId == 'activity'
+      }
+    ]
+  }) }}
+{% endif %}

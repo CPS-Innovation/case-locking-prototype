@@ -1,0 +1,38 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'key-evidence' %}
+{% set pageName = "Key evidence" %}
+
+{% block beforeContent %}
+  {% include "_includes/case/identity-bar.njk" %}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/case/navigation.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukInsetText({
+          html: "<b>This is a case of assault.</b> The defendant is alleged to have attacked the victim outside a licensed premises on the evening of 14 March 2026, causing actual bodily harm. The prosecution case rests on a combination of CCTV, forensic, and witness evidence placing the defendant at the scene."
+        })
+      }}
+
+      <ol class="govuk-list">
+        {% for item in evidence %}
+          <li class="govuk-!-margin-bottom-6">
+            <h2 class="govuk-heading-s govuk-!-margin-bottom-1">{{ item.title }}</h2>
+            <p class="govuk-body">{{ item.detail }}</p>
+            {% if item.source %}
+              <p class="govuk-body govuk-!-margin-bottom-0">
+                <a href="{{ item.source.href }}" class="govuk-link">{{ item.source.text }}</a>
+              </p>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+{% endblock %}

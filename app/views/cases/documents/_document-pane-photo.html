@@ -1,0 +1,55 @@
+<div class="app-document-pane">
+  <div class="app-document app-document--photo">
+    <div
+      class="app-document__content"
+      id="document-content-{{ documentId }}"
+      data-case-id="{{ caseId }}"
+      data-document-id="{{ documentId }}"
+    >
+      {% if isReviewMode %}
+        <div class="app-photo-annotation-actions govuk-button-group govuk-!-margin-bottom-0">
+          {{
+            govukButton({
+              text: "Add note",
+              classes: "govuk-button--secondary js-photo-annotate-btn",
+              type: "button",
+              attributes: { "data-type": "note" }
+            })
+          }}
+          {% if offences.length %}
+            {{
+              govukButton({
+                text: "Mark as evidence",
+                classes: "govuk-button--secondary js-photo-annotate-btn",
+                type: "button",
+                attributes: { "data-type": "evidence" }
+              })
+            }}
+          {% endif %}
+          {% if offences.length %}
+            {{
+              govukButton({
+                text: "Add anticipated issue",
+                classes: "govuk-button--secondary js-photo-annotate-btn",
+                type: "button",
+                attributes: { "data-type": "issue" }
+              })
+            }}
+          {% endif %}
+          {{
+            govukButton({
+              text: "Add information request note",
+              classes: "govuk-button--secondary js-photo-annotate-btn",
+              type: "button",
+              attributes: { "data-type": "information-request" }
+            })
+          }}
+        </div>
+      {% endif %}
+
+      {% for url in photoUrls %}
+        <img src="{{ url }}" alt="{{ document.name }}{% if photoUrls.length > 1 %} (image {{ loop.index }} of {{ photoUrls.length }}){% endif %}" class="app-document__photo" />
+      {% endfor %}
+    </div>
+  </div>
+</div>

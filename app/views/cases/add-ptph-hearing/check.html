@@ -1,0 +1,50 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Check details and add PTPH hearing" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Date" },
+            value: { text: data.addPtphHearing.hearingDate | isoDateFromDateInput | govukDateTime },
+            actions: {
+              items: [{
+                href: "/cases/:caseId/add-ptph-hearing" | replace(':caseId', _case.id),
+                text: "Change",
+                visuallyHiddenText: "date of PTPH hearing"
+              }]
+            }
+          },
+          {
+            key: { text: "Venue" },
+            value: { text: data.addPtphHearing.venue },
+            actions: {
+              items: [{
+                href: "/cases/:caseId/add-ptph-hearing/venue" | replace(':caseId', _case.id),
+                text: "Change",
+                visuallyHiddenText: "venue"
+              }]
+            }
+          }
+        ]
+      }) }}
+
+      <form method="post">
+        {{ govukButton({ text: "Add PTPH hearing" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

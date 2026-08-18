@@ -1,0 +1,383 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Cases (:total)" | replace(':total', totalCases | formatNumber) %}
+
+{% block pageTitle %}
+  {% if errorSummary.items.length %}
+    {% if errorSummary.items.length == 1 %}1 error{% else %}{{ errorSummary.items.length }} errors{% endif %}
+    - {{ pageName }} - {{ serviceName }} - GOV.UK
+  {% else %}
+    {{ pageName }}
+    - {{ serviceName }} - GOV.UK
+  {% endif %}
+{% endblock %}
+
+{% block skipLink %}
+  {{ super() }}
+  {{
+    govukSkipLink({
+      text: "Skip to case search",
+      href: "#app-case-search"
+    })
+  }}
+  {{
+    govukSkipLink({
+      text: "Skip to case list",
+      href: "#app-case-list"
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+
+  {% if errorSummary.items.length %}
+    {{
+      govukErrorSummary({
+        titleText: "There’s a problem",
+        errorList: errorSummary.items
+      })
+    }}
+  {% endif %}
+
+  <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+  <div class="govuk-button-group" style="display: none;">
+    {{
+      govukButton({
+        text: "Create case"
+      })
+    }}
+
+    {{
+      govukButton({
+        text: "Export cases",
+        classes: 'govuk-button--secondary'
+      })
+    }}
+
+    {# {{
+      govukButton({
+        text: "Record all 36 casesDGA dispute outcomes as not disputed",
+        classes: 'govuk-button--secondary'
+      })
+    }} #}
+
+    {# <a class="govuk-link govuk-link--no-visited-state" href="/dga-reporting">
+      Director’s Guidance Assessment (DGA) reporting
+    </a> #}
+  </div>
+
+  <div class="app-filter-layout">
+    <div class="app-filter-layout__filter">{% include "_includes/case/filter-panel.njk" %}</div>
+    <div class="app-filter-layout__content">
+      <div class="app-action-bar">
+        <div class="app-action-bar__filter"></div>
+      </div>
+
+      {% include "_includes/case/search-form.njk" %}
+      {# {% include "_includes/case/sort-controls.njk" %} #}
+
+      {% if cases.length %}
+        <form method="post" action="/cases?page={{ pagination.pageNumber }}">
+          <div
+            class="govuk-button-group app-list-actions govuk-!-margin-top-4"
+            style="display: none;"
+          >
+            {% if data.applyAction.cases and data.applyAction.cases.length == totalCases %}
+              {{
+                govukButton({
+                  text: "Deselect all " + totalCases + " cases",
+                  classes: "govuk-button--secondary",
+                  href: "/cases/deselect-all?page=" + pagination.pageNumber
+                })
+              }}
+            {% else %}
+              {{
+                govukButton({
+                  text: "Select all " + totalCases + " cases",
+                  classes: "govuk-button--secondary",
+                  href: "/cases/select-all?page=" + pagination.pageNumber
+                })
+              }}
+            {% endif %}
+            {{
+              govukButton({
+                text: "Add prosecutor",
+                classes: "govuk-button--secondary",
+                name: "action",
+                value: "add-prosecutor"
+              }) if 1==2
+            }}
+            {{
+              govukButton({
+                text: "Record DGA dispute outcomes as not disputed",
+                classes: "govuk-button--secondary",
+                name: "action",
+                value: "record-dga-dispute-outcomes-as-not-disputed"
+              })
+            }}
+          </div>
+
+          <div
+            class="govuk-form-group {% if inlineErrors.applyAction.cases %}govuk-form-group--error{% endif %}"
+          >
+            {%
+              call govukFieldset({
+                legend: { text: "Cases", classes: "govuk-visually-hidden" }
+              })
+            %}
+              {% if inlineErrors.applyAction.cases %}
+                {{ govukErrorMessage({ text: inlineErrors.applyAction.cases.text }) }}
+              {% endif %}
+              {% for selectedId in data.applyAction.cases %}
+                {% set onPage = false %}
+                {% for _case in cases %}{% if _case.id | string == selectedId %}{% set onPage = true %}{% endif %}{% endfor %}
+                {% if not onPage %}
+                  <input type="hidden" name="applyAction[cases]" value="{{ selectedId }}" />
+                {% endif %}
+              {% endfor %}
+
+              <div class="app-list app-list--with-checkboxes" id="app-case-list">
+                {% for _case in cases %}
+                  {% set defendantLabel %}
+                    {{ _case.defendants[0].firstName }}
+                    {{ _case.defendants[0].lastName }}
+                    {% if _case.defendants.length > 1 %}
+                      and {{ _case.defendants.length - 1 }} more
+                    {%- endif %}
+                  {% endset %}
+
+                  <div class="app-list__item">
+                    {% set labelHtml %}
+                      &nbsp;
+                      <span class="govuk-visually-hidden">
+                        {{ _case.reference }} - {{ defendantLabel }}
+                      </span>
+                    {% endset %}
+
+                    {{
+                      govukCheckboxes({
+                        classes: "govuk-checkboxes--small app-list__checkbox",
+                        idPrefix: "applyAction.cases",
+                        name: "applyAction[cases]",
+                        items: [{
+                          value: _case.id ~ '',
+                          html: labelHtml
+                        }],
+                        values: data.applyAction.cases
+                      }) if false
+                    }}
+
+                    <div class="app-list__content">
+                      <h2 class="govuk-heading-s govuk-!-margin-bottom-1">
+                        <div>
+                          <a href="/cases/{{ _case.id }}" class="govuk-link--no-visited-state">
+                            {{ defendantLabel }}
+                          </a>
+                        </div>
+                        <div class="app-list__tag">
+                          {{
+                            govukTag({
+                              text: _case.status,
+                              classes: (_case.status | caseStatusTagClass)
+                            })
+                          }}
+                          {% if _case.hearingStatuses.length == 1 %}
+                            {{
+                              govukTag({
+                                text: _case.hearingStatuses[0],
+                                classes: (_case.hearingStatuses[0] | hearingStatusTagClass) + ' govuk-!-margin-left-1'
+                              })
+                            }}
+                          {% endif %}
+                        </div>
+                      </h2>
+
+                      {% set prosecutorValue %}
+                        {% if _case.prosecutors.length %}
+                          {{ _case.prosecutors[0].user.firstName }}
+                          {{ _case.prosecutors[0].user.lastName }}
+                          {% if _case.prosecutors.length > 1 %}
+                            and {{ _case.prosecutors.length - 1 }} more
+                          {% endif %}
+                        {% else %}
+                          Unassigned
+                        {% endif %}
+                      {% endset %}
+
+
+                      {% set paralegalOfficerValue %}
+                        {% if _case.paralegalOfficers.length %}
+                          {{ _case.paralegalOfficers[0].user.firstName }}
+                          {{ _case.paralegalOfficers[0].user.lastName }}
+                          {% if _case.paralegalOfficers.length > 1 %}
+                            and {{ _case.paralegalOfficers.length - 1 }} more
+                          {% endif %}
+                        {% else %}
+                          Unassigned
+                        {% endif %}
+                      {% endset %}
+
+                      {{
+                        govukSummaryList({
+                          classes: 'govuk-summary-list--no-border app-summary-list--compact app-summary-list--small-text',
+                          rows: [
+                            {
+                              key: {
+                                html: 'URN'
+                              },
+                              value: {
+                                html: _case.reference
+                              }
+                            },
+                            {
+                              key: { html: 'Status' },
+                              value: { html: _case.defendantStatuses | join(', ') }
+                            } if _case.defendantStatuses.length,
+                            {
+                              key: { html: 'Hearing status' },
+                              value: { html: _case.hearingStatuses | join(', ') }
+                            } if _case.hearingStatuses.length > 1,
+                            {
+                              key: {
+                                html: 'Operation name'
+                              },
+                              value: {
+                                html: _case.operationName
+                              }
+                            } if _case.operationName,
+                            {
+                              key: {
+                                html: 'Unit'
+                              },
+                              value: {
+                                html: _case.unit.name
+                              }
+                            },
+                            {
+                              key: {
+                                html: 'Court type'
+                              },
+                              value: {
+                                html: _case.courtType
+                              }
+                            } if 1==2,
+                            {
+                              key: {
+                                html: 'Complexity'
+                              },
+                              value: {
+                                html: _case.complexity
+                              }
+                            } if false,
+                            {
+                              key: {
+                                html: 'Prosecutor'
+                              },
+                              value: {
+                                html: prosecutorValue
+                              }
+                            },
+                            {
+                              key: {
+                                html: 'Paralegal officer'
+                              },
+                              value: {
+                                html: paralegalOfficerValue
+                              }
+                            } if false,
+                            {
+                              key: {
+                                html: 'Hearing type'
+                              },
+                              value: {
+                                html: _case.type
+                              }
+                            } if 1==2,
+                            {
+                              key: {
+                                html: 'Hearing date'
+                              },
+                              value: {
+                                html: _case.nextHearingDate | isoDateString | govukDateTime
+                              }
+                            } if _case.nextHearingDate,
+                            {
+                              key: { html: 'Custody time limit' },
+                              value: { html: (_case.custodyTimeLimit | isoDateString | govukDate) + ' (' + (_case.custodyTimeLimit | timeLimitStatus) + ')' }
+                            } if _case.custodyTimeLimit,
+                            {
+                              key: { html: 'Statutory time limit' },
+                              value: { html: (_case.statutoryTimeLimit | isoDateString | govukDate) + ' (' + (_case.statutoryTimeLimit | timeLimitStatus) + ')' }
+                            } if _case.statutoryTimeLimit,
+                            {
+                              key: { html: 'PACE clock' },
+                              value: { html: (_case.paceClock | isoDateString | govukDateTime) + ' (' + (_case.paceClock | paceClockStatus) + ')' }
+                            } if _case.paceClock,
+                            {
+                              key: { html: 'DGA reporting deadline' },
+                              value: { html: _case.dga.recordDisputeOutcomesDeadline | isoDateString | govukDate }
+                            } if _case.dga and _case.dga.recordDisputeOutcomesDeadline
+                          ]
+                        })
+                      }}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endcall %}
+          </div>
+        </form>
+      {% else %}
+        <p>There are no results.</p>
+      {% endif %}
+      {% include "_includes/pagination.njk" %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    new App.FilterToggleButton({
+      bigModeMediaQuery: '(min-width: 48.063em)',
+      startHidden: false,
+      toggleButton: {
+        container: $('.app-action-bar__filter'),
+        showText: 'Show filter',
+        hideText: 'Hide filter',
+        classes: 'govuk-button--secondary govuk-!-margin-bottom-3',
+      },
+      closeButton: {
+        container: $('.app-filter__header-action'),
+        text: 'Close',
+      },
+      filter: {
+        container: $('.app-filter-layout__filter'),
+      },
+    })
+
+    new App.ListFilter({
+      container: $('.prosecutor-filter'),
+      textBox: {
+        label: 'Find prosecutor',
+      },
+    })
+
+    new App.ListFilter({
+      container: $('.paralegal-officer-filter'),
+      textBox: {
+        label: 'Find paralegal',
+      },
+    })
+
+    new App.ListFilter({
+      container: $('.police-unit-filter'),
+      textBox: {
+        label: 'Find police force',
+      },
+    })
+  </script>
+{% endblock %}

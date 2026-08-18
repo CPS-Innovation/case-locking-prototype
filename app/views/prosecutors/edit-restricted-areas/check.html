@@ -1,0 +1,55 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'prosecutors' %}
+{% set pageName = "Check details and update restricted areas" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{prosecutor.firstName}} {{prosecutor.lastName}}</span>
+      <h1 class="govuk-heading-l">{{pageName}}</h1>
+
+      {% set restrictedAreasValue %}
+        {% if restrictedAreas.length %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for item in restrictedAreas %}
+              <li>{{item.name}}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          No restricted areas
+        {% endif %}
+      {% endset %}
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Restricted areas" },
+            value: { html: restrictedAreasValue },
+            actions: {
+              items: [
+                {
+                  href: "/prosecutors/:prosecutorId/edit-restricted-areas" | replace(':prosecutorId', prosecutor.id),
+                  text: "Change",
+                  visuallyHiddenText: "Restricted areas"
+                }
+              ]
+            }
+          }
+        ]
+      }) }}
+
+      <form method="post">
+        {{ govukButton({
+          text: "Update restricted areas"
+        }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

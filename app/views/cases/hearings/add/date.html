@@ -1,0 +1,59 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/date-input/macro.njk" import govukDateInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Date" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: '/cases/' + _case.id + '/hearings/add'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – add hearing</span>
+
+      <form method="post">
+        {{ govukDateInput({
+          id: "hearing-date",
+          fieldset: {
+            legend: {
+              text: pageName,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: {
+            text: "For example, 31 3 2025"
+          },
+          items: [
+            {
+              name: "addHearing[hearingDate][day]",
+              label: "Day",
+              value: data.addHearing.hearingDate.day,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "addHearing[hearingDate][month]",
+              label: "Month",
+              value: data.addHearing.hearingDate.month,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "addHearing[hearingDate][year]",
+              label: "Year",
+              value: data.addHearing.hearingDate.year,
+              classes: "govuk-input--width-4"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

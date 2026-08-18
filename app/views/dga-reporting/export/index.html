@@ -1,0 +1,72 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'dga' %}
+{% set pageName = 'Time period to export for ' + monthName %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: "Back",
+      href: "/dga-reporting/" + monthKey
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ monthName }} - {{ policeUnit.name }}</span>
+      <h1 class="govuk-heading-l">Export cases that had a DGA</h1>
+
+      <form method="post">
+        {{
+          govukRadios({
+            name: 'export[shareOutsideCps]',
+            fieldset: {
+              legend: {
+                text: 'Are you sharing this export outside the CPS?',
+                classes: 'govuk-fieldset__legend--m'
+              }
+            },
+            items: [
+              {
+                value: 'yes',
+                text: 'Yes',
+                hint: {
+                  text: "The ‘reason for outcome’ column will be removed because it may contain sensitive or personal information"
+                }
+              },
+              {
+                value: 'no',
+                text: 'No'
+              }
+            ]
+          })
+        }}
+
+        {{
+          govukCheckboxes({
+            name: "export[weeks]",
+            fieldset: {
+              legend: {
+                text: 'Time period',
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            items: weekItems
+          })
+        }}
+
+        {{
+          govukButton({
+            text: "Export"
+          })
+        }}
+      </form>
+
+      <p>
+        <a href="/dga-reporting/{{ monthKey }}" class="govuk-link">Return to {{ monthName }}</a>
+      </p>
+    </div>
+  </div>
+{% endblock %}

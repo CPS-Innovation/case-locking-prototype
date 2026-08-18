@@ -1,0 +1,102 @@
+{% set statusTagHtml %}
+  {{ govukTag({
+    text: _case.status,
+    classes: (_case.status | caseStatusTagClass) + ' govuk-!-margin-left-2'
+  }) }}
+  {% for status in hearingStatuses %}
+    {{ govukTag({
+      text: status,
+      classes: (status | hearingStatusTagClass) + ' govuk-!-margin-left-2'
+    }) }}
+  {% endfor %}
+{% endset %}
+
+{% set identityTitle %}
+  <span class="govuk-!-margin-right-1">{{_case.reference}}</span>
+  <b>
+    {% if _case.operationName %}
+      {{_case.operationName}}
+    {% else %}
+      {{_case.defendants[0].firstName}} {{_case.defendants[0].lastName}}
+      {% if _case.defendants.length > 1 %}
+        and {{_case.defendants.length - 1}} more
+      {% endif %}
+    {% endif %}
+  </b>
+  {{statusTagHtml | safe}}
+{% endset %}
+
+{% set descriptionHtml %}
+
+  {% if _case.custodyTimeLimit %}
+    <span class="govuk-!-display-block">Custody time limit ends {{ _case.custodyTimeLimit | isoDateString | govukDate }} ({{ _case.custodyTimeLimit | timeLimitStatus }})</span>
+  {% endif %}
+  {% if _case.statutoryTimeLimit %}
+    <span class="govuk-!-display-block">Statutory time limit ends {{ _case.statutoryTimeLimit | isoDateString | govukDate }} ({{ _case.statutoryTimeLimit | timeLimitStatus }})</span>
+  {% endif %}
+  {% if _case.paceClock %}
+    {% set paceStatus = _case.paceClock | paceClockStatus %}
+    {% if paceStatus == 'expired' %}
+      <span class="govuk-!-display-block">PACE clock expired on {{ _case.paceClock | isoDateString | govukDateTime }}</span>
+    {% else %}
+      <span class="govuk-!-display-block">PACE clock {{ paceStatus }} ({{ _case.paceClock | isoDateString | govukDateTime }})</span>
+    {% endif %}
+  {% endif %}
+{% endset %}
+
+{% if _case.needsReview %}
+  {% set identityBarMenus = [
+    {
+      items: [
+        {
+          text: 'Review case',
+          href: '/cases/' + _case.id + '/review-variant-2' if data.reviewVariant2 else '/cases/' + _case.id + '/review'
+        }
+      ]
+    }
+  ] %}
+{% elif hasPendingInformationRequest %}
+  {% set identityBarMenus = [] %}
+{% elif _case.status == caseStatuses.CHARGES_PENDING %}
+  {% set identityBarMenus = [] %}
+{% elif activeHearings.length == 1 %}
+  {% if activeHearings[0].status == 'Hearing preparation needed' %}
+    {% set identityBarMenus = [
+      {
+        items: [
+          {
+            text: 'Mark preparation as complete',
+            action: '/cases/' + _case.id + '/hearings/' + activeHearings[0].id + '/mark-preparation-complete?referrer=' + path
+          }
+        ]
+      }
+    ] %}
+  {% elif activeHearings[0].status == 'Hearing pending' %}
+    {% set identityBarMenus = [] %}
+  {% elif activeHearings[0].status == 'Hearing outcome needed' %}
+    {% set identityBarMenus = [
+      {
+        items: [
+          {
+            text: 'Record outcome',
+            href: '/cases/' + _case.id + '/hearings/' + activeHearings[0].id + '/record-outcome'
+          }
+        ]
+      }
+    ] %}
+  {% else %}
+    {% set identityBarMenus = [] %}
+  {% endif %}
+{% else %}
+  {% set identityBarMenus = [] %}
+{% endif %}
+
+{{ appIdentityBar({
+  title: {
+    html: identityTitle
+  },
+  description: {
+    html: descriptionHtml
+  } if (_case.custodyTimeLimit or _case.statutoryTimeLimit or _case.paceClock) and false,
+  menus: identityBarMenus
+})}}

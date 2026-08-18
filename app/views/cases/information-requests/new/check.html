@@ -1,0 +1,70 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: "/cases/" + _case.id + "/information-requests/new/items"
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }} - create information request</span>
+      <h1 class="govuk-heading-l">Check details and create request</h1>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "Title" },
+              value: { text: informationRequest.description or "—" },
+              actions: {
+                items: [
+                  { href: "/cases/" + _case.id + "/information-requests/new", text: "Change", visuallyHiddenText: "title" }
+                ]
+              }
+            }
+          ]
+        })
+      }}
+
+      {% for item in informationRequest.items %}
+        <h2 class="govuk-heading-m">Item {{ loop.index }}</h2>
+        {{
+          govukSummaryList({
+            rows: [
+              {
+                key: { text: "Category" },
+                value: { text: item.category },
+                actions: { items: [{ href: "/cases/" + _case.id + "/information-requests/new/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "category for item " + loop.index }] }
+              },
+              {
+                key: { text: "Description" },
+                value: { text: item.description },
+                actions: { items: [{ href: "/cases/" + _case.id + "/information-requests/new/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "description for item " + loop.index }] }
+              },
+              {
+                key: { text: "Due date" },
+                value: { text: item.formattedDueDate },
+                actions: { items: [{ href: "/cases/" + _case.id + "/information-requests/new/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "due date for item " + loop.index }] }
+              },
+              {
+                key: { text: "Defendants" },
+                value: { text: item.defendantNames or "—" },
+                actions: { items: [{ href: "/cases/" + _case.id + "/information-requests/new/items/" + loop.index0 + "/edit", text: "Change", visuallyHiddenText: "defendants for item " + loop.index }] }
+              } if _case.defendants.length > 1
+            ]
+          })
+        }}
+      {% endfor %}
+
+      <form method="post">
+        {{ govukButton({ text: "Create request" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

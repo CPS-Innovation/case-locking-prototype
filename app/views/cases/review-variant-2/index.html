@@ -1,0 +1,141 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/task-list/macro.njk" import govukTaskList %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Review case" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: 'Back', href: '/cases/' + _case.id }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% if review.materialStatus == 'reviewed' %}
+        {% set materialStatus = { text: "Completed" } %}
+      {% elif review.materialStatus == 'in_progress' %}
+        {% set materialStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
+      {% else %}
+        {% set materialStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+      {% endif %}
+
+      {{
+        govukTaskList({
+          idPrefix: "review-material",
+          items: [{
+            title: { text: "Material" },
+            href: "/cases/" + _case.id + "/review-variant-2/material",
+            status: materialStatus
+          }]
+        })
+      }}
+
+      <h2 class="govuk-heading-m govuk-!-margin-top-4">Assessment and decisions</h2>
+
+      {% if review.summaryComplete == true %}
+        {% set summaryStatus = { text: "Completed" } %}
+      {% elif review.summary %}
+        {% set summaryStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
+      {% else %}
+        {% set summaryStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+      {% endif %}
+
+      {% if review.strengthAssessmentComplete == true %}
+        {% set strengthAssessmentStatus = { text: "Completed" } %}
+      {% elif strengthAssessmentStarted %}
+        {% set strengthAssessmentStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
+      {% else %}
+        {% set strengthAssessmentStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+      {% endif %}
+
+      {% if review.chargingDecisionComplete == true %}
+        {% set chargingStatus = { text: "Completed" } %}
+      {% elif chargingDecisionStarted %}
+        {% set chargingStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
+      {% else %}
+        {% set chargingStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+      {% endif %}
+
+      {% if informationRequest and informationRequest.complete == true %}
+        {% set informationRequestStatus = { text: "Completed" } %}
+      {% elif informationRequest %}
+        {% set informationRequestStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
+      {% else %}
+        {% set informationRequestStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+      {% endif %}
+
+      {% if reviewFirstHearing and reviewFirstHearing.confirmed %}
+        {% set firstHearingStatus = { text: "Completed" } %}
+      {% elif reviewFirstHearing and reviewFirstHearing.hearingDate.day %}
+        {% set firstHearingStatus = { tag: { text: "In progress", classes: "govuk-tag--blue" } } %}
+      {% else %}
+        {% set firstHearingStatus = { tag: { text: "Not started", classes: "govuk-tag--grey" } } %}
+      {% endif %}
+
+      {%
+        set additionalInformationItems = [
+          {
+            title: { text: "Case summary" },
+            href: "/cases/" + _case.id + "/review-variant-2/summary/check" if (review.summaryComplete == true or review.summary) else "/cases/" + _case.id + "/review-variant-2/summary",
+            status: summaryStatus
+          }
+        ]
+      %}
+
+      {%
+        set additionalInformationItems = additionalInformationItems.concat([{
+          title: { text: "Information request" },
+          href: "/cases/" + _case.id + "/review-variant-2/information-request/check" if informationRequest else "/cases/" + _case.id + "/review-variant-2/information-request",
+          status: informationRequestStatus
+        }])
+      %}
+
+      {% if needsChargingDecision %}
+        {%
+          set additionalInformationItems = additionalInformationItems.concat([{
+            title: { text: "Offences and element strength assessment" },
+            href: "/cases/" + _case.id + "/review-variant-2/strength-assessment/check" if ((review.strengthAssessmentComplete == true) or strengthAssessmentAllAssessed) else "/cases/" + _case.id + "/review-variant-2/strength-assessment",
+            status: strengthAssessmentStatus
+          }])
+        %}
+        {%
+          set additionalInformationItems = additionalInformationItems.concat([{
+            title: { text: "Charging decision" },
+            href: "/cases/" + _case.id + "/review-variant-2/charging-decision/check" if ((review.chargingDecisionComplete == true) or chargingDecisionAllAnswered) else "/cases/" + _case.id + "/review-variant-2/charging-decision",
+            status: chargingStatus
+          }])
+        %}
+      {% endif %}
+
+      {% if not firstHearings.length and not needsChargingDecision %}
+        {% set firstHearingAllAnswered = reviewFirstHearing and reviewFirstHearing.hearingDate.day and reviewFirstHearing.time and reviewFirstHearing.venue %}
+        {%
+          set additionalInformationItems = additionalInformationItems.concat([{
+            title: { text: "First hearing details" },
+            href: "/cases/" + _case.id + "/review-variant-2/first-hearing/check" if ((reviewFirstHearing and reviewFirstHearing.confirmed == true) or firstHearingAllAnswered) else "/cases/" + _case.id + "/review-variant-2/first-hearing",
+            status: firstHearingStatus
+          }])
+        %}
+      {% endif %}
+
+      {{
+        govukTaskList({
+          idPrefix: "additional-information",
+          items: additionalInformationItems
+        })
+      }}
+
+      <h2 class="govuk-heading-m govuk-!-margin-top-4">Check and submit review</h2>
+
+      {{
+        govukButton({
+          text: "Check and submit review",
+          href: "/cases/" + _case.id + "/review-variant-2/check"
+        })
+      }}
+    </div>
+  </div>
+{% endblock %}

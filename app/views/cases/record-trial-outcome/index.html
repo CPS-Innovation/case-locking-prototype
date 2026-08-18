@@ -1,0 +1,51 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Record trial outcome" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – record trial outcome</span>
+
+      <form method="post">
+        {{ govukRadios({
+          name: "outcome",
+          value: selectedOutcome,
+          fieldset: {
+            legend: {
+              text: "What was the outcome?",
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          items: [
+            {
+              value: "found-guilty",
+              text: "Found guilty"
+            },
+            {
+              value: "pleads-guilty",
+              text: "Pleads guilty"
+            },
+            {
+              value: "not-guilty",
+              text: "Not guilty"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({
+          text: "Continue"
+        }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

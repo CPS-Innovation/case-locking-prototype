@@ -1,0 +1,61 @@
+{{ xGovukSecondaryNavigation({
+  classes: 'govuk-!-margin-bottom-6 app-secondary-navigation',
+  visuallyHiddenTitle: "Secondary menu",
+  items: [{
+    text: "Overview",
+    href: "/cases/:caseId" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'overview'
+  },
+  {
+    text: "Defendants",
+    href: "/cases/:caseId/defendants" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'defendants'
+  },
+  {
+    text: "Witnesses",
+    href: "/cases/:caseId/witnesses" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'witnesses'
+  },
+  {
+    href: "/cases/:caseId/documents" | replace(':caseId', _case.id),
+    text: "Material",
+    current: secondaryNavId == 'documents'
+  } if not _case.needsReview,
+  {
+    text: "Hearings",
+    href: "/cases/:caseId/hearings" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'hearings'
+  } if not (_case.status == caseStatuses.NOT_CHARGED and _case.needsReview),
+  {
+    text: "Directions",
+    href: "/cases/:caseId/directions" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'directions'
+  } if false,
+  {
+    text: "Tasks",
+    href: "/cases/:caseId/tasks" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'tasks'
+  } if false, {
+    text: "CTL log",
+    href: "/cases/:caseId/ctl-log" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'ctl-log'
+  } if _case.custodyTimeLimit and false,
+  {
+    text: "DGA reporting",
+    href: "/cases/:caseId/dga" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'dga'
+  } if _case.dga and _case.dga.recordDisputeOutcomesDeadline and false,
+  {
+    text: "Information requests",
+    href: "/cases/:caseId/information-requests" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'information-requests'
+  } if _case.status != caseStatuses.NOT_CHARGED, {
+    text: "Notes",
+    href: "/cases/:caseId/notes" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'notes'
+  } if false, {
+    text: "Activity",
+    href: "/cases/:caseId/activity" | replace(':caseId', _case.id),
+    current: secondaryNavId == 'activity'
+  }]
+})}}

@@ -1,0 +1,59 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'ctl-log' %}
+{% set pageName = "CTL log (:total)" | replace(':total', _case.ctlLogEntries.length | formatNumber) %}
+
+{% block beforeContent %}
+  {% include "_includes/case/identity-bar.njk" %}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+  {% include "_includes/case/navigation.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{pageName}}</h1>
+
+      <div class="govuk-button-group">
+        {{ govukButton({
+          text: "Add CTL log entry",
+          href: "/cases/:caseId/ctl-log/new" | replace(':caseId', _case.id)
+        }) }}
+
+        {{ govukButton({
+          text: "Export",
+          classes: 'govuk-button--secondary'
+        }) if _case.ctlLogEntries.length }}
+      </div>
+
+      {% if _case.ctlLogEntries.length %}
+        <div class="app-list">
+          {% for entry in _case.ctlLogEntries %}
+            <div class="app-list__item">
+              <h2 class="govuk-heading-s govuk-!-margin-bottom-1">
+                <a href="/cases/{{_case.id}}/ctl-log/{{entry.id}}" class="govuk-link--no-visited-state">{{ entry.description | truncate(75) }}</a>
+              </h2>
+
+              {{ govukSummaryList({
+                classes: 'govuk-summary-list--no-border app-summary-list--compact app-summary-list--small-text',
+                rows: [
+                  {
+                    key: { text: 'User' },
+                    value: { text: entry.user.firstName + ' ' + entry.user.lastName }
+                  },
+                  {
+                    key: { text: 'Date added' },
+                    value: { text: entry.createdAt | isoDateString | govukDateTime }
+                  }
+                ]
+              }) }}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>There are no CTL log entries.</p>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

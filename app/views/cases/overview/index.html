@@ -1,0 +1,243 @@
+{% extends "_layouts/main.html" %}
+{% from "_includes/case/charges-elements.njk" import chargesElements %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'overview' %}
+{% set pageName = 'Overview' %}
+
+{% block beforeContent %}
+  {% include "_includes/case/identity-bar.njk" %}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+  {% include "_includes/case/navigation.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Overview</h1>
+
+      {% set offencesValue %}
+        {% if charges.length == 1 %}
+          <p class="govuk-body govuk-!-margin-bottom-0">{{ charges[0].description }}</p>
+        {% else %}
+          <ul class="govuk-list govuk-list--bullet">
+            {% for charge in charges %}
+              <li>{{ charge.description }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      {% endset %}
+
+      <div class="app-section">
+        {{
+          govukSummaryList({
+            rows: [
+              {
+                key: {
+                  text: "URN"
+                },
+                value: {
+                  html: _case.reference
+                }
+              },
+              {
+                key: {
+                  text: "Operation name"
+                },
+                value: {
+                  html: _case.operationName
+                }
+              } if _case.operationName,
+              {
+                key: {
+                  text: "Unit"
+                },
+                value: {
+                  html: _case.unit.name
+                }
+              },
+              {
+                key: {
+                  text: "Complexity"
+                },
+                value: {
+                  html: _case.complexity + '<div class="govuk-!-margin-top-1"><a href="/cases/:caseId/complexity-calculation">How we calculated complexity</a></div>' | replace(':caseId', _case.id)
+                },
+                actions: {
+                  items: [
+                    {
+                      href: "/cases/:caseId/edit-complexity" | replace(':caseId', _case.id),
+                      text: "Change",
+                      visuallyHiddenText: "Complexity"
+                    }
+                  ]
+                }
+              } if false,
+              {
+                key: {
+                  text: "Case summary"
+                },
+                value: {
+                  text: summary
+                },
+                actions: {
+                  items: [
+                    {
+                      href: "/cases/" + _case.id + "/review-variant-2/summary" if data.reviewVariant2 else "/cases/" + _case.id + "/review/summary",
+                      text: "Change",
+                      visuallyHiddenText: "case summary"
+                    }
+                  ]
+                }
+              } if summary,
+              {
+                key: {
+                  text: "Offences"
+                },
+                value: {
+                  html: offencesValue
+                },
+                actions: {
+                  items: [
+                    {
+                      href: "/cases/" + _case.id + "/review-variant-2/strength-assessment/check" if data.reviewVariant2 else "/cases/" + _case.id + "/review/strength-assessment/check",
+                      text: "Change",
+                      visuallyHiddenText: "offences"
+                    }
+                  ]
+                } if elementsAssessed
+              } if charges.length
+            ]
+          })
+        }}
+      </div>
+
+      {% if elementsAssessed %}
+        {{ chargesElements(charges, _case) }}
+      {% endif %}
+
+      {# Temporarily hidden while this is a single defendant case
+      <div class="app-section">
+        <h2 class="govuk-heading-m">Defendants</h2>
+
+        {% if _case.defendants.length %}
+          <div class="app-list">
+            {% for defendant in _case.defendants %}
+              <div class="app-list__item">
+                <p class="govuk-body govuk-!-margin-bottom-0">
+                  <a
+                    href="/cases/{{ _case.id }}/defendants/{{ defendant.id }}"
+                    class="govuk-link govuk-link--no-visited-state"
+                  >
+                    {{ defendant.firstName }} {{ defendant.lastName }}
+                  </a>
+                </p>
+                <div class="app-list__actions">
+                  <strong class="govuk-tag {{ defendant.status | caseStatusTagClass }}">
+                    {{ defendant.status }}
+                  </strong>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="govuk-body">No defendants.</p>
+        {% endif %}
+      </div>
+      #}
+
+      {% if _case.hearings.length and false %}
+        <div class="app-section">
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">Hearings</h2>
+          <div class="app-list">
+            {% for hearing in _case.hearings %}
+              <div class="app-list__item">
+                <p class="govuk-body govuk-!-margin-bottom-0">
+                  <a
+                    href="/cases/{{ _case.id }}/hearings/{{ hearing.id }}"
+                    class="govuk-link govuk-link--no-visited-state"
+                  >
+                    {{ hearing.type }}
+                  </a>
+                </p>
+                <div class="app-list__actions">
+                  <strong class="govuk-tag {{ hearing.status | hearingStatusTagClass }}">
+                    {{ hearing.status | replace("Hearing ", "") | capitalize }}
+                  </strong>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      {% if false %}
+        <div class="app-section">
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">Prosecutor</h2>
+
+          <p><a href="/cases/{{ _case.id }}/add-prosecutor">Add prosecutor</a></p>
+
+          {% if _case.prosecutors.length %}
+            <div class="app-list">
+              {% for cp in _case.prosecutors %}
+                <div class="app-list__item">
+                  <p class="govuk-body govuk-!-margin-bottom-0">
+                    {{ cp.user.firstName }}
+                    {{ cp.user.lastName }}{% if _case.prosecutors.length > 1 and cp.isLead %}(lead){% endif %}
+                  </p>
+                  <div class="app-list__actions">
+                    <a
+                      href="/cases/{{ _case.id }}/prosecutors/{{ cp.id }}/remove"
+                      class="govuk-link govuk-link--no-visited-state"
+                    >
+                      Remove
+                    </a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            {# <p>There is no assigned prosecutor.</p> #}
+          {% endif %}
+        </div>
+
+        <div class="app-section">
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">Paralegal officer</h2>
+
+          <p><a href="/cases/{{ _case.id }}/add-paralegal-officer">Add paralegal officer</a></p>
+
+          {% if _case.paralegalOfficers.length %}
+            <div class="app-list">
+              {% for cpo in _case.paralegalOfficers %}
+                <div class="app-list__item">
+                  <p class="govuk-body govuk-!-margin-bottom-0">
+                    {{ cpo.user.firstName }} {{ cpo.user.lastName }}
+                  </p>
+                  <div class="app-list__actions">
+                    <a
+                      href="/cases/{{ _case.id }}/paralegal-officers/{{ cpo.id }}/remove"
+                      class="govuk-link govuk-link--no-visited-state"
+                    >
+                      Remove
+                    </a>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            {# <p>There is no paralegal officer assigned.</p> #}
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    $('.js-annotation-excerpt').each(function () {
+      new App.TextExpander({ container: $(this), maxLength: 80 })
+    })
+  </script>
+{% endblock %}

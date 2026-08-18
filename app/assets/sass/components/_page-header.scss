@@ -1,0 +1,23 @@
+.app-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: govuk-spacing(4);
+
+  &__title {
+    max-width: 75%;
+    min-width: 0;
+
+    [class^=govuk-heading-] {
+      margin-bottom: 0;
+    }
+  }
+
+  &__actions {
+    @include govuk-font($size: 19);
+  }
+
+  &__action + &__action {
+    margin-left: govuk-spacing(3);
+  }
+}

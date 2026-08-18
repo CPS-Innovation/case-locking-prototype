@@ -1,0 +1,74 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Prosecutor" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: 'javascript:history.back()'
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l govuk-!-margin-bottom-5">{{ pageName }}</h1>
+
+      <div class="app-prosecutor-cards">
+        {% for prosecutor in prosecutorItems %}
+
+          {% set breakdown = [] %}
+          {% if prosecutor.ctlCases > 0 %}{% set breakdown = breakdown.concat([prosecutor.ctlCases ~ ' CTL']) %}{% endif %}
+          {% if prosecutor.stlCases > 0 %}{% set breakdown = breakdown.concat([prosecutor.stlCases ~ ' STL']) %}{% endif %}
+          {% if prosecutor.basicCases > 0 %}{% set breakdown = breakdown.concat([prosecutor.basicCases ~ ' basic']) %}{% endif %}
+          {% if prosecutor.basicPlusCases > 0 %}{% set breakdown = breakdown.concat([prosecutor.basicPlusCases ~ ' basic plus']) %}{% endif %}
+          {% if prosecutor.standardCases > 0 %}{% set breakdown = breakdown.concat([prosecutor.standardCases ~ ' standard']) %}{% endif %}
+          {% if prosecutor.highCases > 0 %}{% set breakdown = breakdown.concat([prosecutor.highCases ~ ' high']) %}{% endif %}
+          {% if prosecutor.complexCases > 0 %}{% set breakdown = breakdown.concat([prosecutor.complexCases ~ ' complex']) %}{% endif %}
+          {% set breakdownValue = breakdown | join(', ') %}
+
+          <div
+            class="app-prosecutor-cards__item {% if prosecutor.selected %}app-prosecutor-cards__item--selected{% endif %}"
+          >
+            <h2 class="govuk-heading-m govuk-!-margin-bottom-1">
+              {{ loop.index }}. {{ prosecutor.name }}
+            </h2>
+            <div class="app-prosecutor-cards__item__tag">
+              {{ govukTag({ text: 'Best match', classes: 'govuk-tag--green' }) if prosecutor.recommended }}
+            </div>
+
+            {{
+              govukSummaryList({
+                classes: 'govuk-summary-list--no-border app-summary-list--compact app-summary-list--small-tex',
+                rows: [
+                  { key: { text: 'Initial review' }, value: { text: 'Yes' } } if prosecutor.didInitialReview,
+                  { key: { text: 'Specialist areas' }, value: { text: prosecutor.specialistAreas | join(', ') } } if prosecutor.specialistAreas.length,
+                  { key: { text: 'Total cases' }, value: { text: prosecutor.totalCases } },
+                  { key: { text: 'Breakdown' }, value: { text: breakdownValue } } if breakdownValue
+                ]
+              })
+            }}
+            <form method="post" class="govuk-!-margin-top-3">
+              <input
+                type="hidden"
+                name="assignProsecutor[prosecutor]"
+                value="{{ prosecutor.value }}"
+              />
+              <button
+                class="govuk-button govuk-button--secondar govuk-!-margin-bottom-1"
+                type="submit"
+              >
+                Select prosecutor
+                <span class="govuk-visually-hidden">{{ prosecutor.name }}</span>
+              </button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

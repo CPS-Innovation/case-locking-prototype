@@ -1,0 +1,100 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'dga' %}
+{% set secondaryNavId = 'dga' %}
+{% set pageName = monthName %}
+
+{% block beforeContent %}
+  {{
+    govukBreadcrumbs({
+      items: [
+        {
+          text: "Director’s Guidance Assessment (DGA) reporting",
+          href: "/dga-reporting"
+        },
+        {
+          text: monthName
+        }
+      ]
+    })
+  }}
+{% endblock beforeContent %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+      {% if isDeadlinePassed %}
+        <p>
+          The deadline for recording outcomes passed on
+          {{ deadline | isoDateString | govukDateTime }}.
+        </p>
+      {% else %}
+        <p>Outcomes must be recorded by {{ deadline | isoDateString | govukDateTime }}.</p>
+      {% endif %}
+
+      {{
+        govukButton({
+          text: "Record the remaining dispute outcomes for all 37 cases as not disputed"
+        }) if 1 == 2
+      }}
+
+      {% for policeUnit in policeUnits %}
+        <div class="app-dga-police-unit govuk-!-margin-top-9 govuk-!-margin-bottom-9">
+          <h2 class="govuk-heading-m">{{ policeUnit.name }}</h2>
+
+          {% set deadlineDateText = deadline | isoDateString | govukDateTime %}
+
+          <p>
+            <a
+              href="/dga-reporting/{{ monthKey }}/{{ policeUnit.id }}/export"
+              class="govuk-link govuk-link--no-visited-state"
+            >
+              Export cases that had a DGA
+            </a>
+          </p>
+
+          {% if policeUnit.status === 'Deadline passed' and policeUnit.casesNeedingOutcomes > 0 %}
+            {% set insetHtml %}
+              <p class="govuk-body govuk-!-margin-bottom-0">
+                Outcomes were not recorded for {{ policeUnit.casesNeedingOutcomes }} out of
+                {{ policeUnit.nonCompliantCases }}
+                {{ policeUnit.nonCompliantCases | pluralize("case") }}
+                before the deadline.
+                <a
+                  href="/cases/shortcut/dga-police-unit-all/{{ monthKey }}/{{ policeUnit.id }}"
+                  class="govuk-link govuk-link--no-visited-state"
+                >
+                  View cases that failed DGA
+                </a>
+              </p>
+            {% endset %}
+            {{ govukInsetText({ html: insetHtml }) }}
+          {% elif policeUnit.casesNeedingOutcomes > 0 %}
+            <p class="govuk-body">
+              Outcomes for {{ policeUnit.casesNeedingOutcomes }}
+              {{ policeUnit.casesNeedingOutcomes | pluralize("case") }} need to be recorded.
+            </p>
+            {{ govukButton({ text: "Record dispute outcomes", href: "/cases/shortcut/dga-police-unit/" + monthKey + "/" + policeUnit.id }) }}
+          {% else %}
+            {% set insetHtml %}
+              <p class="govuk-body govuk-!-margin-bottom-0">
+                Outcomes have been recorded for all {{ policeUnit.completedCases }}
+                {{ policeUnit.completedCases | pluralize("case") }}.{% if policeUnit.nonCompliantCases > 0 %}
+                  <a
+                    href="/cases/shortcut/dga-police-unit-all/{{ monthKey }}/{{ policeUnit.id }}"
+                    class="govuk-link govuk-link--no-visited-state"
+                  >
+                    View cases that failed DGA
+                  </a>
+                {% endif %}
+              </p>
+            {% endset %}
+            {{ govukInsetText({ html: insetHtml }) }}
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

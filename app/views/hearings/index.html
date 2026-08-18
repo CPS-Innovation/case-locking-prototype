@@ -1,0 +1,127 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'hearings' %}
+{% set pageName = "Hearings (:total)" | replace(':total', totalHearings | formatNumber) %}
+
+{% block pageTitle %}
+  {{ pageName }} - {{ serviceName }} - GOV.UK
+{% endblock %}
+
+{% block skipLink %}
+  {{ super() }}
+  {{
+    govukSkipLink({
+      text: "Skip to hearing search",
+      href: "#app-hearing-search"
+    })
+  }}
+  {{
+    govukSkipLink({
+      text: "Skip to hearings list",
+      href: "#app-hearings-list"
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+
+  <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+  <div class="app-filter-layout">
+    <div class="app-filter-layout__filter">{% include "_includes/hearing-list/filter-panel.njk" %}</div>
+    <div class="app-filter-layout__content">
+      <div class="app-action-bar">
+        <div class="app-action-bar__filter"></div>
+      </div>
+
+      {% include "_includes/hearing-list/search-form.njk" %}
+
+      {% if hearings.length %}
+        <div class="app-list" id="app-hearings-list">
+          {% for hearing in hearings %}
+            {% set defendants = hearing.case.defendants %}
+            {% set defendantLabel %}
+              {{ defendants[0].firstName }} {{ defendants[0].lastName }}
+              {%- if defendants.length > 1 %} and {{ defendants.length - 1 }} more{% endif %}
+            {% endset %}
+
+            <div class="app-list__item">
+              <div class="app-list__content">
+                <h2 class="govuk-heading-s govuk-!-margin-bottom-1">
+                  <div>
+                    <a href="/cases/{{ hearing.case.id }}/hearings/{{ hearing.id }}" class="govuk-link--no-visited-state">
+                      {{ defendantLabel }}
+                    </a>
+                  </div>
+                  <div class="app-list__tag">
+                    {{
+                      govukTag({
+                        text: hearing.status | replace("Hearing ", "") | capitalize,
+                        classes: (hearing.status | hearingStatusTagClass)
+                      })
+                    }}
+                  </div>
+                </h2>
+
+                {{
+                  govukSummaryList({
+                    classes: 'govuk-summary-list--no-border app-summary-list--compact app-summary-list--small-text',
+                    rows: [
+                      {
+                        key: { html: 'URN' },
+                        value: { html: hearing.case.reference }
+                      },
+                      {
+                        key: { html: 'Date' },
+                        value: { html: hearing.startDate | isoDateString | govukDateTime }
+                      },
+                      {
+                        key: { html: 'Type' },
+                        value: { html: hearing.type }
+                      },
+                      {
+                        key: { html: 'Operation name' },
+                        value: { html: hearing.case.operationName }
+                      } if hearing.case.operationName,
+                      {
+                        key: { html: 'Venue' },
+                        value: { html: hearing.venue }
+                      }
+                    ]
+                  })
+                }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>There are no results.</p>
+      {% endif %}
+      {% include "_includes/pagination.njk" %}
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    new App.FilterToggleButton({
+      bigModeMediaQuery: '(min-width: 48.063em)',
+      startHidden: false,
+      toggleButton: {
+        container: $('.app-action-bar__filter'),
+        showText: 'Show filter',
+        hideText: 'Hide filter',
+        classes: 'govuk-button--secondary govuk-!-margin-bottom-3',
+      },
+      closeButton: {
+        container: $('.app-filter__header-action'),
+        text: 'Close',
+      },
+      filter: {
+        container: $('.app-filter-layout__filter'),
+      },
+    })
+  </script>
+{% endblock %}

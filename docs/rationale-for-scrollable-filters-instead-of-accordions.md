@@ -1,0 +1,7 @@
+# Ratioanle for scrollable filters instead of accordions
+
+This is a repeat-use specialist service. Users will be working with these filters for hours a day, every day. Hiding options behind toggles means they’d have to open a section, scan the options, make a selection, then potentially open the next section - over and over again. At that frequency, the effort is significant. The GOV.UK Design System accordion guidance (https://design-system.service.gov.uk/components/accordion/) reflects this too.
+
+There’s also a significant cognitive accessibility benefit to keeping options visible. With the current design, users can see the filter label (e.g. "Owner") alongside the options (e.g. "Rachel Harvey") at a glance. That combination gives (sighted) users the context they need to quickly scan and understand the state of their filters. An accordion strips that away - you’d only see the category labels, losing the at-a-glance clarity. I would say given the trade-offs between cognitive accessibility, for example, and people using Dragon, this is the right trade off to make in this context.
+
+Luckily, for Dragon users specifically, the issue isn’t insurmountable. They also have the search box as an alternative way to find and select options, and they can use mouse grid to interact with the checkboxes directly.

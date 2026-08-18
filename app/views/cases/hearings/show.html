@@ -1,0 +1,100 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'hearings' %}
+{% set pageName = hearing.type %}
+
+{% block beforeContent %}
+  {{
+    govukBreadcrumbs({
+      items: [
+        {
+          text: _case.reference,
+          href: "/cases/" + _case.id
+        },
+        {
+          text: "Hearings",
+          href: "/cases/" + _case.id + "/hearings"
+        }
+      ]
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">
+        {{ hearing.type }}
+        {{
+          govukTag({
+            text: hearing.status,
+            classes: hearing.status | hearingStatusTagClass
+          })
+        }}
+      </h1>
+
+      <div class="govuk-button-group">
+        {% if hearing.status == 'Hearing preparation needed' %}
+          <form method="post" action="/cases/{{ _case.id }}/hearings/{{ hearing.id }}/mark-preparation-complete">
+            {{
+              govukButton({
+                text: "Mark preparation as complete"
+              })
+            }}
+          </form>
+        {% elif hearing.status == 'Hearing outcome needed' %}
+          {{
+            govukButton({
+              text: "Record outcome",
+              href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/record-outcome"
+            })
+          }}
+        {% endif %}
+      </div>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "Type" },
+              value: { text: hearing.type },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/edit/type",
+                  text: "Change",
+                  visuallyHiddenText: "type"
+                }]
+              }
+            },
+            {
+              key: { text: "Date" },
+              value: { html: hearing.startDate | isoDateString | govukDateTime },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/edit/date",
+                  text: "Change",
+                  visuallyHiddenText: "date"
+                }]
+              }
+            },
+            {
+              key: { text: "Court or venue" },
+              value: { text: hearing.venue },
+              actions: {
+                items: [{
+                  href: "/cases/" + _case.id + "/hearings/" + hearing.id + "/edit/venue",
+                  text: "Change",
+                  visuallyHiddenText: "court or venue"
+                }]
+              }
+            }
+          ]
+        })
+      }}
+    </div>
+  </div>
+{% endblock %}

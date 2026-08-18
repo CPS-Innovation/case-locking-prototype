@@ -1,0 +1,56 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Offences and element strength assessment" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: 'javascript:history.back()'
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% for charge in chargeSections %}
+        <h2 class="govuk-heading-m">
+          {{ (charge.defendant.firstName + " " + charge.defendant.lastName + " – " + charge.description) if showDefendantName else charge.description }}
+        </h2>
+        {{ govukSummaryList({ rows: charge.elementRows }) }}
+      {% endfor %}
+
+      <form method="post">
+        {{
+          govukRadios({
+            name: "complete",
+            fieldset: {
+              legend: {
+                text: "Have you completed this section?",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            value: "yes" if review.strengthAssessmentComplete == true else ("no" if review.strengthAssessmentComplete == false else ""),
+            items: [
+              {
+                value: "yes",
+                text: "Yes, I’ve completed this section"
+              },
+              {
+                value: "no",
+                text: "No, I’ll come back to it later"
+              }
+            ]
+          })
+        }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

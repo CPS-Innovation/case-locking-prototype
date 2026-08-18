@@ -1,0 +1,158 @@
+{% if urgentTaskCount > 0 or paceClockCountsByRange.expired > 0 or paceClockCountsByRange.lessThan1Hour > 0 or paceClockCountsByRange.lessThan2Hours > 0 or paceClockCountsByRange.lessThan3Hours > 0 or paceClockCountsByRange.moreThan3Hours > 0 or ctlCountsByRange.overdue > 0 or ctlCountsByRange.today > 0 or ctlCountsByRange.tomorrow > 0 or ctlCountsByRange.thisWeek > 0 or ctlCountsByRange.nextWeek > 0 or ctlCountsByRange.later > 0 or stlCountsByRange.overdue > 0 or stlCountsByRange.today > 0 or stlCountsByRange.tomorrow > 0 or stlCountsByRange.thisWeek > 0 or stlCountsByRange.nextWeek > 0 or stlCountsByRange.later > 0 %}
+  <div class="app-overview-section">
+    <h2 class="govuk-heading-m">High priority tasks assigned to you</h2>
+    <ul class="govuk-list govuk-list--bullet">
+      {% if urgentTaskCount > 0 %}
+        <li>
+          <a href="/tasks/shortcut/urgent" class="govuk-link--no-visited-state">
+            {{urgentTaskCount}} {{ urgentTaskCount | pluralize("urgent task") }}
+          </a>
+        </li>
+      {% endif %}
+      {% if paceClockCountsByRange.expired > 0 %}
+        <li>
+          <a href="/tasks/shortcut/pace-expired" class="govuk-link--no-visited-state">
+            {{paceClockCountsByRange.expired}} {{ paceClockCountsByRange.expired | pluralize("task has", "tasks have") }}
+            an expired PACE clock
+          </a>
+        </li>
+      {% endif %}
+      {% if paceClockCountsByRange.lessThan1Hour > 0 %}
+        <li>
+          <a href="/tasks/shortcut/pace-less-than-1-hour" class="govuk-link--no-visited-state">
+            {{paceClockCountsByRange.lessThan1Hour}} {{ paceClockCountsByRange.lessThan1Hour | pluralize("task has", "tasks have") }}
+            a PACE clock ending in less than 1 hour
+          </a>
+        </li>
+      {% endif %}
+      {% if paceClockCountsByRange.lessThan2Hours > 0 %}
+        <li>
+          <a href="/tasks/shortcut/pace-less-than-2-hours" class="govuk-link--no-visited-state">
+            {{paceClockCountsByRange.lessThan2Hours}} {{ paceClockCountsByRange.lessThan2Hours | pluralize("task has", "tasks have") }}
+            a PACE clock ending in less than 2 hours
+          </a>
+        </li>
+      {% endif %}
+      {% if paceClockCountsByRange.lessThan3Hours > 0 %}
+        <li>
+          <a href="/tasks/shortcut/pace-less-than-3-hours" class="govuk-link--no-visited-state">
+            {{paceClockCountsByRange.lessThan3Hours}} {{ paceClockCountsByRange.lessThan3Hours | pluralize("task has", "tasks have") }}
+            a PACE clock ending in less than 3 hours
+          </a>
+        </li>
+      {% endif %}
+      {% if paceClockCountsByRange.moreThan3Hours > 0 %}
+        <li>
+          <a href="/tasks/shortcut/pace-more-than-3-hours" class="govuk-link--no-visited-state">
+            {{paceClockCountsByRange.moreThan3Hours}} {{ paceClockCountsByRange.moreThan3Hours | pluralize("task has", "tasks have") }}
+            a PACE clock ending in more than 3 hours
+          </a>
+        </li>
+      {% endif %}
+      {% if ctlCountsByRange.overdue > 0 %}
+        <li>
+          <a href="/tasks/shortcut/ctl-overdue" class="govuk-link--no-visited-state">
+            {{ctlCountsByRange.overdue}} {{ ctlCountsByRange.overdue | pluralize("task has", "tasks have") }}
+            an expired custody time limit
+          </a>
+        </li>
+      {% endif %}
+      {% if ctlCountsByRange.today > 0 %}
+        <li>
+          <a href="/tasks/shortcut/ctl-today" class="govuk-link--no-visited-state">
+            {{ctlCountsByRange.today}} {{ ctlCountsByRange.today | pluralize("task has", "tasks have") }}
+            a custody time limit ending today
+          </a>
+        </li>
+      {% endif %}
+      {% if ctlCountsByRange.tomorrow > 0 %}
+        <li>
+          <a href="/tasks/shortcut/ctl-tomorrow" class="govuk-link--no-visited-state">
+            {{ctlCountsByRange.tomorrow}} {{ ctlCountsByRange.tomorrow | pluralize("task has", "tasks have") }}
+            a custody time limit ending tomorrow
+          </a>
+        </li>
+      {% endif %}
+      {% if ctlCountsByRange.thisWeek > 0 %}
+        <li>
+          <a href="/tasks/shortcut/ctl-this-week" class="govuk-link--no-visited-state">
+            {{ctlCountsByRange.thisWeek}} {{ ctlCountsByRange.thisWeek | pluralize("task has", "tasks have") }}
+            a custody time limit ending this week
+          </a>
+        </li>
+      {% endif %}
+      {% if ctlCountsByRange.nextWeek > 0 %}
+        <li>
+          <a href="/tasks/shortcut/ctl-next-week" class="govuk-link--no-visited-state">
+            {{ctlCountsByRange.nextWeek}} {{ ctlCountsByRange.nextWeek | pluralize("task has", "tasks have") }}
+            a custody time limit ending next week
+          </a>
+        </li>
+      {% endif %}
+      {% if ctlCountsByRange.later > 0 %}
+        <li>
+          <a href="/tasks/shortcut/ctl-later" class="govuk-link--no-visited-state">
+            {{ctlCountsByRange.later}} {{ ctlCountsByRange.later | pluralize("task has", "tasks have") }}
+            a custody time limit ending later
+          </a>
+        </li>
+      {% endif %}
+      {% if stlCountsByRange.overdue > 0 %}
+        <li>
+          <a href="/tasks/shortcut/stl-overdue" class="govuk-link--no-visited-state">
+            {{stlCountsByRange.overdue}} {{ stlCountsByRange.overdue | pluralize("task has", "tasks have") }}
+            an expired statutory time limit
+          </a>
+        </li>
+      {% endif %}
+      {% if stlCountsByRange.today > 0 %}
+        <li>
+          <a href="/tasks/shortcut/stl-today" class="govuk-link--no-visited-state">
+            {{stlCountsByRange.today}} {{ stlCountsByRange.today | pluralize("task has", "tasks have") }}
+            a statutory time limit ending today
+          </a>
+        </li>
+      {% endif %}
+      {% if stlCountsByRange.tomorrow > 0 %}
+        <li>
+          <a href="/tasks/shortcut/stl-tomorrow" class="govuk-link--no-visited-state">
+            {{stlCountsByRange.tomorrow}} {{ stlCountsByRange.tomorrow | pluralize("task has", "tasks have") }}
+            a statutory time limit ending tomorrow
+          </a>
+        </li>
+      {% endif %}
+      {% if stlCountsByRange.thisWeek > 0 %}
+        <li>
+          <a href="/tasks/shortcut/stl-this-week" class="govuk-link--no-visited-state">
+            {{stlCountsByRange.thisWeek}} {{ stlCountsByRange.thisWeek | pluralize("task has", "tasks have") }}
+            a statutory time limit ending this week
+          </a>
+        </li>
+      {% endif %}
+      {% if stlCountsByRange.nextWeek > 0 %}
+        <li>
+          <a href="/tasks/shortcut/stl-next-week" class="govuk-link--no-visited-state">
+            {{stlCountsByRange.nextWeek}} {{ stlCountsByRange.nextWeek | pluralize("task has", "tasks have") }}
+            a statutory time limit ending next week
+          </a>
+        </li>
+      {% endif %}
+      {% if stlCountsByRange.later > 0 %}
+        <li>
+          <a href="/tasks/shortcut/stl-later" class="govuk-link--no-visited-state">
+            {{stlCountsByRange.later}} {{ stlCountsByRange.later | pluralize("task has", "tasks have") }}
+            a statutory time limit ending later
+          </a>
+        </li>
+      {% endif %}
+      {# <li>2 priority tasks</li> #}
+    </ul>
+  </div>
+
+  {# <h2 class="govuk-heading-m">Priority charging tasks within your units not assigned to you</h2>
+
+  <ul class="govuk-list">
+    <li>5 priority pcd review tasks across all your units //if they have view charging task national right</li>
+    <li>5 Priority resubmitted PCD case tasks across all your units //if they have view charging task national right</li>
+  </ul> #}
+{% endif %}

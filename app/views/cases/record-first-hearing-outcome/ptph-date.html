@@ -1,0 +1,57 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "PTPH hearing date" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }} – record first hearing outcome</span>
+
+      <form method="post">
+        {{ govukDateInput({
+          id: "ptph-date",
+          fieldset: {
+            legend: {
+              text: pageName,
+              isPageHeading: true,
+              classes: "govuk-fieldset__legend--l"
+            }
+          },
+          hint: {
+            text: "For example, 31 3 2025"
+          },
+          items: [
+            {
+              name: "recordFirstHearingOutcome[ptphDate][day]",
+              label: "Day",
+              value: data.recordFirstHearingOutcome.ptphDate.day,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "recordFirstHearingOutcome[ptphDate][month]",
+              label: "Month",
+              value: data.recordFirstHearingOutcome.ptphDate.month,
+              classes: "govuk-input--width-2"
+            },
+            {
+              name: "recordFirstHearingOutcome[ptphDate][year]",
+              label: "Year",
+              value: data.recordFirstHearingOutcome.ptphDate.year,
+              classes: "govuk-input--width-4"
+            }
+          ]
+        }) }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

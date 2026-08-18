@@ -1,0 +1,77 @@
+/* ==========================================================================
+   #NOTIFICATION BANNER PINNED
+   ========================================================================== */
+
+// This variation represents an error/locking state, so it uses the GOV.UK
+// error colour rather than the standard "blue" notification banner brand
+// colour. Scoped narrowly to .app-notification-banner-pinned so that ordinary
+// .govuk-notification-banner components elsewhere are unaffected.
+.app-notification-banner-pinned .govuk-notification-banner {
+  border-color: govuk-functional-colour("error");
+  background-color: govuk-functional-colour("error");
+
+  // The fixed wrapper already sits flush against the bottom of the viewport
+  // (bottom: 0 below); GOV.UK's own responsive bottom margin on the banner
+  // itself would otherwise leave a gap beneath it.
+  margin-bottom: 0;
+}
+
+.app-notification-banner-pinned .govuk-notification-banner__header {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: govuk-spacing(3);
+  row-gap: govuk-spacing(1);
+}
+
+// The pinned/fixed positioning is only applied once JavaScript has enhanced
+// the page. Without JS, the component remains an ordinary in-flow
+// notification banner (see govuk-frontend's own .js-enabled convention).
+.js-enabled .app-notification-banner-pinned {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  max-width: $govuk-page-width;
+  margin-right: auto;
+  margin-left: auto;
+
+  // Keep the banner usable on short viewports: cap its own height and scroll
+  // internally rather than letting expanded content run off the screen.
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.app-notification-banner-pinned__toggle {
+  @include govuk-font($size: 19);
+  @include govuk-link-common;
+
+  // This is a <button>, not an <a>, so the `:link`/`:visited` pseudo-classes
+  // used by govuk-link-style-default never match it - that mixin was leaving
+  // the button's normal/idle colour unstyled (falling back to the browser's
+  // default button text colour) rather than actually turning it white. The
+  // colour needed against the error-coloured header is therefore set
+  // explicitly instead of relying on that mixin.
+  background: none;
+  border: 0;
+  color: govuk-colour("white");
+  cursor: pointer;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+
+  // Keep the hover/active states readable against the red background too.
+  // The focus state is intentionally left to govuk-link-common above, which
+  // already applies the standard GOV.UK yellow focus background with dark
+  // focus text - `:not(:focus)` ensures that still wins if the button is
+  // both hovered/active AND focused at the same time (e.g. straight after a
+  // mouse click, while the pointer remains over the button), since these
+  // selectors share the same specificity and would otherwise override the
+  // focus text colour based on source order alone.
+  &:hover:not(:focus),
+  &:active:not(:focus) {
+    color: govuk-colour("white");
+  }
+}

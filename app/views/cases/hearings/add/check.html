@@ -1,0 +1,63 @@
+{% extends "_layouts/main.html" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set navId = 'cases' %}
+{% set pageName = "Check details and add hearing" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: 'Back',
+    href: 'javascript:history.back()'
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{ govukSummaryList({
+        rows: [
+          {
+            key: { text: "Type" },
+            value: { text: data.addHearing.type },
+            actions: {
+              items: [{
+                href: "/cases/" + _case.id + "/hearings/add",
+                text: "Change",
+                visuallyHiddenText: "hearing type"
+              }]
+            }
+          },
+          {
+            key: { text: "Date" },
+            value: { text: data.addHearing.hearingDate | isoDateFromDateInput | govukDateTime },
+            actions: {
+              items: [{
+                href: "/cases/" + _case.id + "/hearings/add/date",
+                text: "Change",
+                visuallyHiddenText: "date"
+              }]
+            }
+          },
+          {
+            key: { text: "Venue" },
+            value: { text: data.addHearing.venue },
+            actions: {
+              items: [{
+                href: "/cases/" + _case.id + "/hearings/add/venue",
+                text: "Change",
+                visuallyHiddenText: "venue"
+              }]
+            }
+          }
+        ]
+      }) }}
+
+      <form method="post">
+        {{ govukButton({ text: "Add hearing" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

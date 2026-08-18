@@ -1,0 +1,41 @@
+.app-filter-layout {
+  @include govuk-media-query($from: desktop) {
+    display: flex;
+    align-items: flex-start;
+    gap: govuk-spacing(4);
+  }
+}
+
+.app-filter-layout__filter {
+  @include govuk-media-query($from: desktop) {
+    flex-shrink: 0;
+    max-width: 310px;
+    min-width: 260px;
+    width: 100%;
+  }
+}
+
+.app-filter-layout__filter:focus {
+  outline: $govuk-focus-width solid $govuk-focus-colour;
+  outline-offset: 0;
+
+  @include govuk-media-query(desktop) {
+    outline: none;
+  }
+}
+
+@include govuk-media-query($until: desktop) {
+  .js-enabled .app-filter-layout__filter {
+    background-color: govuk-colour("light-grey");
+    position: fixed; top: 5px; right: 5px; bottom: 5px;
+    overflow-y: scroll;
+    z-index: 100;
+    width: 315px;
+  }
+}
+
+.app-filter-layout__content {
+  flex: 1;
+  min-width: 0;
+}
+

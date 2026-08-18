@@ -1,0 +1,9 @@
+<div class="govuk-inset-text">
+  <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Failure reason</h2>
+  <p>{{ failureReason.reason }}</p>
+
+  {% if failureReason.details %}
+    <h2 class="govuk-heading-s govuk-!-margin-bottom-1">Details</h2>
+    <p class="govuk-!-margin-bottom-0">{{ failureReason.details }}</p>
+  {% endif %}
+</div>

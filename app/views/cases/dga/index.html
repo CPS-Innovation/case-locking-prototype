@@ -1,0 +1,131 @@
+{% extends "_layouts/main.html" %}
+{% set navId = 'cases' %}
+{% set secondaryNavId = 'dga' %}
+{% set pageName = 'DGA reporting' %}
+
+{% block beforeContent %}
+  {% include "_includes/case/identity-bar.njk" %}
+{% endblock %}
+
+{% block content %}
+  {% include "_includes/success-banner.njk" %}
+  {% include "_includes/case/navigation.njk" %}
+
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {% if _case.dga.recordDisputeOutcomesDeadline %}
+        {% if hasDeadlinePassed %}
+          <p class="govuk-body">
+            The deadline for recording outcomes passed on
+            {{ _case.dga.recordDisputeOutcomesDeadline | isoDateString | govukDateTime }}.
+          </p>
+        {% elif outcomesRemaining > 0 %}
+          <p class="govuk-body">
+            {{ outcomesRemaining }} {{ outcomesRemaining | pluralize("outcome") }} must be recorded
+            by {{ _case.dga.recordDisputeOutcomesDeadline | isoDateString | govukDateTime }}.
+          </p>
+        {% else %}
+          <p class="govuk-body">
+            The deadline for recording outcomes is
+            {{ _case.dga.recordDisputeOutcomesDeadline | isoDateString | govukDateTime }}.
+          </p>
+        {% endif %}
+      {% endif %}
+
+      {% set deadlineDateText = _case.dga.recordDisputeOutcomesDeadline | isoDateString | govukDateTime %}
+
+      {% for reason in _case.dga.failureReasons %}
+        <div>
+          <h2 class="govuk-heading-m govuk-!-margin-top-7">{{ reason.reason }}</h2>
+
+          {% if reason.details %}
+            <p class="govuk-body">{{ reason.details }}</p>
+          {% endif %}
+
+          {% if not reason.didPoliceDisputeFailure %}
+            {% if hasDeadlinePassed %}
+              {{
+                govukInsetText({
+                  text: "Outcome not recorded. The deadline passed on " + deadlineDateText + "."
+                })
+              }}
+            {% else %}
+              {{
+                govukButton({
+                  text: "Record dispute outcome",
+                  href: "/cases/" + _case.id + "/dga/" + reason.id + "/record-dispute-outcome"
+                })
+              }}
+            {% endif %}
+          {% else %}
+            {% set methodsHtml %}
+              {% if reason.discussionMethods %}
+                <ul class="govuk-list govuk-list--bullet">
+                  {% for method in reason.discussionMethods.split(', ') %}
+                    <li>{{ method }}</li>
+                  {% endfor %}
+                </ul>
+              {% else %}
+                -
+              {% endif %}
+            {% endset %}
+
+            {% set baseUrl = "/cases/" + _case.id + "/dga/" + reason.id + "/update-dispute-outcome" %}
+            {{
+              govukSummaryList({
+                rows: [
+                  {
+                    key: { text: "Did the police dispute this failure?" },
+                    value: { text: reason.didPoliceDisputeFailure },
+                    actions: {} if hasDeadlinePassed else {
+                      items: [{
+                        href: baseUrl + "?from=check",
+                        text: "Change",
+                        visuallyHiddenText: "did the police dispute this failure"
+                      }]
+                    }
+                  },
+                  {
+                    key: { text: "Did CPS accept the dispute?" },
+                    value: { text: reason.didCpsAcceptDispute },
+                    actions: {} if hasDeadlinePassed else {
+                      items: [{
+                        href: baseUrl + "/cps-accepted?from=check",
+                        text: "Change",
+                        visuallyHiddenText: "did CPS accept the dispute"
+                      }]
+                    }
+                  } if reason.didPoliceDisputeFailure == "Yes",
+                  {
+                    key: { text: "Reason for outcome" },
+                    value: { text: reason.reasonForOutcome if reason.reasonForOutcome else "-" },
+                    actions: {} if hasDeadlinePassed else {
+                      items: [{
+                        href: baseUrl + "/reason?from=check",
+                        text: "Change",
+                        visuallyHiddenText: "reason for outcome"
+                      }]
+                    }
+                  } if reason.didPoliceDisputeFailure == "Yes",
+                  {
+                    key: { text: "How did you discuss this dispute with the police?" },
+                    value: { html: methodsHtml },
+                    actions: {} if hasDeadlinePassed else {
+                      items: [{
+                        href: baseUrl + "/method?from=check",
+                        text: "Change",
+                        visuallyHiddenText: "how you discussed this dispute with the police"
+                      }]
+                    }
+                  } if reason.didPoliceDisputeFailure == "Yes"
+                ]
+              })
+            }}
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}

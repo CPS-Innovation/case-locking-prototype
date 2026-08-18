@@ -1,0 +1,89 @@
+{% extends "_layouts/main.html" %}
+
+{% set navId = 'cases' %}
+{% set pageName = "First hearing details" %}
+
+{% block beforeContent %}
+  {{
+    govukBackLink({
+      text: 'Back',
+      href: '/cases/' + _case.id + '/review/first-hearing/venue'
+    })
+  }}
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds-from-desktop">
+      <span class="govuk-caption-l">{{ _case.reference }}</span>
+      <h1 class="govuk-heading-l">{{ pageName }}</h1>
+
+      {{
+        govukSummaryList({
+          rows: [
+            {
+              key: { text: "Date" },
+              value: { text: reviewFirstHearing.hearingDate | isoDateFromDateInput | govukDate },
+              actions: {
+                items: [{
+                  href: '/cases/' + _case.id + '/review/first-hearing',
+                  text: "Change",
+                  visuallyHiddenText: "date of first hearing"
+                }]
+              }
+            },
+            {
+              key: { text: "Time" },
+              value: { text: reviewFirstHearing.time },
+              actions: {
+                items: [{
+                  href: '/cases/' + _case.id + '/review/first-hearing/time',
+                  text: "Change",
+                  visuallyHiddenText: "time of first hearing"
+                }]
+              }
+            },
+            {
+              key: { text: "Venue" },
+              value: { text: reviewFirstHearing.venue },
+              actions: {
+                items: [{
+                  href: '/cases/' + _case.id + '/review/first-hearing/venue',
+                  text: "Change",
+                  visuallyHiddenText: "venue"
+                }]
+              }
+            }
+          ]
+        })
+      }}
+
+      <form method="post">
+        {{
+          govukRadios({
+            name: "complete",
+            fieldset: {
+              legend: {
+                text: "Have you completed this section?",
+                classes: "govuk-fieldset__legend--m"
+              }
+            },
+            value: "yes" if reviewFirstHearing.confirmed == true else ("no" if reviewFirstHearing.confirmed == false else ""),
+            items: [
+              {
+                value: "yes",
+                text: "Yes, I’ve completed this section"
+              },
+              {
+                value: "no",
+                text: "No, I’ll come back to it later"
+              }
+            ]
+          })
+        }}
+
+        {{ govukButton({ text: "Continue" }) }}
+      </form>
+    </div>
+  </div>
+{% endblock %}

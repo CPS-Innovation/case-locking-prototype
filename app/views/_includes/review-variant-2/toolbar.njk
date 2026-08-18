@@ -1,0 +1,24 @@
+{% set documentBasePath = '/cases/' + caseId + '/review-variant-2/material' %}
+
+<div class="app-toolbar js-toolbar">
+  <div class="app-toolbar__inner">
+    <div class="govuk-button-group">
+      <form
+        method="post"
+        action="{{ documentBasePath }}/mark-reviewed"
+      >
+        {{ govukButton({ text: "Mark as completed" }) }}
+      </form>
+      <form
+        method="post"
+        action="{{ documentBasePath }}/save-progress"
+      >
+        {{ govukButton({ text: "Finish later", classes: "govuk-button--secondary" }) }}
+      </form>
+      {# {{ govukButton({ text: "Mark as unused", classes: "govuk-button--secondary", href: "#" }) }} #}
+      {# {{ govukButton({ text: "Add case summary note", classes: "govuk-button--secondary", href: "#" }) }} #}
+      {# {{ govukButton({ text: "Add information request", classes: "govuk-button--secondary", href: "#" }) }} #}
+      {# {{ govukButton({ text: "Link to witness or victim", classes: "govuk-button--secondary", href: "#" }) }} #}
+    </div>
+  </div>
+</div>
