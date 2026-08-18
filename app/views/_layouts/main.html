@@ -17,13 +17,15 @@
     {{ appNotificationBannerPinned({
       titleText: "Case locked as 1 user is editing with 2 users viewing",
       html: "
+        <h3 class=\"govuk-notification-banner__heading\">Someone else is editing this case</h3>
         <h4 class=\"govuk-heading-s\">Witnesses</h4>
-        <p class=\"govuk-body\">Contact <a class=\"govuk-notification-banner__link\" href=\"#\">oliver.del-staff@cps.gov.uk</a> since 15:38 on 21 September 2026.</p>
-        <h3 class=\"govuk-notification-banner__heading\">Other users are viewing the following sections:</h3>
+        <p class=\"govuk-body\"><a class=\"govuk-notification-banner__link\" href=\"#\">Oliver.del-staff@cps.gov.uk</a> has been editing this section since 3.38pm on 21 September 2026.</p>
+        <p class=\"govuk-body\">Contact them and ask them to stop editing before you make changes.</p>
+        <h3 class=\"govuk-notification-banner__heading\">Other people viewing this case</h3>
         <h4 class=\"govuk-heading-s\">Witnesses</h4>
-        <p class=\"govuk-body\">Contact <a class=\"govuk-notification-banner__link\" href=\"#\">alice.bennett@cps.gov.uk</a> since 15:38 on 21 September 2026.</p>
+        <p class=\"govuk-body\"><a class=\"govuk-notification-banner__link\" href=\"#\">Alice.bennett@cps.gov.uk</a> has been viewing this section since 3.29pm on 21 September 2026.</p>
         <h4 class=\"govuk-heading-s\">Defendants</h4>
-        <p class=\"govuk-body\">Contact <a class=\"govuk-notification-banner__link\" href=\"#\">oliver.del-staff@cps.gov.uk</a> since 15:15 on 21 September 2026.</p>
+        <p class=\"govuk-body\"><a class=\"govuk-notification-banner__link\" href=\"#\">Arthur.stone@cps.gov.uk</a> has been viewing this section since 3.15pm on 21 September 2026.</p>
       "
     }) }}
   {% endif %}

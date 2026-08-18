@@ -1,31 +1,19 @@
 {% extends "_layouts/main.html" %}
-{% from "_includes/case/charges-elements.njk" import chargesElements %}
+{% from "govuk/components/task-list/macro.njk" import govukTaskList %}
+
 {% set navId = 'cases' %}
-{% set secondaryNavId = 'overview' %}
-{% set pageName = 'Overview' %}
+{% set pageName = "Review case" %}
 
 {% block beforeContent %}
-{% include "_includes/case/identity-bar.njk" %}
+{{ govukBackLink({ text: 'Back', href: '/cases/' + _case.id }) }}
 {% endblock %}
 
 {% block content %}
-{% include "_includes/success-banner.njk" %}
-{% include "_includes/case/navigation.njk" %}
-
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-full-from-desktop">
-
-    {% include "_includes/case/interruption-card.njk" %}
-
+    <span class="govuk-caption-l">{{ _case.reference }}</span>
+    <h1 class="govuk-heading-l">{{ pageName }}</h1>
+        {% include "_includes/case/interruption-card.njk" %}
   </div>
 </div>
-{% endblock %}
-
-{% block scripts %}
-{{ super() }}
-<script>
-  $('.js-annotation-excerpt').each(function () {
-    new App.TextExpander({ container: $(this), maxLength: 80 })
-  })
-</script>
 {% endblock %}
