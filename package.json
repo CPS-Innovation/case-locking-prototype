@@ -19,7 +19,7 @@
     "connect-flash": "^0.1.1",
     "exceljs": "^4.4.0",
     "govuk-frontend": "6.1.0",
-    "govuk-prototype-kit": "13.18.1",
+    "govuk-prototype-kit": "13.20.4",
     "jquery": "3.7.1",
     "lodash": "^4.17.21",
     "postcss": "^8.5.6"
